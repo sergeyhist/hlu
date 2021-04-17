@@ -95,12 +95,15 @@ pfxcreator() {
 }
 
 steamlauchoptions() {
+	if [[ "$video_driver" == *"NVIDIA"* ]]; then sl_video="${nvidia_to}${nvidia_osd}"
+	elif [[ "$video_driver" == *"AMD"* ]]; then sl_video="${amd_aco}${amd_to}"; fi
+	sl_vars="${proton_wined3d}${proton_large_address}${proton_old_gl}${proton_seccomp}${proton_d3d12}${proton_d3d11}${proton_d3d10}${proton_d3d9}${proton_esync}${proton_fsync}${proton_futex2}${sl_video}${dxvk_async}${dxvk_cache}${dxvkhud_status}${dxvkhud_full}${dxvkhud_devinfo}${dxvkhud_fps}${dxvkhud_frametimes}${dxvkhud_submission}${dxvkhud_drawcall}${dxvkhud_pipelines}${dxvkhud_memory}${dxvkhud_gpuload}${dxvkhud_version}${dxvkhud_api}${dxvkhud_compiler}${dxvkhud_samplers}${dxvkhud_scale}${strangle_status}${strangle_fps}${strangle_fps_battery}${strangle_vsync}${strangle_glfinish}${strangle_picmip}${strangle_af}${strangle_trilinear}${strangle_retro}${strangle_nodlsym}${strangle_vkonly}${strangle_enable_vklayer}${strangle_disable_vklayer}${main_pulse}${main_gamemode}${main_mangohud}${main_vkbasalt}${main_customoptions}"
 	line_number=0; pkill steam; sleep 3s
 	while read line; do 
 		let "line_number+=1"
 		if [[ $line == *'"Software"'* ]]; then flag=1; fi 
 		if [[ $flag == 1 && $line == *"Apps"* ]]; then flag=0
-			sed -i "$((line_number+2))i\ \t\t\t\t\t\"$2\"\n\t\t\t\t\t{\n\t\t\t\t\t\t\"LaunchOptions\" \t\"$3%command% $4\"\n\t\t\t\t\t}" $1; fi;  done < $1 	
+			sed -i "$((line_number+2))i\ \t\t\t\t\t\"$2\"\n\t\t\t\t\t{\n\t\t\t\t\t\t\"LaunchOptions\" \t\"${sl_vars}%command% ${main_args}\"\n\t\t\t\t\t}" $1; fi;  done < "$1" 	
 }
 
 launchercreator() {
@@ -111,10 +114,8 @@ launchercreator() {
 	else
 		generalinit "${1^} Apps" "${1}apps"; launcher_name="$init_result_name"; launcher_steam_appid="$init_result"
 		finder "localconfig" "path" "$HOME/.steam/steam/userdata/"; generalinit "Steam Profiles" "localconfigfiles"; launcher_lc="$init_result"; fi
-	inputhistory "$HISTORYPATH/.launchername" "${cyc}name${noc} of the launcher" "exit" "$launcher_name"; launcher_name="$input_ans"
-	launchersetup "${launcher_name}" "$1"; launchercompleteinit "$1" "$launcher_name"
-	if [[ $1 == "steam" ]]; then
-		steamlauchoptions "$launcher_lc" "$launcher_steam_appid" "${launcher_dxvkhud} ${launcher_video}${launcher_dxvk}${launcher_strangle}${launcher_proton}${launcher_main}" "$main_args"; fi
+	inputhistory "$HISTORYPATH/.launchername" "${cyc}name${noc} of the launcher" "exit" "$launcher_name"; launcher_name="$input_ans"; launchersetup "${launcher_name}" "$1" 
+	if [[ $1 == "steam" ]]; then steamlauchoptions "$launcher_lc" "$launcher_steam_appid"; fi; launchercompleteinit "$1" "$launcher_name"
 	if [[ -f "$LAUNCHPATH/${launcher_name}-$1" ]]; then chmod +x "$LAUNCHPATH/${launcher_name}-$1"; echo -e "\nLauncher ${grc}${launcher_name}-$1${noc} successfully created in the ${grc}$LAUNCHPATH${noc} folder!"; fi
 }
 
@@ -242,8 +243,8 @@ launchereditor () {
 		elif [[ "$launcher_type" == "steam" ]]; then
 			listoptions "Launcher Setup" "Change Launch Options|Change Steam App"
 			if [[ "$select_ans" == "1" ]]; then
-				finder "localconfig" "path" "$HOME/.steam/steam/userdata/"; generalinit "Steam Profiles" "localconfigfiles"; launcher_lc="$init_result"; launchersetup "$launcher_name" "$launcher_type"
-				steamlauchoptions "$launcher_lc" "$launcher_steam_appid" "${launcher_dxvkhud} ${launcher_video}${launcher_dxvk}${launcher_strangle}${launcher_proton}${launcher_main}" "$main_args"			
+				finder "localconfig" "path" "$HOME/.steam/steam/userdata/"; generalinit "Steam Profiles" "localconfigfiles"; launcher_lc="$init_result"
+				launchersetup "$launcher_name" "$launcher_type"; steamlauchoptions "$launcher_lc" "$launcher_steam_appid"			
 			elif [[ "$select_ans" == "2" ]]; then generalinit "Steam Apps" "steamapps"; launcher_steam_appid="$init_result" ; fi; fi
 		launchercompleteinit "$launcher_type" "$launcher_name"; fi
 }
