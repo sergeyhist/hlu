@@ -34,10 +34,10 @@ Simply input this command in terminal:
 
     histgamehelper
     
-## Screenshots:
-   ![Example 1](Screenshots/example1.png)
-   ![Example 2](Screenshots/example2.png)
-   ![Example 3](Screenshots/example3.png)
-   ![Example 4](Screenshots/example4.png)
-   ![Example 5](Screenshots/example5.png)
+## Screenshots:   
+   ![Example 1](Screenshots/example1.png)   
+   ![Example 2](Screenshots/example2.png)   
+   ![Example 3](Screenshots/example3.png)   
+   ![Example 4](Screenshots/example4.png)   
+   ![Example 5](Screenshots/example5.png)   
    ![Example 6](Screenshots/example6.png)
