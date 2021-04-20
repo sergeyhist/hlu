@@ -8,7 +8,7 @@ echo -e "\n ${cyc}1${noc} - ${grc}Install${noc}"
 echo -e " ${cyc}2${noc} - ${grc}Uninstall${noc}"
 echo -e "\nChoose ${cyc}option${noc} from the ${grc}list${noc} above:"; read -e "installer_ans"
 if [[ "$installer_ans" == "1" ]]; then
-	sudo cp Src/$Exec $Bin_folder/$Exec
+	sudo cp source/$Exec $Bin_folder/$Exec
 	sudo chmod 755 $Bin_folder/$Exec
 	if [[ -f "$Bin_folder/$Exec" ]]; then echo -e "\n${grc}Program${noc} installed ${grc}successfully${noc}!\n"
 	else echo -e "\n${grc}Program${noc}${rec}not installed${noc}!\n"; fi

@@ -27,7 +27,7 @@ Clone the repo:
 
 Run hgh-installer script:
 
-    sh hgh-installer.sh
+    sh lgh-installer.sh
     
 ## Usage:
 Simply input this command in terminal:
