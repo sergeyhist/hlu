@@ -22,8 +22,8 @@ Small console program written in bash.
 ## Installation:
 Clone the repo:
 
-    git clone https://github.com/sergeyhist/hist-game-helper.git
-    cd hist-game-helper
+    git clone https://github.com/sergeyhist/linux-game-helper.git
+    cd linux-game-helper
 
 Run hgh-installer script:
 
