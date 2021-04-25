@@ -23,14 +23,14 @@ addlines() {
 }
 
 deletelines() {
-	readfiles "$1" "$2" "$3" "ans"; if [[ "$file_empty" != "1" ]]; then
-		if [[ "$3" == "lines" ]]; then sed -i $((file_line_number*2-1)),$((file_line_number*2))d "$2"
-		elif [[ "$3" == "line" ]]; then sed -i ${file_line_number}d "$2"; fi
-		if [[ "$1" == "Git Packages" ]]; then if [[ -f "$CONFPATH/gitcomlist.cfg" ]]; then sed -i $((file_line_number*2-1)),$((file_line_number*2))d "$CONFPATH/gitcomlist.cfg"; fi; fi
-		if [[ -d "$file_line_dir" && "$1" != "Commands" ]]; then 
-			if [[ "$4" != "delete" ]]; then echo -e "\nDelete ${cyc}folder${noc} from filesystem? ${cyc}y|N${noc}"; read -e "ans"; else ans="y"; fi
-			if [[ "$ans" = [yY]* ]]; then if [[ "$5" != "steam" ]]; then rm -rf "$file_line_dir"; else rm -rf "$(dirname "$file_line_dir")"; fi; fi; fi
-		if [[ ! -s "$2" ]]; then rm "$2"; fi; fi
+	readfiles "$1" "$2" "$3" "ans"
+	if [[ "$3" == "lines" ]]; then sed -i $((file_line_number*2-1)),$((file_line_number*2))d "$2"
+	elif [[ "$3" == "line" ]]; then sed -i ${file_line_number}d "$2"; fi
+	if [[ "$1" == "Git Packages" ]]; then if [[ -f "$CONFPATH/gitcomlist.cfg" ]]; then sed -i $((file_line_number*2-1)),$((file_line_number*2))d "$CONFPATH/gitcomlist.cfg"; fi; fi
+	if [[ -d "$file_line_dir" && "$1" != "Commands" ]]; then 
+		if [[ "$4" != "delete" ]]; then echo -e "\nDelete ${cyc}folder${noc} from filesystem? ${cyc}y|N${noc}"; read -e "ans"; else ans="y"; fi
+		if [[ "$ans" = [yY]* ]]; then if [[ "$5" != "steam" ]]; then rm -rf "$file_line_dir"; else rm -rf "$(dirname "$file_line_dir")"; fi; fi; fi
+	if [[ ! -s "$2" ]]; then rm "$2"; fi
 }
 
 readfiles() {
@@ -48,17 +48,17 @@ readfiles() {
 		else file_line_dir=$(sed -n ${4}p $2); file_line_number=$4; fi; fi; if [[ -n "$line_number" ]]; then l_count=$((line_number+1)); else l_count=$((listcount+1)); fi
 		if [[ "$ans" == [qQйЙ] ]]; then exit
 		elif [[ "$ans" -ge "$l_count" || "$ans" -le "0" ]]; then readfiles "$1" "$2" "$3" "$4" "$5"; fi
-	else echo -e "\n${grc}List${noc} is ${rec}empty${noc}"; file_empty="1"; fi
+	else echo -e "\n${grc}List${noc} is ${rec}empty${noc}"; exit; fi
 }
 
 generalinit() {
-	readfiles "${1}" "$TEMPPATH/.${2}" "lines" "ans"; if [[ "$file_empty" != "1" ]]; then init_result="$file_line_dir"; init_result_name="$file_line_name"; fi
+	readfiles "${1}" "$TEMPPATH/.${2}" "lines" "ans"; init_result="$file_line_dir"; init_result_name="$file_line_name"
 }
 
 runnerinit() {
 	if [[ $1 == "steam" ]]; then exec_ver="proton"
 	else exec_ver="$1"; fi
-	finder "$exec_ver" "file" "$TEMPPATH/.${exec_ver}run"; readfiles "Runners" "$TEMPPATH/.runners" "lines" "ans"; if [[ "$file_empty" != "1" ]]; then init_result="$file_line_dir"; fi
+	finder "$exec_ver" "file" "$TEMPPATH/.${exec_ver}run"; readfiles "Runners" "$TEMPPATH/.runners" "lines" "ans"; init_result="$file_line_dir"
 	if [[ $exec_ver == "proton" && $2 == "original" ]]; then
 		if [[ $(find "$(dirname "$file_line_dir")" -type f,l -name "wine") ]]; then
 			init_result=$(find "$(dirname "$file_line_dir")" -type f,l -name "wine")
@@ -70,7 +70,7 @@ runnerinit() {
 }
 
 pfxinit() {
-	readfiles "Prefixes" "$TEMPPATH/.${3}${1}pfx" "lines" "ans"; if [[ "$file_empty" != "1" ]]; then init_result="$file_line_dir"; fi
+	readfiles "Prefixes" "$TEMPPATH/.${3}${1}pfx" "lines" "ans"; init_result="$file_line_dir"
 	if [[ $1 == "proton" && $2 == "original" ]]; then init_result="$file_line_dir/pfx"; fi
 }
 
@@ -79,7 +79,7 @@ execinit() {
 	else exec_ver="$1"; fi
 	addlines "${exec_ver^} App" "dir" "" "" "" "${exec_ver}app"
 	finder "$exec_ver" "path" "$line_path" ; readfiles "${exec_ver^} Executables" "$TEMPPATH/.${exec_ver}files" "lines" "ans"
-	if [[ "$file_empty" != "1" ]]; then init_result_name="$file_line_name"; init_result_dir=$(dirname "$file_line_dir"); init_result="$file_line_dir"; fi
+	init_result_name="$file_line_name"; init_result_dir=$(dirname "$file_line_dir"); init_result="$file_line_dir"
 }
 
 pfxcreator() {
@@ -228,26 +228,26 @@ launchercompleteinit() {
 }
 
 launchereditor () {
-	readfiles "Launchers" "$TEMPPATH/.launchers" "line" "ans"; if [[ "$file_empty" != "1" ]]; then
-		launcher_name_full="$(basename "$file_line_dir")"; launcher_path="$file_line_dir"; source "$launcher_path" "read_vars"
-		launcher_name="$(echo "${launcher_name_full%%-*}")"; launcher_type="$(echo "${launcher_name_full##*-}")"
-		if [[ "$launcher_type" == "wine" || "$launcher_type" == "proton" ]]; then
-			listoptions "Launcher Setup" "Change Launch Options|Change Prefix|Change Runner|Change Executable"
-			if [[ "$select_ans" == "1" ]]; then launchersetup "$launcher_name" "$launcher_type"
-			elif [[ "$select_ans" == "2" ]]; then pfxinit "$launcher_type"; launcher_prefix="$init_result" 
-			elif [[ "$select_ans" == "3" ]]; then runnerinit "$launcher_type"; launcher_runner="$init_result"
-			elif [[ "$select_ans" == "4" ]]; then execinit "$launcher_type"; launcher_exec_dir="$init_result_dir"; launcher_exec="$init_result"; fi
-		elif [[ "$launcher_type" == "linux" ]]; then
-			listoptions "Launcher Setup" "Change Launch Options|Change Executable"
-			if [[ "$select_ans" == "1" ]]; then launchersetup "$launcher_name" "$launcher_type"
-			elif [[ "$select_ans" == "2" ]]; then execinit "$launcher_type"; launcher_exec_dir="$init_result_dir"; launcher_exec="$init_result"; fi
-		elif [[ "$launcher_type" == "steam" ]]; then
-			listoptions "Launcher Setup" "Change Launch Options|Change Steam App"
-			if [[ "$select_ans" == "1" ]]; then
-				finder "localconfig" "path" "$HOME/.steam/steam/userdata/"; generalinit "Steam Profiles" "localconfigfiles"; launcher_lc="$init_result"
-				launchersetup "$launcher_name" "$launcher_type"; steamlauchoptions "$launcher_lc" "$launcher_steam_appid"			
-			elif [[ "$select_ans" == "2" ]]; then generalinit "Steam Apps" "steamapps"; launcher_steam_appid="$init_result" ; fi; fi
-		launchercompleteinit "$launcher_type" "$launcher_name"; fi
+	readfiles "Launchers" "$TEMPPATH/.launchers" "line" "ans"
+	launcher_name_full="$(basename "$file_line_dir")"; launcher_path="$file_line_dir"; source "$launcher_path" "read_vars"
+	launcher_name="$(echo "${launcher_name_full%%-*}")"; launcher_type="$(echo "${launcher_name_full##*-}")"
+	if [[ "$launcher_type" == "wine" || "$launcher_type" == "proton" ]]; then
+		listoptions "Launcher Setup" "Change Launch Options|Change Prefix|Change Runner|Change Executable"
+		if [[ "$select_ans" == "1" ]]; then launchersetup "$launcher_name" "$launcher_type"
+		elif [[ "$select_ans" == "2" ]]; then pfxinit "$launcher_type"; launcher_prefix="$init_result" 
+		elif [[ "$select_ans" == "3" ]]; then runnerinit "$launcher_type"; launcher_runner="$init_result"
+		elif [[ "$select_ans" == "4" ]]; then execinit "$launcher_type"; launcher_exec_dir="$init_result_dir"; launcher_exec="$init_result"; fi
+	elif [[ "$launcher_type" == "linux" ]]; then
+		listoptions "Launcher Setup" "Change Launch Options|Change Executable"
+		if [[ "$select_ans" == "1" ]]; then launchersetup "$launcher_name" "$launcher_type"
+		elif [[ "$select_ans" == "2" ]]; then execinit "$launcher_type"; launcher_exec_dir="$init_result_dir"; launcher_exec="$init_result"; fi
+	elif [[ "$launcher_type" == "steam" ]]; then
+		listoptions "Launcher Setup" "Change Launch Options|Change Steam App"
+		if [[ "$select_ans" == "1" ]]; then
+			finder "localconfig" "path" "$HOME/.steam/steam/userdata/"; generalinit "Steam Profiles" "localconfigfiles"; launcher_lc="$init_result"
+			launchersetup "$launcher_name" "$launcher_type"; steamlauchoptions "$launcher_lc" "$launcher_steam_appid"			
+		elif [[ "$select_ans" == "2" ]]; then generalinit "Steam Apps" "steamapps"; launcher_steam_appid="$init_result" ; fi; fi
+	launchercompleteinit "$launcher_type" "$launcher_name"
 }
 
 launchersetup() {
@@ -452,9 +452,9 @@ if [[ "$select_ans" == "1" ]]; then #Launchers Control
 			elif [[ "$select_ans" == "3" ]]; then launchercreator "linux"
 			elif [[ "$select_ans" == "4" ]]; then launchercreator "steam"; fi
 		elif [[ "$select_ans" == "2" ]]; then launchereditor
-		elif [[ "$select_ans" == "3" ]]; then readfiles "Launchers" "$TEMPPATH/.launchers" "line" "ans"; if [[ "$file_empty" != "1" ]]; then rm "$file_line_dir"; fi
-		elif [[ "$select_ans" == "4" ]]; then readfiles "Launchers" "$TEMPPATH/.launchers" "line" "ans"; if [[ "$file_empty" != "1" ]]; then xdg-open "$file_line_dir"; fi
-		elif [[ "$select_ans" == "5" ]]; then readfiles "Launchers" "$TEMPPATH/.launchers" "line" "ans"; if [[ "$file_empty" != "1" ]]; then "$file_line_dir"; fi; fi
+		elif [[ "$select_ans" == "3" ]]; then readfiles "Launchers" "$TEMPPATH/.launchers" "line" "ans"; rm "$file_line_dir"
+		elif [[ "$select_ans" == "4" ]]; then readfiles "Launchers" "$TEMPPATH/.launchers" "line" "ans"; xdg-open "$file_line_dir"
+		elif [[ "$select_ans" == "5" ]]; then readfiles "Launchers" "$TEMPPATH/.launchers" "line" "ans"; "$file_line_dir"; fi
 elif [[ "$select_ans" == "2" ]]; then #Wine Utilities
 	listoptions "Wine Utilities" "Prefix Commands|Winetricks|Dxvk|Vkd3d|Install MF|Install MF-Cab|Install mfplat.dll"
 	if [[ "$select_ans" == "1" ]]; then
