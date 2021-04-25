@@ -113,7 +113,8 @@ launchercreator() {
 		execinit "$1"; if [[ -z "$launcher_name" ]]; then launcher_name=$init_result_name; launcher_exec_dir="$init_result_dir"; launcher_exec="$init_result"; fi
 	else
 		generalinit "${1^} Apps" "${1}apps"; launcher_name="$init_result_name"; launcher_steam_appid="$init_result"
-		finder "localconfig" "path" "$HOME/.steam/steam/userdata/"; generalinit "Steam Profiles" "localconfigfiles"; launcher_lc="$init_result"; fi
+		if [[ -n "$launcher_steam_appid" ]]; then
+			finder "localconfig" "path" "$HOME/.steam/steam/userdata/"; generalinit "Steam Profiles" "localconfigfiles"; launcher_lc="$init_result"; fi; fi
 	inputhistory "$HISTORYPATH/.launchername" "${cyc}name${noc} of the launcher" "exit" "$launcher_name"; launcher_name="$input_ans"; launchersetup "${launcher_name}" "$1" 
 	if [[ $1 == "steam" ]]; then steamlauchoptions "$launcher_lc" "$launcher_steam_appid"; fi; launchercompleteinit "$1" "$launcher_name"
 	if [[ -f "$LAUNCHPATH/${launcher_name}-$1" ]]; then chmod +x "$LAUNCHPATH/${launcher_name}-$1"; echo -e "\nLauncher ${grc}${launcher_name}-$1${noc} successfully created in the ${grc}$LAUNCHPATH${noc} folder!"; fi
