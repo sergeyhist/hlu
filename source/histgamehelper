@@ -410,19 +410,21 @@ LOGSPATH="$HIPATH/Logs"; CONFPATH="$HIPATH/Configs"; PACKAGESPATH="$HIPATH/Packa
 if [[ ! -d "$HIPATH"  ]]; then mkdir -p "$HIPATH"; fi; if [[ ! -d "$TOOLSPATH"  ]]; then mkdir -p "$TOOLSPATH"; fi; if [[ ! -d "$HISTORYPATH" ]]; then mkdir -p "$HISTORYPATH"; fi
 if [[ ! -d "$LAUNCHPATH" ]]; then mkdir -p "$LAUNCHPATH"; fi; if [[ ! -d "$PROTONPFXPATH" ]]; then mkdir -p "$PROTONPFXPATH"; fi; if [[ ! -d "$LOGSPATH" ]]; then mkdir -p "$LOGSPATH"; fi
 if [[ ! -d "$TEMPPATH" ]]; then mkdir -p "$TEMPPATH"; else rm -rf "$TEMPPATH"; mkdir -p "$TEMPPATH"; fi; if [[ ! -d "$CONFPATH" ]]; then mkdir -p "$CONFPATH"; fi; if [[ ! -d "$PACKAGESPATH" ]]; then mkdir -p "$PACKAGESPATH"; fi; 
-trap hi_exit EXIT; Def_IFS=$IFS; IFS=$'\n'
-for D in ~/.steam/root $(egrep '^[^"]*"[0-9]+"' ~/.steam/root/steamapps/libraryfolders.vdf | cut -d\" -f4); do for F in "$D"/steamapps/appmanifest_*.acf; do 
-	steam_name=$(grep '"name"' "$F" | cut -d\" -f4); steam_appid=$(grep '"appid"' "$F" | cut -d\" -f4); steam_dir=$(grep '"installdir"' "$F" | cut -d\" -f4)
-	if [[ -d "$D/steamapps/compatdata/$steam_appid/pfx" ]]; then steam_pfx="$D/steamapps/compatdata/$steam_appid/pfx"; fi
-	if [[ "$steam_dir" == *"Proton"* ]]; then echo -e "$D/steamapps/common/$steam_dir" >> "$TEMPPATH/.protonrun"; fi
-	case $steam_name in
-	*"Proton"* | *"Runtime"* | *"Steamworks"*)
-	;;
-	*)
-	echo -e "${steam_name}\n${steam_appid}" >> "$TEMPPATH/.steamapps"
-	if [[ -n "$steam_pfx" ]]; then echo -e "$steam_name\n$steam_pfx" >> "$TEMPPATH/.steampfx"; fi
-	esac
-done; IFS=$Def_IFS; done
+trap hi_exit EXIT; Def_IFS=$IFS
+if [[ -f "$HOME/.steam/root/steamapps/libraryfolders.vdf" ]]; then
+	IFS=$'\n'
+	for D in ~/.steam/root $(egrep '^[^"]*"[0-9]+"' ~/.steam/root/steamapps/libraryfolders.vdf | cut -d\" -f4); do for F in "$D"/steamapps/appmanifest_*.acf; do 
+		steam_name=$(grep '"name"' "$F" | cut -d\" -f4); steam_appid=$(grep '"appid"' "$F" | cut -d\" -f4); steam_dir=$(grep '"installdir"' "$F" | cut -d\" -f4)
+		if [[ -d "$D/steamapps/compatdata/$steam_appid/pfx" ]]; then steam_pfx="$D/steamapps/compatdata/$steam_appid/pfx"; fi
+		if [[ "$steam_dir" == *"Proton"* ]]; then echo -e "$D/steamapps/common/$steam_dir" >> "$TEMPPATH/.protonrun"; fi
+		case $steam_name in
+		*"Proton"* | *"Runtime"* | *"Steamworks"*)
+		;;
+		*)
+		echo -e "${steam_name}\n${steam_appid}" >> "$TEMPPATH/.steamapps"
+		if [[ -n "$steam_pfx" ]]; then echo -e "$steam_name\n$steam_pfx" >> "$TEMPPATH/.steampfx"; fi
+		esac
+	done; IFS=$Def_IFS; done; fi
 echo -e "Default\n$HOME/.wine\nCreate Prefix\nAdd new prefix to the list" > "$TEMPPATH/.launcherwinepfx"; if [[ -f "$CONFPATH/addwinepfx.cfg" ]]; then while read line; do echo "$line" >>  "$TEMPPATH/.launcherwinepfx"; done < "$CONFPATH/addwinepfx.cfg"; fi
 echo -e "Default\n$HOME/.wine" > "$TEMPPATH/.winepfx"; if [[ -f "$CONFPATH/addwinepfx.cfg" ]]; then while read line; do echo "$line" >>  "$TEMPPATH/.winepfx"; done < "$CONFPATH/addwinepfx.cfg"; fi
 echo -e "/usr/bin/wine" >> "$TEMPPATH/.winerun"; if [[ -f "$CONFPATH/addwinerun.cfg" ]]; then while read line; do echo "$line" >>  "$TEMPPATH/.winerun"; done < "$CONFPATH/addwinerun.cfg"; fi
