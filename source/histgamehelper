@@ -219,14 +219,14 @@ launchercompleteinit() {
 	elif [[ "$1" == "linux" ]]; then
 		launcher_command="${launcher_command}${launcher_video}${launcher_strangle}${launcher_main}"
 		launcher_command="${launcher_command} \${launcher_exec} \${main_args}"
-	elif [[ "$1" == "steam" ]]; then launcher_command="${launcher_command} steam -applaunch \$launcher_steam_appid -silent"; fi
+	elif [[ "$1" == "steam" ]]; then launcher_command="${launcher_command} steam &> /dev/null & sleep 2s; steam -applaunch \$launcher_steam_appid -silent"; fi
 	echo -e '#!/bin/bash'"\n${launcher_vars}${launcher_settings}"'if [[ $1 != "read_vars" ]]; then cd "${launcher_exec_dir}"; eval '"\"${launcher_command}\"; fi" > "$LAUNCHPATH/$2-$1"
 }
 
 launchereditor () {
-	readfiles "Launchers" "$TEMPPATH/.launchers" "line" "ans"
+	readfiles "Launchers" "$1" "line" "ans"
 	launcher_name_full="$(basename "$file_line_dir")"; launcher_path="$file_line_dir"; source "$launcher_path" "read_vars"
-	launcher_name="$(echo "${launcher_name_full%%-*}")"; launcher_type="$(echo "${launcher_name_full##*-}")"
+	launcher_name="$(echo "${launcher_name_full%-*}")"; launcher_type="$(echo "${launcher_name_full##*-}")"
 	if [[ "$launcher_type" == "wine" || "$launcher_type" == "proton" ]]; then
 		listoptions "Launcher Setup" "Change Launch Options|Change Prefix|Change Runner|Change Executable"
 		if [[ "$select_ans" == "1" ]]; then launchersetup "$launcher_name" "$launcher_type"
@@ -448,7 +448,8 @@ MangoHud\nhttps://github.com/flightlessmango/MangoHud
 libStrangle\nhttps://gitlab.com/torkel104/libstrangle
 Media Foundation Workaround\nhttps://github.com/z0z0z/mf-install
 Media Foundation Workaround Cab Version\nhttps://github.com/z0z0z/mf-installcab" > "$TEMPPATH/.winetools"
-if [[ -n "$(ls "$LAUNCHPATH")" ]]; then ls "$LAUNCHPATH/"* | while read line; do echo "$line" >> "$TEMPPATH/.launchers"; done; fi
+if [[ -n "$(ls "$LAUNCHPATH")" ]]; then 
+	ls "$LAUNCHPATH/"* | while read line; do line_type="$(echo "${line##*-}")"; echo "$line" >> "$TEMPPATH/.${line_type}launchers"; done; fi
 listoptions "Linux Game Helper by Hist" "Launchers Manager|Wine Utilities|Tools Installer|Lists Manager"
 if [[ "$select_ans" == "1" ]]; then #Launchers Control
 	listoptions "Launchers Manager" "Create Launcher|Edit Launcher|Delete Launcher|Open Launcher in Text Editor|Run Launcher"
@@ -457,11 +458,18 @@ if [[ "$select_ans" == "1" ]]; then #Launchers Control
 			if [[ "$select_ans" == "1" ]]; then launchercreator "wine"
 			elif [[ "$select_ans" == "2" ]]; then launchercreator "proton"
 			elif [[ "$select_ans" == "3" ]]; then launchercreator "linux"
-			elif [[ "$select_ans" == "4" ]]; then launchercreator "steam"; fi
-		elif [[ "$select_ans" == "2" ]]; then launchereditor
-		elif [[ "$select_ans" == "3" ]]; then readfiles "Launchers" "$TEMPPATH/.launchers" "line" "ans"; rm "$file_line_dir"
-		elif [[ "$select_ans" == "4" ]]; then readfiles "Launchers" "$TEMPPATH/.launchers" "line" "ans"; xdg-open "$file_line_dir"
-		elif [[ "$select_ans" == "5" ]]; then readfiles "Launchers" "$TEMPPATH/.launchers" "line" "ans"; "$file_line_dir"; fi
+			elif [[ "$select_ans" == "4" ]]; then launchercreator "steam"; fi; fi
+		if [[ "$select_ans" == [2-5] ]]; then
+			launcher_option="$select_ans"
+			listoptions "Launcher Selector" "Wine App|Proton App|Linux App|Steam App"
+			if [[ "$select_ans" == "1" ]]; then launchers_list="$TEMPPATH/.winelaunchers"
+			elif [[ "$select_ans" == "2" ]]; then launchers_list="$TEMPPATH/.protonlaunchers"
+			elif [[ "$select_ans" == "3" ]]; then launchers_list="$TEMPPATH/.linuxlaunchers"
+			elif [[ "$select_ans" == "4" ]]; then launchers_list="$TEMPPATH/.steamlaunchers"; fi
+			if [[ "$launcher_option" == "2" ]]; then launchereditor "$launchers_list"
+			elif [[ "$launcher_option" == "3" ]]; then readfiles "Launchers" "$launchers_list" "line" "ans"; rm "$file_line_dir"
+			elif [[ "$launcher_option" == "4" ]]; then readfiles "Launchers" "$launchers_list" "line" "ans"; xdg-open "$file_line_dir"
+			elif [[ "$launcher_option" == "5" ]]; then readfiles "Launchers" "$launchers_list" "line" "ans"; "$file_line_dir"; fi; fi
 elif [[ "$select_ans" == "2" ]]; then #Wine Utilities
 	listoptions "Wine Utilities" "Prefix Commands|Winetricks|Dxvk|Vkd3d|Install MF|Install MF-Cab|Install mfplat.dll"
 	if [[ "$select_ans" == "1" ]]; then
