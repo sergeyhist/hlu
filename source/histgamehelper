@@ -7,7 +7,7 @@ inputhistory() {
 	flg=0; while (( flg == 0 )); do listcount=0; flg=1; if [[ ! -f "$1" ]]; then touch "$1"; fi
 	while read LINE; do let "listcount += 1"; if [[ "$LINE" = "$input_ans" ]]; then flg=0; sed -i ${listcount}d $1; break; fi
 	done < "$1"; done; echo "$input_ans" >> "$1"; history -c; else 
-		if [[ "$input_ans" == [qQйЙ] ]]; then input_ans="quit"; if [[ "$3" == "exit" ]]; then exit; fi
+		if [[ "$input_ans" == [qQйЙ] ]]; then if [[ "$3" == "exit" ]]; then exit; fi
 		elif [[ "$input_ans" == [dDвВ] ]]; then input_ans="$4"
 		else inputhistory "$1" "$2" "$3" "$4"; fi; fi
 }
@@ -41,7 +41,7 @@ readfiles() {
 			echo -e "\nChoose ${cyc}item${noc} from the ${grc}list${noc} above (${cyc}q|Q${noc} for ${grc}exit${noc}):"; read -e "ans"
 			for ((i=1;i<=line_number;i++)); do if (( i == ans )); then file_line_name=$(sed -n $((i*2-1))p $2); file_line_dir=$(sed -n $((i*2))p $2); file_line_number=$ans; fi; done
 		else file_line_name=$(sed -n $(($4*2-1))p $2); file_line_dir=$(sed -n $(($4*2))p $2); file_line_number=$4; fi; fi
-		if [[ $3 == "line" ]]; then if [[ "$4" == "ans" ]]; then echo -e "\n     ${mac}$1:${noc}\n"
+		if [[ $3 == "line" ]]; then if [[ "$4" == "ans" ]]; then echo -e "\n ${mac}$1:${noc}\n"
 			while read line; do let "listcount += 1"; file_dir=$line; echo -e " ${cyc}$listcount${noc} - ${grc}$(basename -s .$5 "$file_dir")${noc} - ${blc}$file_dir${noc}"; done < $2
 			echo -e "\nChoose ${cyc}item${noc} from the ${grc}list${noc} above (${cyc}q|Q${noc} for ${grc}exit${noc}):"; read -e "ans"
 			for ((i=1;i<=listcount;i++)); do if (( i == ans )); then file_line_dir=$(sed -n ${ans}p $2); file_line_number=$ans; fi; done
@@ -89,9 +89,9 @@ pfxcreator() {
 		if [[ -z "$pfx_runner" ]]; then runnerinit "$1" "original"; pfx_runner="$init_result"; fi
 		listoptions "Prefix Version" "32bit|64bit"
 		if [[ "$select_ans" == "1" ]]; then
-			WINEARCH=win32 WINEPREFIX="$pfx_path" "$pfx_runner" wineboot -u &>"$LOGSPATH/mainoutput.log" &
+			WINEARCH=win32 WINEPREFIX="$pfx_path" "$pfx_runner" wineboot -u;
 		elif [[ "$select_ans" == "2" ]]; then
-			WINEPREFIX="$pfx_path" "$pfx_runner" wineboot -u &>"$LOGSPATH/mainoutput.log" & fi; fi
+			WINEPREFIX="$pfx_path" "$pfx_runner" wineboot -u; fi; fi
 }
 
 steamlauchoptions() {
@@ -126,13 +126,13 @@ pfxcommands() {
 	elif [[ "$command_func" == "Select this for input custom prefix command" ]]; then
 		runnerinit "$1" "original"; command_runner="$init_result"
 		inputhistory "$HISTORYPATH/.prefixcommand" "${grc}custom prefix command${noc} (Example: ${cyc}notepad.exe${noc})" "exit"; command_func="$input_ans"
-		WINEPREFIX="$command_prefix" "$command_runner" $command_func &>"$LOGSPATH/mainoutput.log" & echo -e "\n${cyc}Output${noc} in ${grc}$LOGSPATH/mainoutput.log${noc}"
-	else runnerinit "$1" "original"; command_runner="$init_result"; WINEPREFIX="$command_prefix" "$command_runner" $command_func &>"$LOGSPATH/mainoutput.log" & echo -e "\n${cyc}Output${noc} in ${grc}$LOGSPATH/mainoutput.log${noc}"; fi
+		WINEPREFIX="$command_prefix" "$command_runner" $command_func; echo -e "\n${cyc}Output${noc} in ${grc}$LOGSPATH/mainoutput.log${noc}"
+	else runnerinit "$1" "original"; command_runner="$init_result"; WINEPREFIX="$command_prefix" "$command_runner" $command_func; fi
 }
 
 toolsupdater() {
 	cd  $TOOLSPATH; name=$(basename -s .git "$1")
-	listoptions "Options" "Install|Update|Uninstall"
+	listoptions "Options" "Install ${blc} - Check \"${cyc}$1${blc}\" for additional information or necessary dependencies${noc}|Update|Uninstall"
 	if [[ "$select_ans" == "1" ]]; then if [[ -d "$name" ]]; then rm -rf "$name"; fi; git clone $2 "$1"; cd "$name"; tup_build="1"
 	elif [[ "$select_ans" == "2" ]]; then cd "$name"; git fetch; git remote update && git status -uno | grep -q 'Your branch is behind' && tup_update_check="1"
 		if [[ "$tup_update_check" == "1" ]]; then git reset --hard; git pull; tup_build="1"; else echo -e "\nAlready ${grc}up to date${noc}!"; fi; fi
@@ -177,10 +177,6 @@ finder() {
 	esac; fi
 }
 
-hi_exit() {
-	echo -e "\n${rec}Exit${noc}\n"; rm -rf "$TEMPPATH"
-}
-
 listoptions() {
 	IFS="|"; lo_count=0; sa_count=0; echo -e "\n ${mac}$1:${noc}\n"
 	for item in $4; do
@@ -190,7 +186,7 @@ listoptions() {
 		elif [[ -n "$4" ]]; then status_check=" - ${rec}OFF${noc}"; else status_check=""; fi; if [[ "$option" == "Reset Options" ]]; then status_check=""; fi
 		list_array[$lo_count]="$option"; echo -e " ${cyc}$((lo_count+=1))${noc} - ${grc}$option${noc}${status_check}"; done
 	echo -e "\nChoose ${cyc}Option${noc} from the list above (${cyc}q|Q${noc} for ${grc}exit${noc}):"; read -e "select_ans"; IFS="$Def_IFS"; let "lo_count+=1"
-	if [[ "$select_ans" == [qQйЙ] ]]; then select_ans="quit"
+	if [[ "$select_ans" == [qQйЙ] ]]; then if [[ -z "$3" ]]; then exit; fi
 	elif [[ "$select_ans" -ge "$lo_count" || "$select_ans" -le "0" ]]; then listoptions "$1" "$2" "$3" "$4" "$5"
 	else if [[ -n "$3" ]]; then ${3}selector "${list_array[select_ans-1]}" "$5"; listoptions "$1" "$2" "$3" "$4" "$5"; fi; fi; 
 }
@@ -224,7 +220,7 @@ launchercompleteinit() {
 		launcher_command="${launcher_command}${launcher_video}${launcher_strangle}${launcher_main}"
 		launcher_command="${launcher_command} \${launcher_exec} \${main_args}"
 	elif [[ "$1" == "steam" ]]; then launcher_command="${launcher_command} steam -applaunch \$launcher_steam_appid -silent"; fi
-	echo -e '#!/bin/bash'"\n${launcher_vars}${launcher_settings}"'if [[ $1 != "read_vars" ]]; then cd "${launcher_exec_dir}"; eval '"\"${launcher_command}\" &>\"$LOGSPATH/$2-$1.log\" & fi" > "$LAUNCHPATH/$2-$1"
+	echo -e '#!/bin/bash'"\n${launcher_vars}${launcher_settings}"'if [[ $1 != "read_vars" ]]; then cd "${launcher_exec_dir}"; eval '"\"${launcher_command}\"; fi" > "$LAUNCHPATH/$2-$1"
 }
 
 launchereditor () {
@@ -291,13 +287,13 @@ settingsselector() {
 mainselector() {
 	if [[ "$1" == "Add Additional Arguments" ]]; then
 		inputhistory "$HISTORYPATH/.argshistory" "${cyc}Additional Arguments${noc}"
-		if [[ "$input_ans" != "quit" ]]; then main_args="$input_ans"; fi
+		if [[ "$input_ans" != [qQйЙ] ]]; then main_args="$input_ans"; fi
 	elif [[ "$1" == "Add Custom Options" ]]; then
 		inputhistory "$HISTORYPATH/.options" "${cyc}Custom Options${noc}"
-		if [[ "$input_ans" != "quit" ]]; then main_customoptions="$input_ans "; fi
+		if [[ "$input_ans" != [qQйЙ] ]]; then main_customoptions="$input_ans "; fi
 	elif [[ "$1" == "Enable Pulse Audio Latency" ]]; then
 		inputhistory "$HISTORYPATH/.pulsehistory" "${cyc}value(ms)${noc} of ${grc}Pulse Audio Latency${noc}" "" "60"
-		if [[ "$input_ans" != "quit" ]]; then main_pulse="PULSE_LATENCY_MSEC=$input_ans "; fi
+		if [[ "$input_ans" != [qQйЙ] ]]; then main_pulse="PULSE_LATENCY_MSEC=$input_ans "; fi
 	elif [[ "$1" == "Enable Gamemode" ]]; then main_gamemode="gamemoderun "
 	elif [[ "$1" == "Enable MangoHud" ]]; then main_mangohud="mangohud "
 	elif [[ "$1" == "Enable vkBasalt" ]]; then main_vkbasalt="ENABLE_VKBASALT=1 "; fi
@@ -309,21 +305,21 @@ strangleselector() {
 	if [[ "$1" == "Enable libstrangle" ]]; then strangle_status="strangle "
 	elif [[ "$1" == "Max Framerate" ]]; then
 		inputhistory "$HISTORYPATH/.framerate" "maximum ${cyc}framerate${noc}. ${cyc}0${noc} to disable. Any ${cyc}positive value${noc} to enable" "" "60"
-		if [[ "$input_ans" != "quit" ]]; then strangle_fps="STRANGLE_FPS=${input_ans} "; fi
+		if [[ "$input_ans" != [qQйЙ] ]]; then strangle_fps="STRANGLE_FPS=${input_ans} "; fi
 	elif [[ "$1" == "Max Framerate for Battery Power" ]]; then
 		inputhistory "$HISTORYPATH/.frameratebattery" "maximum ${cyc}framerate${noc} when running on battery power. ${cyc}0${noc} to disable. Any ${cyc}positive value${noc} to enable" "" "60"
-		if [[ "$input_ans" != "quit" ]]; then strangle_fps_battery="STRANGLE_FPS_BATTERY=${input_ans} "; fi
+		if [[ "$input_ans" != [qQйЙ] ]]; then strangle_fps_battery="STRANGLE_FPS_BATTERY=${input_ans} "; fi
 	elif [[ "$1" == "Vsync" ]]; then
 		echo -e "\n	${mac}OpenGL${noc}\n ${cyc}-1${noc} - ${grc}Adaptive sync (unconfirmed if this actually works)${noc}\n ${cyc}0${noc} - ${grc}Force off${noc}\n ${cyc}1${noc} - ${grc}Force on${noc}\n ${cyc}n${noc} - ${grc}Sync to refresh rate / n${noc}\n	${mac}Vulkan${noc}\n ${cyc}0${noc} - ${grc}Force off${noc}\n ${cyc}1${noc} - ${grc}Mailbox mode. Vsync with uncapped framerate${noc}\n ${cyc}2${noc} - ${grc}Traditional vsync with framerate capped to refresh rate${noc}\n ${cyc}3${noc} - ${grc}Adaptive vsync with tearing at low framerates${noc}"
 		inputhistory "$HISTORYPATH/.vsyncstrangle" "${cyc}value${noc} from the list above" "" "2"
-		if [[ "$input_ans" != "quit" ]]; then strangle_vsync="STRANGLE_VSYNC=${input_ans} "; fi
+		if [[ "$input_ans" != [qQйЙ] ]]; then strangle_vsync="STRANGLE_VSYNC=${input_ans} "; fi
 	elif [[ "$1" == "Run glFinish after every frame (OpenGL only)" ]]; then strangle_glfinish="STRANGLE_GLFINISH=1 "
 	elif [[ "$1" == "Mip-map LoD Bias" ]]; then
 		inputhistory "$HISTORYPATH/.vsyncstrangle" "${cyc}value${noc} between ${cyc}-16${noc} and ${cyc}16${noc}. Negative ${cyc}values${noc} will increase texture sharpness (and aliasing). Positive ${cyc}values${noc} will increase texture blurriness"
-		if [[ "$input_ans" != "quit" ]]; then if (( ans >= -16 && ans <= 16 )); then strangle_picmip="STRANGLE_PICMIP=${input_ans} "; fi; fi
+		if [[ "$input_ans" != [qQйЙ] ]]; then if (( ans >= -16 && ans <= 16 )); then strangle_picmip="STRANGLE_PICMIP=${input_ans} "; fi; fi
 	elif [[ "$1" == "Anisotropic Filtering level (Vulkan Only)" ]]; then
 		inputhistory "$HISTORYPATH/.vsyncstrangle" "${cyc}value${noc} between ${cyc}1${noc} and ${cyc}16${noc}. Improves sharpness of textures viewed at an angle"
-		if [[ "$input_ans" != "quit" ]]; then if (( ans >= 1 && ans <= 16 )); then strangle_af="STRANGLE_AF=${input_ans} "; fi; fi
+		if [[ "$input_ans" != [qQйЙ] ]]; then if (( ans >= 1 && ans <= 16 )); then strangle_af="STRANGLE_AF=${input_ans} "; fi; fi
 	elif [[ "$1" == "Force Trilinear Filtering (Vulkan only)" ]]; then strangle_trilinear="STRANGLE_TRILINEAR=1 "
 	elif [[ "$1" == "Disables Linear Texture Filtering (Vulkan only)" ]]; then strangle_retro="STRANGLE_RETRO=1 "
 	elif [[ "$1" == "Disables the Hooking of Dlsym" ]]; then strangle_nodlsym="STRANGLE_NODLSYM=1 "
@@ -353,7 +349,7 @@ dxvkhudselector() {
 	elif [[ "$1" == "Shows the current number of sampler pairs used [D3D9 Only]" ]]; then dxvkhud_samplers="samplers,"; dxvkhud_full=""
 	elif [[ "$1" == "Scales the HUD" ]]; then
 		inputhistory "$HISTORYPATH/.scaledxvkhud" "${cyc}scale factor${noc} (Example: ${cyc}1.5${noc})"
-		if [[ "$input_ans" != "quit" ]]; then dxvkhud_scale="scale=$input_ans,"; dxvkhud_full=""; fi; fi
+		if [[ "$input_ans" != [qQйЙ] ]]; then dxvkhud_scale="scale=$input_ans,"; dxvkhud_full=""; fi; fi
 	if [[ "$1" == "Reset Options" ]]; then
 		dxvkhud_full=""; dxvkhud_devinfo=""; dxvkhud_fps=""; dxvkhud_frametimes=""; dxvkhud_submission=""; dxvkhud_drawcall=""; dxvkhud_pipelines=""; dxvkhud_memory=""; dxvkhud_gpuload=""
 		dxvkhud_version=""; dxvkhud_api=""; dxvkhud_compiler=""; dxvkhud_samplers=""; dxvkhud_scale=""; dxvkhud_status=""; fi
@@ -382,9 +378,9 @@ wineselector() {
 	elif [[ "$1" == "Enable FSYNC" ]]; then wine_fsync="WINEFSYNC=1 "
 	elif [[ "$1" == "Enable Virtual Desktop" ]]; then
 		inputhistory "$HISTORYPATH/.widthhistory" "${cycc}width${noc} of ${grc}Virtual Desktop${noc}" "" "1920"
-		if [[ "$input_ans" != "quit" ]]; then wine_vd="explorer /desktop='$2',${input_ans}x"; fi
+		if [[ "$input_ans" != [qQйЙ] ]]; then wine_vd="explorer /desktop='$2',${input_ans}x"; fi
 		inputhistory "$HISTORYPATH/.heighthistory" "${cycc}height${noc} of ${grc}Virtual Desktop${noc}" "" "1080"
-		if [[ "$input_ans" != "quit" ]]; then wine_vd="${wine_vd}${input_ans}"; fi; fi
+		if [[ "$input_ans" != [qQйЙ] ]]; then wine_vd="${wine_vd}${input_ans}"; fi; fi
 	if [[ "$1" == "Reset Options" ]]; then wine_esync=""; wine_fsync=""; wine_vd=""; fi
 }
 
@@ -405,14 +401,8 @@ protonselector() {
 		proton_esync=""; proton_fsync=""; proton_futex2=""; fi
 }
 
-noc=$(tput sgr0); rec=$(tput setaf 1); grc=$(tput setaf 2); blc=$(tput setaf 4); cyc=$(tput setaf 6); mac=$(tput setaf 5); video_driver=$(lspci | grep -i --color 'vga\|3d\|2d')
-HIPATH="$HOME/Hist"; TOOLSPATH="$HIPATH/Tools"; HISTORYPATH="$HIPATH/.historyfiles"; TEMPPATH="$HIPATH/.temp"; LAUNCHPATH="$HIPATH/Launchers"; PROTONPFXPATH="$HIPATH/Proton"
-LOGSPATH="$HIPATH/Logs"; CONFPATH="$HIPATH/Configs"; PACKAGESPATH="$HIPATH/Packages"
-if [[ ! -d "$HIPATH"  ]]; then mkdir -p "$HIPATH"; fi; if [[ ! -d "$TOOLSPATH"  ]]; then mkdir -p "$TOOLSPATH"; fi; if [[ ! -d "$HISTORYPATH" ]]; then mkdir -p "$HISTORYPATH"; fi
-if [[ ! -d "$LAUNCHPATH" ]]; then mkdir -p "$LAUNCHPATH"; fi; if [[ ! -d "$PROTONPFXPATH" ]]; then mkdir -p "$PROTONPFXPATH"; fi; if [[ ! -d "$LOGSPATH" ]]; then mkdir -p "$LOGSPATH"; fi
-if [[ ! -d "$TEMPPATH" ]]; then mkdir -p "$TEMPPATH"; else rm -rf "$TEMPPATH"; mkdir -p "$TEMPPATH"; fi; if [[ ! -d "$CONFPATH" ]]; then mkdir -p "$CONFPATH"; fi; if [[ ! -d "$PACKAGESPATH" ]]; then mkdir -p "$PACKAGESPATH"; fi; 
-trap hi_exit EXIT; Def_IFS=$IFS
-if [[ -f "$HOME/.steam/root/steamapps/libraryfolders.vdf" ]]; then
+steamfinder() {
+	if [[ -f "$HOME/.steam/root/steamapps/libraryfolders.vdf" ]]; then
 	IFS=$'\n'
 	for D in ~/.steam/root $(egrep '^[^"]*"[0-9]+"' ~/.steam/root/steamapps/libraryfolders.vdf | cut -d\" -f4); do for F in "$D"/steamapps/appmanifest_*.acf; do 
 		steam_name=$(grep '"name"' "$F" | cut -d\" -f4); steam_appid=$(grep '"appid"' "$F" | cut -d\" -f4); steam_dir=$(grep '"installdir"' "$F" | cut -d\" -f4)
@@ -426,6 +416,23 @@ if [[ -f "$HOME/.steam/root/steamapps/libraryfolders.vdf" ]]; then
 		if [[ -n "$steam_pfx" ]]; then echo -e "$steam_name\n$steam_pfx" >> "$TEMPPATH/.steampfx"; fi
 		esac
 	done; IFS=$Def_IFS; done; fi
+}
+
+hi_exit() {
+	echo -e "\n${rec}Exit${noc}\n"; rm -rf "$TEMPPATH"
+}
+
+trap hi_exit EXIT
+HIPATH="$HOME/Hist"; if [[ ! -d "$HIPATH"  ]]; then mkdir -p "$HIPATH"; fi 
+TOOLSPATH="$HIPATH/Tools"; if [[ ! -d "$TOOLSPATH"  ]]; then mkdir -p "$TOOLSPATH"; fi
+HISTORYPATH="$HIPATH/.historyfiles"; if [[ ! -d "$HISTORYPATH" ]]; then mkdir -p "$HISTORYPATH"; fi
+LAUNCHPATH="$HIPATH/Launchers"; if [[ ! -d "$LAUNCHPATH" ]]; then mkdir -p "$LAUNCHPATH"; fi
+PROTONPFXPATH="$HIPATH/Proton"; if [[ ! -d "$PROTONPFXPATH" ]]; then mkdir -p "$PROTONPFXPATH"; fi
+TEMPPATH="$HIPATH/.temp"; if [[ ! -d "$TEMPPATH" ]]; then mkdir -p "$TEMPPATH"; else rm -rf "$TEMPPATH"; mkdir -p "$TEMPPATH"; fi
+CONFPATH="$HIPATH/Configs"; if [[ ! -d "$CONFPATH" ]]; then mkdir -p "$CONFPATH"; fi
+PACKAGESPATH="$HIPATH/Packages"; if [[ ! -d "$PACKAGESPATH" ]]; then mkdir -p "$PACKAGESPATH"; fi 
+noc=$(tput sgr0); rec=$(tput setaf 1); grc=$(tput setaf 2); blc=$(tput setaf 4); cyc=$(tput setaf 6); mac=$(tput setaf 5)
+Def_IFS=$IFS; video_driver=$(lspci | grep -i --color 'vga\|3d\|2d'); steamfinder
 echo -e "Default\n$HOME/.wine\nCreate Prefix\nAdd new prefix to the list" > "$TEMPPATH/.launcherwinepfx"; if [[ -f "$CONFPATH/addwinepfx.cfg" ]]; then while read line; do echo "$line" >>  "$TEMPPATH/.launcherwinepfx"; done < "$CONFPATH/addwinepfx.cfg"; fi
 echo -e "Default\n$HOME/.wine" > "$TEMPPATH/.winepfx"; if [[ -f "$CONFPATH/addwinepfx.cfg" ]]; then while read line; do echo "$line" >>  "$TEMPPATH/.winepfx"; done < "$CONFPATH/addwinepfx.cfg"; fi
 echo -e "/usr/bin/wine" >> "$TEMPPATH/.winerun"; if [[ -f "$CONFPATH/addwinerun.cfg" ]]; then while read line; do echo "$line" >>  "$TEMPPATH/.winerun"; done < "$CONFPATH/addwinerun.cfg"; fi
@@ -433,14 +440,14 @@ echo -e "Default\n$PROTONPFXPATH\nCreate New Prefix\nAdd new prefix to the list"
 echo -e "Default\n$PROTONPFXPATH" > "$TEMPPATH/.protonpfx"; if [[ -f "$CONFPATH/addprotonpfx.cfg" ]]; then while read line; do echo "$line" >>  "$TEMPPATH/.protonpfx"; done < "$CONFPATH/addprotonpfx.cfg"; fi
 echo -e "/usr/share/steam/compatibilitytools.d/" >> "$TEMPPATH/.protonrun"; if [[ -f "$CONFPATH/addprotonrun.cfg" ]]; then while read line; do echo "$line" >>  "$TEMPPATH/.protonrun"; done < "$CONFPATH/addprotonrun.cfg"; fi
 echo -e "Wine Config\nwinecfg\nControl Panel\ncontrol\nTask Manager\ntaskmgr\nExplorer\nexplorer\nInstall|Uninstall Apps\nuninstaller\nRegistry Editor\nregedit\nKill Running Apps\nwineserver -k\nForce Kill Running Apps\nwineserver -k9\nCustom command\nSelect this for input custom prefix command" >> "$TEMPPATH/.functions"
-echo -e "Dxvk\nhttps://github.com/doitsujin/dxvk.git
-Vkd3d\nhttps://github.com/HansKristian-Work/vkd3d-proton.git
-VkBasalt\nhttps://github.com/DadSchoorse/vkBasalt.git
-Gamemode\nhttps://github.com/FeralInteractive/gamemode.git
-MangoHud\nhttps://github.com/flightlessmango/MangoHud.git
-libStrangle\nhttps://gitlab.com/torkel104/libstrangle.git
-Media Foundation Workaround\nhttps://github.com/z0z0z/mf-install.git
-Media Foundation Workaround Cab Version\nhttps://github.com/z0z0z/mf-installcab.git" > "$TEMPPATH/.winetools"
+echo -e "Dxvk\nhttps://github.com/doitsujin/dxvk
+Vkd3d\nhttps://github.com/HansKristian-Work/vkd3d-proton
+VkBasalt\nhttps://github.com/DadSchoorse/vkBasalt
+Gamemode\nhttps://github.com/FeralInteractive/gamemode
+MangoHud\nhttps://github.com/flightlessmango/MangoHud
+libStrangle\nhttps://gitlab.com/torkel104/libstrangle
+Media Foundation Workaround\nhttps://github.com/z0z0z/mf-install
+Media Foundation Workaround Cab Version\nhttps://github.com/z0z0z/mf-installcab" > "$TEMPPATH/.winetools"
 if [[ -n "$(ls "$LAUNCHPATH")" ]]; then ls "$LAUNCHPATH/"* | while read line; do echo "$line" >> "$TEMPPATH/.launchers"; done; fi
 listoptions "Linux Game Helper by Hist" "Launchers Manager|Wine Utilities|Tools Installer|Lists Manager"
 if [[ "$select_ans" == "1" ]]; then #Launchers Control
@@ -468,13 +475,12 @@ elif [[ "$select_ans" == "2" ]]; then #Wine Utilities
 		runnerinit "$selected_option" "original"; wt_runner="$init_result"; pfxinit "$selected_option" "original"; wt_prefix="$init_result"
 		if [[ -n "$wt_prefix" ]]; then inputhistory "$HISTORYPATH/.winetricks" "${cyc}winetricks arguments${noc}" "exit" "gui"
 			if [[ "$input_ans" == "gui" ]]; then 
-				WINEPREFIX="$wt_prefix" WINE="$wt_runner" winetricks &>"$LOGSPATH/mainoutput.log" & echo -e "\n${cyc}Output${noc} in ${grc}$LOGSPATH/mainoutput.log${noc}"; else WINEPREFIX="$wt_prefix" WINE="$wt_runner" winetricks $input_ans &>"$LOGSPATH/mainoutput.log" & echo -e "\n${cyc}Output${noc} in ${grc}$LOGSPATH/mainoutput.log${noc}"; fi; fi
+				WINEPREFIX="$wt_prefix" WINE="$wt_runner" winetricks; else WINEPREFIX="$wt_prefix" WINE="$wt_runner" winetricks $input_ans; fi; fi
 	elif [[ "$select_ans" == "3" ]]; then
 		if [[ -d "$TOOLSPATH/dxvk" ]]; then
 			listoptions "Options List" "Install|Uninstall"; 
 			if [[ "$select_ans" == "1" ]]; then update_option="install"
-			elif [[ "$select_ans" == "2" ]]; then update_option="uninstall"
-			elif [[ "$select_ans" == "quit" ]]; then exit; fi
+			elif [[ "$select_ans" == "2" ]]; then update_option="uninstall"; fi
 			pfxinit "wine"; update_prefix="$init_result"
 			WINEPREFIX="$update_prefix" "$TOOLSPATH/dxvk/dlls/dxvk-master/setup_dxvk.sh" $update_option
 		else echo -e "\nInstall ${grc}Dxvk${noc} from ${grc}Tools Installer${noc} menu!"; fi
@@ -482,8 +488,7 @@ elif [[ "$select_ans" == "2" ]]; then #Wine Utilities
 		if [[ -d "$TOOLSPATH/vkd3d-proton" ]]; then
 			listoptions "Options List" "Install|Uninstall"; 
 			if [[ "$select_ans" == "1" ]]; then update_option="install"
-			elif [[ "$select_ans" == "2" ]]; then update_option="uninstall"
-			elif [[ "$select_ans" == "quit" ]]; then exit; fi
+			elif [[ "$select_ans" == "2" ]]; then update_option="uninstall"; fi
 			pfxinit "wine"; update_prefix="$init_result"
 			if [[ ! -f "$update_prefix/drive_c/windows/system32/d3d12.dll" ]]; then touch "$update_prefix/drive_c/windows/system32/d3d12.dll"
 			elif [[ ! -f "$update_prefix/drive_c/windows/syswow64/d3d12.dll" ]]; then touch "$update_prefix/drive_c/windows/syswow64/d3d12.dll"; fi
@@ -494,8 +499,7 @@ elif [[ "$select_ans" == "2" ]]; then #Wine Utilities
 			listoptions "Options List" "Wine|Proton|Steam"
 			if [[ "$select_ans" == "1" ]]; then pfxinit "wine" 
 			elif [[ "$select_ans" == "2" ]]; then pfxinit "proton" "original"
-			elif [[ "$select_ans" == "3" ]]; then pfxinit "steam" "original"
-			elif [[ "$select_ans" == "quit" ]]; then exit; fi; update_prefix="$init_result"
+			elif [[ "$select_ans" == "3" ]]; then pfxinit "steam" "original"; fi; update_prefix="$init_result"
 			WINEPREFIX="$update_prefix" "$TOOLSPATH/mf-install/mf-install.sh"
 		else echo -e "\nInstall ${grc}MF${noc} from ${grc}Tools Installer${noc} menu!"; fi
 	elif [[ "$select_ans" == "6" ]]; then
@@ -503,8 +507,7 @@ elif [[ "$select_ans" == "2" ]]; then #Wine Utilities
 			listoptions "Options List" "Wine|Proton|Steam"
 			if [[ "$select_ans" == "1" ]]; then pfxinit "wine" 
 			elif [[ "$select_ans" == "2" ]]; then pfxinit "proton" "original"
-			elif [[ "$select_ans" == "3" ]]; then pfxinit "steam" "original"
-			elif [[ "$select_ans" == "quit" ]]; then exit; fi; update_prefix="$init_result"
+			elif [[ "$select_ans" == "3" ]]; then pfxinit "steam" "original"; fi; update_prefix="$init_result"
 			WINEPREFIX="$update_prefix" "$TOOLSPATH/mf-installcab/install-mf-64.sh"
 		else echo -e "\nInstall ${grc}MF-Cab${noc} from ${grc}Tools Installer${noc} menu!"; fi
 	elif [[ "$select_ans" == "7" ]]; then
@@ -527,7 +530,7 @@ elif [[ "$select_ans" == "4" ]]; then #List Manager
 	elif [[ "$select_ans" == "$((menu_count+=1))" ]]; then deletelines "Proton Runners" "$CONFPATH/addprotonrun.cfg" "line"
 	elif [[ "$select_ans" == "$((menu_count+=1))" ]]; then deletelines "Steam Prefixes" "$TEMPPATH/.steampfx" "lines" "delete" "steam"
 	elif [[ "$select_ans" == "$((menu_count+=1))" ]]; then
-		rm -rf "$HOME/.wine"; mkdir "$HOME/.wine"; runnerinit "wine"; pfx_runner="$init_result"; WINEPREFIX="$HOME/.wine" "$pfx_runner" wineboot -u &>"$LOGSPATH/mainoutput.log"
+		rm -rf "$HOME/.wine"; mkdir "$HOME/.wine"; runnerinit "wine"; pfx_runner="$init_result"; WINEPREFIX="$HOME/.wine" "$pfx_runner" wineboot -u
 	elif [[ "$select_ans" == "$((menu_count+=1))" ]]; then
 		rm -rf "$PROTONPFXPATH"; mkdir "$PROTONPFXPATH"; runnerinit "proton" "original"; pfx_runner="$init_result"
-		WINEPREFIX="$PROTONPFXPATH/pfx" "$pfx_runner" wineboot -u &>"$LOGSPATH/mainoutput.log" & fi; fi
+		WINEPREFIX="$PROTONPFXPATH/pfx" "$pfx_runner" wineboot -u; fi; fi
