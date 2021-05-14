@@ -450,7 +450,8 @@ Media Foundation Workaround\nhttps://github.com/z0z0z/mf-install
 Media Foundation Workaround Cab Version\nhttps://github.com/z0z0z/mf-installcab" > "$TEMPPATH/.winetools"
 if [[ -n $(ls "$LAUNCHPATH") ]]; then
 	finder "linux" "path" "$LAUNCHPATH"
-	while read line; do line_type="$(echo "${line##*-}")"; echo "$line" >> "$TEMPPATH/.${line_type}launchers"; done < "$TEMPPATH/.linuxfiles"; fi
+	while read line; do line_type="$(echo "${line##*-}")"; echo "$line" >> "$TEMPPATH/.${line_type}launchers"; done < "$TEMPPATH/.linuxfiles"
+	rm "$TEMPPATH/.linuxfiles"; fi
 listoptions "Linux Game Helper by Hist" "Launchers Manager|Wine Utilities|Tools Installer|Lists Manager"
 if [[ "$select_ans" == "1" ]]; then #Launchers Control
 	listoptions "Launchers Manager" "Create Launcher|Edit Launcher|Delete Launcher|Open Launcher in Text Editor|Run Launcher"
