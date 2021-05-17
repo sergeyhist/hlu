@@ -219,8 +219,8 @@ launchercompleteinit() {
 	elif [[ "$1" == "linux" ]]; then
 		launcher_command="${launcher_command}${launcher_video}${launcher_strangle}${launcher_main}"
 		launcher_command="${launcher_command} \${launcher_exec} \${main_args}"
-	elif [[ "$1" == "steam" ]]; then launcher_command="${launcher_command} steam -silent &> /dev/null & sleep 2s; steam steam://rungameid/\$launcher_steam_appid"; fi
-	echo -e '#!/bin/bash'"\n${launcher_vars}${launcher_settings}"'if [[ $1 != "read_vars" ]]; then cd "${launcher_exec_dir}"; eval '"\"${launcher_command}\"; fi" > "$LAUNCHPATH/$2-$1"
+	elif [[ "$1" == "steam" ]]; then launcher_command="steam steam://open/games &> /dev/null & sleep 2s; steam steam://rungameid/\$launcher_steam_appid"; fi
+	echo -e '#!/bin/bash'"\n${launcher_vars}${launcher_settings}"'if [[ $1 != "read_vars" ]]; then cd "${launcher_exec_dir}"; eval'" \"${launcher_command}\"; fi" > "$LAUNCHPATH/$2-$1"
 }
 
 launchereditor () {
