@@ -95,28 +95,28 @@ pfxcreator() {
 }
 
 steamlauchoptions() {
-	if [[ "$video_driver" == *"NVIDIA"* ]]; then sl_video="${nvidia_to}${nvidia_osd}"
-	elif [[ "$video_driver" == *"AMD"* ]]; then sl_video="${amd_aco}${amd_to}"; fi
-	sl_vars="${proton_wined3d}${proton_large_address}${proton_old_gl}${proton_seccomp}${proton_d3d12}${proton_d3d11}${proton_d3d10}${proton_d3d9}${proton_esync}${proton_fsync}${proton_futex2}${sl_video}${dxvk_async}${dxvk_cache}${dxvkhud_status}${dxvkhud_full}${dxvkhud_devinfo}${dxvkhud_fps}${dxvkhud_frametimes}${dxvkhud_submission}${dxvkhud_drawcall}${dxvkhud_pipelines}${dxvkhud_memory}${dxvkhud_gpuload}${dxvkhud_version}${dxvkhud_api}${dxvkhud_compiler}${dxvkhud_samplers}${dxvkhud_scale}${strangle_status}${strangle_fps}${strangle_fps_battery}${strangle_vsync}${strangle_glfinish}${strangle_picmip}${strangle_af}${strangle_trilinear}${strangle_retro}${strangle_nodlsym}${strangle_vkonly}${strangle_enable_vklayer}${strangle_disable_vklayer}${main_pulse}${main_gamemode}${main_mangohud}${main_vkbasalt}${main_customoptions}"
-	line_number=0; pkill steam; sleep 3s
-	while read line; do 
-		let "line_number+=1"
-		if [[ $line == *'"Software"'* ]]; then flag=1; fi 
-		if [[ $flag == 1 && $line == *"Apps"* ]]; then flag=0
-			sed -i "$((line_number+2))i\ \t\t\t\t\t\"$2\"\n\t\t\t\t\t{\n\t\t\t\t\t\t\"LaunchOptions\" \t\"${sl_vars}%command% ${main_args}\"\n\t\t\t\t\t}" $1; fi;  done < "$1" 	
+	generalinit "Steam Games" "steamapps"; launcher_name="$init_result_name"; launcher_steam_appid="$init_result"
+	if [[ -n "$launcher_steam_appid" ]]; then
+		finder "localconfig" "path" "$HOME/.steam/steam/userdata/"; generalinit "Steam Profiles" "localconfigfiles"; launcher_lc="$init_result"
+		launchersetup "$launcher_name" "steam"
+		if [[ "$video_driver" == *"NVIDIA"* ]]; then sl_video="${nvidia_to}${nvidia_osd}"
+		elif [[ "$video_driver" == *"AMD"* ]]; then sl_video="${amd_aco}${amd_to}"; fi
+		sl_vars="${proton_wined3d}${proton_large_address}${proton_old_gl}${proton_seccomp}${proton_d3d12}${proton_d3d11}${proton_d3d10}${proton_d3d9}${proton_esync}${proton_fsync}${proton_futex2}${sl_video}${dxvk_async}${dxvk_cache}${dxvkhud_status}${dxvkhud_full}${dxvkhud_devinfo}${dxvkhud_fps}${dxvkhud_frametimes}${dxvkhud_submission}${dxvkhud_drawcall}${dxvkhud_pipelines}${dxvkhud_memory}${dxvkhud_gpuload}${dxvkhud_version}${dxvkhud_api}${dxvkhud_compiler}${dxvkhud_samplers}${dxvkhud_scale}${strangle_status}${strangle_fps}${strangle_fps_battery}${strangle_vsync}${strangle_glfinish}${strangle_picmip}${strangle_af}${strangle_trilinear}${strangle_retro}${strangle_nodlsym}${strangle_vkonly}${strangle_enable_vklayer}${strangle_disable_vklayer}${main_pulse}${main_gamemode}${main_mangohud}${main_vkbasalt}${main_customoptions}"
+		line_number=0; pkill steam; sleep 3s
+		while read line; do 
+			let "line_number+=1"
+			if [[ $line == *'"Software"'* ]]; then flag=1; fi 
+			if [[ $flag == 1 && $line == *"Apps"* ]]; then flag=0
+				sed -i "$((line_number+2))i\ \t\t\t\t\t\"$launcher_steam_appid\"\n\t\t\t\t\t{\n\t\t\t\t\t\t\"LaunchOptions\" \t\"${sl_vars}%command% ${main_args}\"\n\t\t\t\t\t}" $launcher_lc; fi
+				done < "$launcher_lc"; fi 	
 }
 
 launchercreator() {
-	if [[ $1 != "steam" ]]; then
-		if [[ $1 == "proton" || $1 == "wine" ]]; then runnerinit "$1"; launcher_runner="$init_result"; pfxinit "$1" "" "launcher"; launcher_prefix="$init_result"
-			if [[ $launcher_prefix == "Add new prefix to the list" ]]; then pfxcreator "$1" "$launcher_runner"; launcher_prefix="$pfx_path"; launcher_name=$pfx_name; fi; fi
-		execinit "$1"; if [[ -z "$launcher_name" ]]; then launcher_name=$init_result_name; launcher_exec_dir="$init_result_dir"; launcher_exec="$init_result"; fi
-	else
-		generalinit "${1^} Apps" "${1}apps"; launcher_name="$init_result_name"; launcher_steam_appid="$init_result"
-		if [[ -n "$launcher_steam_appid" ]]; then
-			finder "localconfig" "path" "$HOME/.steam/steam/userdata/"; generalinit "Steam Profiles" "localconfigfiles"; launcher_lc="$init_result"; fi; fi
+	if [[ $1 == "proton" || $1 == "wine" ]]; then runnerinit "$1"; launcher_runner="$init_result"; pfxinit "$1" "" "launcher"; launcher_prefix="$init_result"
+		if [[ $launcher_prefix == "Add new prefix to the list" ]]; then pfxcreator "$1" "$launcher_runner"; launcher_prefix="$pfx_path"; launcher_name=$pfx_name; fi; fi
+	execinit "$1"; if [[ -z "$launcher_name" ]]; then launcher_name=$init_result_name; launcher_exec_dir="$init_result_dir"; launcher_exec="$init_result"; fi
 	inputhistory "$HISTORYPATH/.launchername" "${cyc}name${noc} of the launcher" "exit" "$launcher_name"; launcher_name="$input_ans"; launchersetup "${launcher_name}" "$1" 
-	if [[ $1 == "steam" ]]; then steamlauchoptions "$launcher_lc" "$launcher_steam_appid"; fi; launchercompleteinit "$1" "$launcher_name"
+	launchercompleteinit "$1" "$launcher_name"
 	if [[ -f "$LAUNCHPATH/${launcher_name}-$1" ]]; then chmod +x "$LAUNCHPATH/${launcher_name}-$1"; echo -e "\nLauncher ${grc}${launcher_name}-$1${noc} successfully created in the ${grc}$LAUNCHPATH${noc} folder!"; fi
 }
 
@@ -207,9 +207,7 @@ launchercompleteinit() {
 	elif [[ "$1" == "proton" ]]; then
 		launcher_vars=" launcher_exec_dir=\"$launcher_exec_dir\"\n launcher_runner=\"$launcher_runner\"\n launcher_prefix=\"$launcher_prefix\"\n launcher_exec=\"$launcher_exec\"\n"
 	elif [[ "$1" == "linux" ]]; then
-		launcher_vars=" launcher_exec_dir=\"$launcher_exec_dir\"\n launcher_exec=\"'$launcher_exec'\"\n"
-	elif [[ "$1" == "steam" ]]; then
-		launcher_vars=" launcher_steam_appid=\"$launcher_steam_appid\"\n"; fi
+		launcher_vars=" launcher_exec_dir=\"$launcher_exec_dir\"\n launcher_exec=\"'$launcher_exec'\"\n"; fi
 	if [[ "$1" == "wine" ]]; then 
 		launcher_command="${launcher_command}${launcher_dxvkhud} ${launcher_video}${launcher_dxvk}${launcher_strangle}${launcher_wine}${launcher_main}"
 		launcher_command="${launcher_command} WINEPREFIX=\\\"\${launcher_prefix}\\\" \\\"\${launcher_runner}\\\" \${wine_vd} \\\"\${launcher_exec}\\\" \${main_args}"
@@ -218,8 +216,7 @@ launchercompleteinit() {
 		launcher_command="${launcher_command} STEAM_COMPAT_DATA_PATH=\\\"\${launcher_prefix}\\\" \\\"\${launcher_runner}\\\" run \\\"\${launcher_exec}\\\" \${main_args}"
 	elif [[ "$1" == "linux" ]]; then
 		launcher_command="${launcher_command}${launcher_video}${launcher_strangle}${launcher_main}"
-		launcher_command="${launcher_command} \${launcher_exec} \${main_args}"
-	elif [[ "$1" == "steam" ]]; then launcher_command="steam steam://open/games &> /dev/null & sleep 2s; steam steam://rungameid/\$launcher_steam_appid"; fi
+		launcher_command="${launcher_command} \${launcher_exec} \${main_args}"; fi
 	echo -e '#!/bin/bash'"\n${launcher_vars}${launcher_settings}"'if [[ $1 != "read_vars" ]]; then cd "${launcher_exec_dir}"; eval'" \"${launcher_command}\"; fi" > "$LAUNCHPATH/$2-$1"
 }
 
@@ -236,13 +233,7 @@ launchereditor () {
 	elif [[ "$launcher_type" == "linux" ]]; then
 		listoptions "Launcher Setup" "Change Launch Options|Change Executable"
 		if [[ "$select_ans" == "1" ]]; then launchersetup "$launcher_name" "$launcher_type"
-		elif [[ "$select_ans" == "2" ]]; then execinit "$launcher_type"; launcher_exec_dir="$init_result_dir"; launcher_exec="$init_result"; fi
-	elif [[ "$launcher_type" == "steam" ]]; then
-		listoptions "Launcher Setup" "Change Launch Options|Change Steam App"
-		if [[ "$select_ans" == "1" ]]; then
-			finder "localconfig" "path" "$HOME/.steam/steam/userdata/"; generalinit "Steam Profiles" "localconfigfiles"; launcher_lc="$init_result"
-			launchersetup "$launcher_name" "$launcher_type"; steamlauchoptions "$launcher_lc" "$launcher_steam_appid"			
-		elif [[ "$select_ans" == "2" ]]; then generalinit "Steam Apps" "steamapps"; launcher_steam_appid="$init_result" ; fi; fi
+		elif [[ "$select_ans" == "2" ]]; then execinit "$launcher_type"; launcher_exec_dir="$init_result_dir"; launcher_exec="$init_result"; fi; fi
 	launchercompleteinit "$launcher_type" "$launcher_name"
 }
 
@@ -452,22 +443,20 @@ if [[ -n $(ls "$LAUNCHPATH") ]]; then
 	finder "linux" "path" "$LAUNCHPATH"
 	while read line; do line_type="$(echo "${line##*-}")"; echo "$line" >> "$TEMPPATH/.${line_type}launchers"; done < "$TEMPPATH/.linuxfiles"
 	rm "$TEMPPATH/.linuxfiles"; fi
-listoptions "Linux Game Helper by Hist" "Launchers Manager|Wine Utilities|Tools Installer|Lists Manager"
+listoptions "Linux Game Helper by Hist" "Launchers Manager|Wine Utilities|Tools Installer|Lists Manager|Steam Launch Options"
 if [[ "$select_ans" == "1" ]]; then #Launchers Control
 	listoptions "Launchers Manager" "Create Launcher|Edit Launcher|Delete Launcher|Open Launcher in Text Editor|Run Launcher"
 		if [[ "$select_ans" == "1" ]]; then
-			listoptions "Launcher Creator" "Wine App|Proton App|Linux App|Steam App"
+			listoptions "Launcher Creator" "Wine App|Proton App|Linux App"
 			if [[ "$select_ans" == "1" ]]; then launchercreator "wine"
 			elif [[ "$select_ans" == "2" ]]; then launchercreator "proton"
-			elif [[ "$select_ans" == "3" ]]; then launchercreator "linux"
-			elif [[ "$select_ans" == "4" ]]; then launchercreator "steam"; fi; fi
+			elif [[ "$select_ans" == "3" ]]; then launchercreator "linux"; fi; fi
 		if [[ "$select_ans" == [2-5] ]]; then
 			launcher_option="$select_ans"
-			listoptions "Launcher Selector" "Wine App|Proton App|Linux App|Steam App"
+			listoptions "Launcher Selector" "Wine App|Proton App|Linux App"
 			if [[ "$select_ans" == "1" ]]; then launchers_list="$TEMPPATH/.winelaunchers"
 			elif [[ "$select_ans" == "2" ]]; then launchers_list="$TEMPPATH/.protonlaunchers"
-			elif [[ "$select_ans" == "3" ]]; then launchers_list="$TEMPPATH/.linuxlaunchers"
-			elif [[ "$select_ans" == "4" ]]; then launchers_list="$TEMPPATH/.steamlaunchers"; fi
+			elif [[ "$select_ans" == "3" ]]; then launchers_list="$TEMPPATH/.linuxlaunchers"; fi
 			if [[ "$launcher_option" == "2" ]]; then launchereditor "$launchers_list"
 			elif [[ "$launcher_option" == "3" ]]; then readfiles "Launchers" "$launchers_list" "lines" "ans"; rm "$file_line_dir"
 			elif [[ "$launcher_option" == "4" ]]; then readfiles "Launchers" "$launchers_list" "lines" "ans"; xdg-open "$file_line_dir"
@@ -543,4 +532,6 @@ elif [[ "$select_ans" == "4" ]]; then #List Manager
 		rm -rf "$HOME/.wine"; mkdir "$HOME/.wine"; runnerinit "wine"; pfx_runner="$init_result"; WINEPREFIX="$HOME/.wine" "$pfx_runner" wineboot -u
 	elif [[ "$select_ans" == "$((menu_count+=1))" ]]; then
 		rm -rf "$PROTONPFXPATH"; mkdir "$PROTONPFXPATH"; runnerinit "proton" "original"; pfx_runner="$init_result"
-		WINEPREFIX="$PROTONPFXPATH/pfx" "$pfx_runner" wineboot -u; fi; fi
+		WINEPREFIX="$PROTONPFXPATH/pfx" "$pfx_runner" wineboot -u; fi; 
+elif [[ "$select_ans" == "5" ]]; then #Steam Launch
+	steamlauchoptions;	fi
