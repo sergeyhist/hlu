@@ -2,7 +2,7 @@
 ## About:
 Small console program written in bash.
 ## Features:
-+ Creating, editing Launchers for Wine, Proton, Linux and Steam applications.   
++ Creating, editing Launchers for Wine, Proton and Linux.   
  Launchers support various settings:   
    - Selecting Prefix.   
    - Selecting Wine/Proton version.   
@@ -19,6 +19,7 @@ Small console program written in bash.
    - Adding, creating and removing Wine/Proton Prefixes.   
    - Adding and removing Wine/Proton Runners.   
    - Reseting Steam Proton Prefixes
++ Change Launch Options for Steam Games
 ## Installation:
 Clone the repo:
 
