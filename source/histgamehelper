@@ -117,7 +117,8 @@ launchercreator() {
 	execinit "$1"; if [[ -z "$launcher_name" ]]; then launcher_name=$init_result_name; launcher_exec_dir="$init_result_dir"; launcher_exec="$init_result"; fi
 	inputhistory "$HISTORYPATH/.launchername" "${cyc}name${noc} of the launcher" "exit" "$launcher_name"; launcher_name="$input_ans"; launchersetup "${launcher_name}" "$1" 
 	launchercompleteinit "$1" "$launcher_name"
-	if [[ -f "$LAUNCHPATH/${launcher_name}-$1" ]]; then chmod +x "$LAUNCHPATH/${launcher_name}-$1"; echo -e "\nLauncher ${grc}${launcher_name}-$1${noc} successfully created in the ${grc}$LAUNCHPATH${noc} folder!"; fi
+	if [[ -f "$launcher_exec_dir/${launcher_name}-$1" ]]; then
+		echo -e "\nLauncher ${grc}${launcher_name}-$1${noc} successfully created in the ${grc}$launcher_exec_dir${noc} folder. Shortcut located in the ${grc}$LAUNCHPATH${noc} folder."; fi
 }
 
 pfxcommands() {
@@ -134,8 +135,9 @@ toolsupdater() {
 	cd  $TOOLSPATH; name=$(basename -s .git "$1")
 	listoptions "Options" "Install ${blc} - Check \"${cyc}$1${blc}\" for additional information or necessary dependencies${noc}|Update|Uninstall"
 	if [[ "$select_ans" == "1" ]]; then if [[ -d "$name" ]]; then rm -rf "$name"; fi; git clone $2 "$1"; cd "$name"; tup_build="1"
-	elif [[ "$select_ans" == "2" ]]; then cd "$name"; git fetch; git remote update && git status -uno | grep -q 'Your branch is behind' && tup_update_check="1"
-		if [[ "$tup_update_check" == "1" ]]; then git reset --hard; git pull; tup_build="1"; else echo -e "\nAlready ${grc}up to date${noc}!"; fi; fi
+	elif [[ "$select_ans" == "2" ]]; then cd "$name"; eval "git reset --hard; git pull $1 master" > "$TEMPPATH/.toolcheck"
+		while read line; do if [[ $line != *"Already up to date"* ]]; then tup_build="1"; else tup_build="0"; fi; done < "$TEMPPATH/.toolcheck"
+		if [[ $tup_build != "1" ]]; then echo -e "\nAlready ${grc}up to date${noc}!"; fi; fi
 	if [[ "$tup_build" == "1" ]]; then
 		if [[ "$name" != "mf-install" && "$name" != "mf-installcab" ]]; then
 			if [[ $name == "dxvk" || $name == "vkd3d-proton" ]]; then if [[ -d "dlls" ]]; then rm -rf dlls; fi; ./package-release.sh master dlls --no-package
@@ -159,7 +161,7 @@ finder() {
 	find "$3" -type f -executable | while read line; do fake_name=$(basename "$line"); echo -e "$fake_name\n$line" >> "$TEMPPATH/.${1}files"; done
 	;;
 	"wine"|"proton")
-	find "$3" -name "*.exe" | while read line; do fake_name=$(basename -s .exe "$line"); echo -e "$fake_name\n$line" >> "$TEMPPATH/.${1}files"; done
+	find "$3" -name "*.exe" -o -name "*.msi" | while read line; do fake_name=$(basename -s .exe "$line"); echo -e "$fake_name\n$line" >> "$TEMPPATH/.${1}files"; done
 	;;
 	"localconfig")
 	find "$3" -name "localconfig.vdf" | while read line; do
@@ -193,6 +195,7 @@ listoptions() {
 
 launchercompleteinit() {
 	launchersetupinit "$1"
+	if [[ "$launcher_exec" == *".msi" ]]; then launcher_msi=" msiexec /i"; else launcher_msi=""; fi
 	launcher_main='${main_pulse}${main_gamemode}${main_mangohud}${main_vkbasalt}${main_customoptions}'
 	launcher_strangle='${strangle_status}${strangle_fps}${strangle_fps_battery}${strangle_vsync}${strangle_glfinish}${strangle_picmip}${strangle_af}${strangle_trilinear}${strangle_retro}${strangle_nodlsym}${strangle_vkonly}${strangle_enable_vklayer}${strangle_disable_vklayer}'
 	launcher_dxvkhud='${dxvkhud_status}${dxvkhud_full}${dxvkhud_devinfo}${dxvkhud_fps}${dxvkhud_frametimes}${dxvkhud_submission}${dxvkhud_drawcall}${dxvkhud_pipelines}${dxvkhud_memory}${dxvkhud_gpuload}${dxvkhud_version}${dxvkhud_api}${dxvkhud_compiler}${dxvkhud_samplers}${dxvkhud_scale}'
@@ -203,25 +206,28 @@ launchercompleteinit() {
 	launcher_proton='${proton_wined3d}${proton_large_address}${proton_old_gl}${proton_seccomp}${proton_d3d12}${proton_d3d11}${proton_d3d10}${proton_d3d9}${proton_esync}${proton_fsync}${proton_futex2}'
 	launcher_command=''
 	if [[ "$1" == "wine" ]]; then
-		launcher_vars=" launcher_exec_dir=\"$launcher_exec_dir\"\n launcher_runner=\"$launcher_runner\"\n launcher_prefix=\"$launcher_prefix\"\n launcher_exec=\"$launcher_exec\"\n"
+		launcher_vars=" launcher_exec_dir=\"$launcher_exec_dir\"\n launcher_runner=\"$launcher_runner\"\n launcher_prefix=\"$launcher_prefix\"\n launcher_exec=\"$launcher_exec\"\n launcher_msi=\"$launcher_msi\"\n"
 	elif [[ "$1" == "proton" ]]; then
 		launcher_vars=" launcher_exec_dir=\"$launcher_exec_dir\"\n launcher_runner=\"$launcher_runner\"\n launcher_prefix=\"$launcher_prefix\"\n launcher_exec=\"$launcher_exec\"\n"
 	elif [[ "$1" == "linux" ]]; then
 		launcher_vars=" launcher_exec_dir=\"$launcher_exec_dir\"\n launcher_exec=\"'$launcher_exec'\"\n"; fi
 	if [[ "$1" == "wine" ]]; then 
 		launcher_command="${launcher_command}${launcher_dxvkhud} ${launcher_video}${launcher_dxvk}${launcher_strangle}${launcher_wine}${launcher_main}"
-		launcher_command="${launcher_command} WINEPREFIX=\\\"\${launcher_prefix}\\\" \\\"\${launcher_runner}\\\" \${wine_vd} \\\"\${launcher_exec}\\\" \${main_args}"
+		launcher_command="${launcher_command} WINEPREFIX=\\\"\${launcher_prefix}\\\" \\\"\${launcher_runner}\\\" \${wine_vd} \${launcher_msi} \\\"\${launcher_exec}\\\" \${main_args}"
 	elif [[ "$1" == "proton" ]]; then
 		launcher_command="${launcher_command}${launcher_dxvkhud} ${launcher_video}${launcher_dxvk}${launcher_strangle}${launcher_proton}${launcher_main}"
 		launcher_command="${launcher_command} STEAM_COMPAT_DATA_PATH=\\\"\${launcher_prefix}\\\" \\\"\${launcher_runner}\\\" run \\\"\${launcher_exec}\\\" \${main_args}"
 	elif [[ "$1" == "linux" ]]; then
 		launcher_command="${launcher_command}${launcher_video}${launcher_strangle}${launcher_main}"
 		launcher_command="${launcher_command} \${launcher_exec} \${main_args}"; fi
-	echo -e '#!/bin/bash'"\n${launcher_vars}${launcher_settings}"'if [[ $1 != "read_vars" ]]; then cd "${launcher_exec_dir}"; eval'" \"${launcher_command}\"; fi" > "$LAUNCHPATH/$2-$1"
+	echo -e '#!/bin/bash'"\n${launcher_vars}${launcher_settings}"'if [[ $1 != "read_vars" ]]; then cd "${launcher_exec_dir}"; eval'" \"${launcher_command}\"; fi" > "$launcher_exec_dir/$2-$1"
+	chmod +x "$launcher_exec_dir/$2-$1"
+	if [[ -f "$LAUNCHPATH/$2-$1" ]]; then rm "$LAUNCHPATH/$2-$1"; fi
+	ln -s "$launcher_exec_dir/$2-$1" "$LAUNCHPATH/$2-$1";
 }
 
 launchereditor () {
-	readfiles "Launchers" "$1" "lines" "ans"
+	readfiles "Launchers" "$1" "line" "ans"
 	launcher_name_full="$(basename "$file_line_dir")"; launcher_path="$file_line_dir"; source "$launcher_path" "read_vars"
 	launcher_name="$(echo "${launcher_name_full%-*}")"; launcher_type="$(echo "${launcher_name_full##*-}")"
 	if [[ "$launcher_type" == "wine" || "$launcher_type" == "proton" ]]; then
@@ -440,9 +446,8 @@ libStrangle\nhttps://gitlab.com/torkel104/libstrangle
 Media Foundation Workaround\nhttps://github.com/z0z0z/mf-install
 Media Foundation Workaround Cab Version\nhttps://github.com/z0z0z/mf-installcab" > "$TEMPPATH/.winetools"
 if [[ -n $(ls "$LAUNCHPATH") ]]; then
-	finder "linux" "path" "$LAUNCHPATH"
-	while read line; do line_type="$(echo "${line##*-}")"; echo "$line" >> "$TEMPPATH/.${line_type}launchers"; done < "$TEMPPATH/.linuxfiles"
-	rm "$TEMPPATH/.linuxfiles"; fi
+	ls "$LAUNCHPATH" > "$TEMPPATH/.shortcutfiles"
+	while read line; do line_type="$(echo "${line##*-}")"; echo "$LAUNCHPATH/$line" >> "$TEMPPATH/.${line_type}launchers"; done < "$TEMPPATH/.shortcutfiles"; fi
 listoptions "Linux Game Helper by Hist" "Launchers Manager|Wine Utilities|Tools Installer|Lists Manager|Steam Launch Options"
 if [[ "$select_ans" == "1" ]]; then #Launchers Control
 	listoptions "Launchers Manager" "Create Launcher|Edit Launcher|Delete Launcher|Open Launcher in Text Editor|Run Launcher"
@@ -458,9 +463,9 @@ if [[ "$select_ans" == "1" ]]; then #Launchers Control
 			elif [[ "$select_ans" == "2" ]]; then launchers_list="$TEMPPATH/.protonlaunchers"
 			elif [[ "$select_ans" == "3" ]]; then launchers_list="$TEMPPATH/.linuxlaunchers"; fi
 			if [[ "$launcher_option" == "2" ]]; then launchereditor "$launchers_list"
-			elif [[ "$launcher_option" == "3" ]]; then readfiles "Launchers" "$launchers_list" "lines" "ans"; rm "$file_line_dir"
-			elif [[ "$launcher_option" == "4" ]]; then readfiles "Launchers" "$launchers_list" "lines" "ans"; xdg-open "$file_line_dir"
-			elif [[ "$launcher_option" == "5" ]]; then readfiles "Launchers" "$launchers_list" "lines" "ans"; "$file_line_dir"; fi; fi
+			elif [[ "$launcher_option" == "3" ]]; then readfiles "Launchers" "$launchers_list" "line" "ans"; rm "$file_line_dir"
+			elif [[ "$launcher_option" == "4" ]]; then readfiles "Launchers" "$launchers_list" "line" "ans"; xdg-open "$file_line_dir"
+			elif [[ "$launcher_option" == "5" ]]; then readfiles "Launchers" "$launchers_list" "line" "ans"; "$file_line_dir"; fi; fi
 elif [[ "$select_ans" == "2" ]]; then #Wine Utilities
 	listoptions "Wine Utilities" "Prefix Commands|Winetricks|Dxvk|Vkd3d|Install MF|Install MF-Cab|Install mfplat.dll"
 	if [[ "$select_ans" == "1" ]]; then
