@@ -222,7 +222,7 @@ launchercompleteinit() {
 	elif [[ "$1" == "linux" ]]; then
 		launcher_command="${launcher_command}${launcher_video}${launcher_strangle}${launcher_main}"
 		launcher_command="${launcher_command} \${launcher_exec} \${main_args}"; fi
-	if [[ $1 == "linux" ]]; then
+	if [[ ! -w "$launcher_exec_dir" && $1 == "linux" ]]; then
 		echo -e '#!/bin/bash'"\n${launcher_vars}${launcher_settings}"'if [[ $1 != "read_vars" ]]; then cd "${launcher_exec_dir}"; eval'" \"${launcher_command}\"; fi" > "$LAUNCHPATH/$2-$1"
 		chmod +x "$LAUNCHPATH/$2-$1"
 	else
