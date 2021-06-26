@@ -112,15 +112,12 @@ steamlauchoptions() {
 }
 
 launchercreator() {
+	launcher_tool="created"
 	if [[ $1 == "proton" || $1 == "wine" ]]; then runnerinit "$1"; launcher_runner="$init_result"; pfxinit "$1" "" "launcher"; launcher_prefix="$init_result"
 		if [[ $launcher_prefix == "Add new prefix to the list" ]]; then pfxcreator "$1" "$launcher_runner"; launcher_prefix="$pfx_path"; launcher_name=$pfx_name; fi; fi
 	execinit "$1"; if [[ -z "$launcher_name" ]]; then launcher_name=$init_result_name; launcher_exec_dir="$init_result_dir"; launcher_exec="$init_result"; fi
 	inputhistory "$HISTORYPATH/.launchername" "${cyc}name${noc} of the launcher" "exit" "$launcher_name"; launcher_name="$input_ans"; launchersetup "${launcher_name}" "$1" 
 	launchercompleteinit "$1" "$launcher_name"
-	if [[ -f "$launcher_exec_dir/${launcher_name}-$1" ]]; then
-		echo -e "\nLauncher ${grc}${launcher_name}-$1${noc} successfully created in the ${grc}$launcher_exec_dir${noc} folder. Shortcut located in the ${grc}$LAUNCHPATH${noc} folder."
-	elif [[ -f "$LAUNCHPATH/${launcher_name}-$1" && $1 == "linux" ]]; then
-		echo -e "\nLauncher ${grc}${launcher_name}-$1${noc} successfully created in the ${grc}$LAUNCHPATH${noc} folder."; fi
 }
 
 pfxcommands() {
@@ -222,17 +219,20 @@ launchercompleteinit() {
 	elif [[ "$1" == "linux" ]]; then
 		launcher_command="${launcher_command}${launcher_video}${launcher_strangle}${launcher_main}"
 		launcher_command="${launcher_command} \${launcher_exec} \${main_args}"; fi
-	if [[ ! -w "$launcher_exec_dir" && $1 == "linux" ]]; then
+	if [[ ! -w "$launcher_exec_dir" ]]; then
 		echo -e '#!/bin/bash'"\n${launcher_vars}${launcher_settings}"'if [[ $1 != "read_vars" ]]; then cd "${launcher_exec_dir}"; eval'" \"${launcher_command}\"; fi" > "$LAUNCHPATH/$2-$1"
 		chmod +x "$LAUNCHPATH/$2-$1"
+		echo -e "\nLauncher ${grc}${launcher_name}-$1${noc} successfully $launcher_tool in the ${grc}$LAUNCHPATH${noc} folder."
 	else
 		echo -e '#!/bin/bash'"\n${launcher_vars}${launcher_settings}"'if [[ $1 != "read_vars" ]]; then cd "${launcher_exec_dir}"; eval'" \"${launcher_command}\"; fi" > "$launcher_exec_dir/$2-$1"
 		chmod +x "$launcher_exec_dir/$2-$1"
 		if [[ -f "$LAUNCHPATH/$2-$1" ]]; then rm "$LAUNCHPATH/$2-$1"; fi
-		ln -s "$launcher_exec_dir/$2-$1" "$LAUNCHPATH/$2-$1"; fi
+		ln -s "$launcher_exec_dir/$2-$1" "$LAUNCHPATH/$2-$1"
+		echo -e "\nLauncher ${grc}${launcher_name}-$1${noc} successfully $launcher_tool in the ${grc}$launcher_exec_dir${noc} folder. Shortcut located in the ${grc}$LAUNCHPATH${noc} folder."; fi
 }
 
 launchereditor () {
+	launcher_tool="updated"
 	readfiles "Launchers" "$1" "line" "ans"
 	launcher_name_full="$(basename "$file_line_dir")"; launcher_path="$file_line_dir"; source "$launcher_path" "read_vars"
 	launcher_name="$(echo "${launcher_name_full%-*}")"; launcher_type="$(echo "${launcher_name_full##*-}")"
@@ -469,7 +469,10 @@ if [[ "$select_ans" == "1" ]]; then #Launchers Control
 			elif [[ "$select_ans" == "2" ]]; then launchers_list="$TEMPPATH/.protonlaunchers"
 			elif [[ "$select_ans" == "3" ]]; then launchers_list="$TEMPPATH/.linuxlaunchers"; fi
 			if [[ "$launcher_option" == "2" ]]; then launchereditor "$launchers_list"
-			elif [[ "$launcher_option" == "3" ]]; then readfiles "Launchers" "$launchers_list" "line" "ans"; rm "$file_line_dir"
+			elif [[ "$launcher_option" == "3" ]]; then
+				readfiles "Launchers" "$launchers_list" "line" "ans"
+				if [[ -L "$file_line_dir" ]]; then rm "$(readlink -f "$file_line_dir")"; fi
+				rm "$file_line_dir"
 			elif [[ "$launcher_option" == "4" ]]; then readfiles "Launchers" "$launchers_list" "line" "ans"; xdg-open "$file_line_dir"
 			elif [[ "$launcher_option" == "5" ]]; then readfiles "Launchers" "$launchers_list" "line" "ans"; "$file_line_dir"; fi; fi
 elif [[ "$select_ans" == "2" ]]; then #Wine Utilities
@@ -543,6 +546,6 @@ elif [[ "$select_ans" == "4" ]]; then #List Manager
 		rm -rf "$HOME/.wine"; mkdir "$HOME/.wine"; runnerinit "wine"; pfx_runner="$init_result"; WINEPREFIX="$HOME/.wine" "$pfx_runner" wineboot -u
 	elif [[ "$select_ans" == "$((menu_count+=1))" ]]; then
 		rm -rf "$PROTONPFXPATH"; mkdir "$PROTONPFXPATH"; runnerinit "proton" "original"; pfx_runner="$init_result"
-		WINEPREFIX="$PROTONPFXPATH/pfx" "$pfx_runner" wineboot -u; fi; 
+		WINEPREFIX="$PROTONPFXPATH/pfx" "$pfx_runner" wineboot -u; fi
 elif [[ "$select_ans" == "5" ]]; then #Steam Launch
 	steamlauchoptions;	fi
