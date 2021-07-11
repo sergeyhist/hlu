@@ -66,6 +66,7 @@ launchersetupinit() {
 	if [[ "$video_driver" == *"NVIDIA"* ]]; then launcher_nvidia_init=" nvidia_to=\"$nvidia_to\"\n nvidia_osd=\"$nvidia_osd\"\n"; fi
 	if [[ "$video_driver" == *"AMD"* ]]; then launcher_amd_init=" amd_aco=\"$amd_aco\"\n amd_to=\"$amd_to\"\n"; fi
 	if [[ "$1" == "wine" ]]; then launcher_wine_init=" wine_esync=\"$wine_esync\"\n wine_fsync=\"$wine_fsync\"\n wine_vd=\"$wine_vd\"\n"; fi
+	launcher_settings="${launcher_main_init}${launcher_strangle_init}${launcher_dxvkhud_init}${launcher_dxvk_init}${launcher_nvidia_init}${launcher_amd_init}${launcher_wine_init}${launcher_proton_init}"
 }
 
 launchercompleteinit() {
