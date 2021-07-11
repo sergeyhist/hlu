@@ -11,10 +11,10 @@ steamfinder
 listoptions "Hist Linux Utilities" "Launchers Creator|Wine Helper|Steam Helper|Packages Installer"
 case $select_ans in
 "1") #Launcher Creator
-	for item in $(ls $LAUNCHPATH); do
-		if [[ -n $hi_launchers ]]; then
-			hi_launchers="$hi_launchers|$item"
-		else hi_launchers="$item"; fi; done
+	ls $LAUNCHPATH > "$TEMPPATH/.launchers"
+	while read line; do
+		if [[ -z "$hi_launchers" ]]; then hi_launchers="$line"
+		else hi_launchers="$hi_launchers|$line"; fi; done < "$TEMPPATH/.launchers"
 	listoptions "Launchers Creator" "Create launcher|Edit launcher|Delete launcher|Open launcher in text editor|Run launcher"
 		if [[ "$select_ans" == "1" ]]; then
 			listoptions "Launcher Creator" "Wine App|Linux App"
