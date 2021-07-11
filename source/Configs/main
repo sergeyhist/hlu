@@ -1,0 +1,87 @@
+#!/bin/bash
+hi_exit() {
+	echo -e "\n${rec}Exit${noc}\n"; rm -rf "$TEMPPATH"
+}
+
+inputhistory() {
+	history -r "$1"
+	if [[ -z "$4" ]]; then echo -e "\nEnter ${2} (${cyc}q|Q${noc} for exit):"
+	else echo -e "\nEnter ${2} (Default: ${grc}${4}${noc}) (${cyc}d|D${noc} for ${grc}default${noc}, ${cyc}q|Q${noc} for ${grc}exit${noc}):"; fi; read -e "input_ans" 
+	if [[ -n "$input_ans" && "$input_ans" != [qQйЙdDвВ] ]]; then
+	flg=0; while (( flg == 0 )); do listcount=0; flg=1; if [[ ! -f "$1" ]]; then touch "$1"; fi
+	while read LINE; do let "listcount += 1"; if [[ "$LINE" = "$input_ans" ]]; then flg=0; sed -i ${listcount}d $1; break; fi
+	done < "$1"; done; echo "$input_ans" >> "$1"; history -c; else 
+		if [[ "$input_ans" == [qQйЙ] ]]; then if [[ "$3" == "exit" ]]; then exit; fi
+		elif [[ "$input_ans" == [dDвВ] ]]; then input_ans="$4"
+		else inputhistory "$1" "$2" "$3" "$4"; fi; fi
+}
+
+addlines() {
+	if [[ "$2" == "dir" ]]; then inputhistory "$HISTORYPATH/.${6}${2}" "${cyc}path${noc} to the ${grc}$1${noc} folder" "exit"; line_path="$input_ans"
+	elif [[ "$2" == "com" ]]; then inputhistory "$HISTORYPATH/.${2}" "${cyc}$1${noc}" "exit"; line_com="$input_ans"; fi
+	if [[ "$3" == "name" ]]; then inputhistory "$HISTORYPATH/.${6}${3}" "${cyc}name${noc} of the ${grc}$1${noc}" "exit"; line_name="$input_ans"; fi
+	if [[ "$4" == "tofile" ]] && [[ "$2" == "dir" ]]; then if [[ ! -d "$line_path" ]]; then mkdir -p "$line_path"; fi
+		if [[ -n "$line_name" ]]; then echo -e "$line_name\n$line_path" >> "$5"; else echo -e "$line_path" >> "$5"; fi
+	elif [[ "$4" == "tofile" ]] && [[ "$2" == "com" ]]; then
+		if [[ -n "$line_name" ]]; then echo -e "$line_name\n$line_com" >> "$5"; else echo -e "$line_com" >> "$5"; fi; fi
+}
+
+deletelines() {
+	readfiles "$1" "$2" "$3" "ans"
+	if [[ "$3" == "lines" ]]; then sed -i $((file_line_number*2-1)),$((file_line_number*2))d "$2"
+	elif [[ "$3" == "line" ]]; then sed -i ${file_line_number}d "$2"; fi
+	if [[ "$1" == "Git Packages" ]]; then if [[ -f "$CONFPATH/gitcomlist.cfg" ]]; then sed -i $((file_line_number*2-1)),$((file_line_number*2))d "$CONFPATH/gitcomlist.cfg"; fi; fi
+	if [[ -d "$file_line_dir" && "$1" != "Commands" ]]; then 
+		if [[ "$4" != "delete" ]]; then echo -e "\nDelete ${cyc}folder${noc} from filesystem? ${cyc}y|N${noc}"; read -e "ans"; else ans="y"; fi
+		if [[ "$ans" = [yY]* ]]; then if [[ "$5" != "steam" ]]; then rm -rf "$file_line_dir"; else rm -rf "$(dirname "$file_line_dir")"; fi; fi; fi
+	if [[ ! -s "$2" ]]; then rm "$2"; fi
+}
+
+readfiles() {
+	if [[ -f "$2" ]]; then
+		listcount=0; file_line_number=0; if [[ $3 == "lines" ]]; then if [[ "$4" == "ans" ]]; then echo -e "\n ${mac}$1:${noc}\n"
+			while read line; do let "listcount += 1"; let "line_number = listcount / 2"; if ((listcount%2 != 0)); then 
+				file_name=$line; else file_dir=$line; echo -e " ${cyc}$line_number${noc} - ${grc}$file_name${noc} - ${blc}$file_dir${noc}"; fi; done < $2
+			echo -e "\nChoose ${cyc}item${noc} from the ${grc}list${noc} above (${cyc}q|Q${noc} for ${grc}exit${noc}):"; read -e "ans"
+			for ((i=1;i<=line_number;i++)); do if (( i == ans )); then file_line_name=$(sed -n $((i*2-1))p $2); file_line_dir=$(sed -n $((i*2))p $2); file_line_number=$ans; fi; done
+		else file_line_name=$(sed -n $(($4*2-1))p $2); file_line_dir=$(sed -n $(($4*2))p $2); file_line_number=$4; fi; fi
+		if [[ $3 == "line" ]]; then if [[ "$4" == "ans" ]]; then echo -e "\n ${mac}$1:${noc}\n"
+			while read line; do let "listcount += 1"; file_dir=$line; echo -e " ${cyc}$listcount${noc} - ${grc}$(basename -s .$5 "$file_dir")${noc} - ${blc}$file_dir${noc}"; done < $2
+			echo -e "\nChoose ${cyc}item${noc} from the ${grc}list${noc} above (${cyc}q|Q${noc} for ${grc}exit${noc}):"; read -e "ans"
+			for ((i=1;i<=listcount;i++)); do if (( i == ans )); then file_line_dir=$(sed -n ${ans}p $2); file_line_number=$ans; fi; done
+		else file_line_dir=$(sed -n ${4}p $2); file_line_number=$4; fi; fi; if [[ -n "$line_number" ]]; then l_count=$((line_number+1)); else l_count=$((listcount+1)); fi
+		if [[ "$ans" == [qQйЙ] ]]; then exit
+		elif [[ "$ans" -ge "$l_count" || "$ans" -le "0" ]]; then readfiles "$1" "$2" "$3" "$4" "$5"; fi
+	else echo -e "\n${grc}List${noc} is ${rec}empty${noc}"; exit; fi
+}
+
+listoptions() {
+	IFS="|"; lo_count=0; sa_count=0; da_count=0
+	echo -e "\n ${mac}$1:${noc}\n"
+	for item in $6; do
+		desc_array[$da_count]="$item"; let "da_count+=1"; done
+	for item in $4; do
+		status_array[$sa_count]="$item"; let "sa_count+=1"; done
+	for option in $2; do 
+		if [[ -n "$4" && -n "${!status_array[lo_count]}" ]]; then
+			status_check=" - ${grc}ON${noc}${cyc} ( ${!status_array[lo_count]})${noc}"
+		elif [[ -n "$4" ]]; then
+			status_check=" - ${rec}OFF${noc}"; else status_check=""; fi
+		if [[ "$option" == "Reset Options" ]]; then status_check=""; fi
+		list_array[$lo_count]="$option"
+		if [[ -n "${desc_array[lo_count]}" ]]; then item_desc=" - ${blc}${desc_array[lo_count]}${noc}"; fi
+		echo -e " ${cyc}$((lo_count+=1))${noc}${status_check} - ${grc}$option${noc}${item_desc}"; done
+	echo -e "\nChoose ${cyc}Option${noc} from the list above (${cyc}q|Q${noc} for ${grc}exit${noc}):"; read -e "select_ans"
+	IFS="$Def_IFS"; let "lo_count+=1"
+	if [[ "$select_ans" == [qQйЙ] ]]; then
+		if [[ -z "$3" ]]; then exit; fi
+	elif [[ "$select_ans" -ge "$lo_count" || "$select_ans" -le "0" ]]; then
+		listoptions "$1" "$2" "$3" "$4" "$5" "$6"
+	else if [[ -n "$3" ]]; then
+		${3}selector "${list_array[select_ans-1]}" "$5"; listoptions "$1" "$2" "$3" "$4" "$5" "$6"; fi; fi; 
+}
+
+git-latest() {
+  	git_version=$(curl --silent "https://api.github.com/repos/$1/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+	wget "https://github.com/$1/releases/download/${git_version}/$2"
+}

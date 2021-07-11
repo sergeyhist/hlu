@@ -1,0 +1,128 @@
+#!/bin/bash
+settingsselector() {
+	if [[ "$1" == "Main Options" ]]; then listoptions "$1" "Add Additional Arguments|Add Custom Options|Enable Pulse Audio Latency${settings_gamemode}${settings_mangohud}${settings_vkbasalt}|Reset Options" "main" "main_args|main_customoptions|main_pulse${settings_gamemode_init}${settings_mangohud_init}${settings_vkbasalt_init}"
+	elif [[ "$1" == "Libstrangle Options" ]]; then listoptions "$1" "Enable libstrangle|Max Framerate|Max Framerate for Battery Power|Vsync|Run glFinish after every frame (OpenGL only)|Mip-map LoD Bias|Anisotropic Filtering level (Vulkan Only)|Force Trilinear Filtering (Vulkan only)|Disables Linear Texture Filtering (Vulkan only)|Disables the Hooking of Dlsym|Stops Strangle's OpenGL libs from loading|Enables the Implicit Vulkan layer|Disables the Implicit Vulkan layer|Reset Options" "strangle" "strangle_status|strangle_fps|strangle_fps_battery|strangle_vsync|strangle_glfinish|strangle_picmip|strangle_af|strangle_trilinear|strangle_retro|strangle_nodlsym|strangle_vkonly|strangle_enable_vklayer|strangle_disable_vklayer"
+	elif [[ "$1" == "Wine Options" ]]; then listoptions "$1" "Enable ESYNC|Enable FSYNC|Enable Virtual Desktop|Reset Options" "wine" "wine_esync|wine_fsync|wine_vd" "$2"
+	elif [[ "$1" == "Proton Options" ]]; then listoptions "$1" "Enable WineD3D|Enable Large Address Aware|Enable Old GL String|Enable Seccomp|Disable D3D12|Disable D3D11|Disable D3D10|Disable D3D9|Disable ESYNC|Disable FSYNC|Disable FUTEX2|Reset Options" "proton" "proton_wined3d|proton_large_address|proton_old_gl|proton_seccomp|proton_d3d12|proton_d3d11|proton_d3d10|proton_d3d9|proton_esync|proton_fsync|proton_futex2"
+	elif [[ "$1" == "DxvkHUD Options" ]]; then listoptions "$1" "Enable DxvkHUD|Enable All Options|Displays the name of the GPU and the driver version|Shows the current frame rate|Shows a frame time graph|Shows the number of command buffers submitted per frame|Shows the number of draw calls and render passes per frame|Shows the total number of graphics and compute pipelines|Shows the amount of device memory allocated and used|Shows estimated GPU load. May be inaccurate|Shows DXVK version|Shows the D3D feature level used by the application|Shows shader compiler activity|Shows the current number of sampler pairs used [D3D9 Only]|Scales the HUD|Reset Options" "dxvkhud" "dxvkhud_status|dxvkhud_full|dxvkhud_devinfo|dxvkhud_fps|dxvkhud_frametimes|dxvkhud_submission|dxvkhud_drawcall|dxvkhud_pipelines|dxvkhud_memory|dxvkhud_gpuload|dxvkhud_version|dxvkhud_api|dxvkhud_compiler|dxvkhud_samplers|dxvkhud_scale"
+	elif [[ "$1" == "Dxvk Options" ]]; then listoptions "$1" "Enable Dxvk Async|Disable State Cache|Reset Options" "dxvk" "dxvk_async|dxvk_cache";
+	elif [[ "$1" == "NVIDIA Options" ]]; then listoptions "$1" "Enable NVIDIA Threaded Optimization|Enable NVIDIA Graphics API Visual Indicator|Reset Options" "nvidia" "nvidia_to|nvidia_osd"
+	elif [[ "$1" == "AMD Options" ]]; then listoptions "$1" "Enable AMD Radeon ACO Vulkan Compiler|Enable AMD Threaded Optimizations|Reset Options" "amd" "amd_aco|amd_to"; fi
+}
+
+mainselector() {
+	if [[ "$1" == "Add Additional Arguments" ]]; then
+		inputhistory "$HISTORYPATH/.argshistory" "${cyc}Additional Arguments${noc}"
+		if [[ "$input_ans" != [qQйЙ] ]]; then main_args="$input_ans"; fi
+	elif [[ "$1" == "Add Custom Options" ]]; then
+		inputhistory "$HISTORYPATH/.options" "${cyc}Custom Options${noc}"
+		if [[ "$input_ans" != [qQйЙ] ]]; then main_customoptions="$input_ans "; fi
+	elif [[ "$1" == "Enable Pulse Audio Latency" ]]; then
+		inputhistory "$HISTORYPATH/.pulsehistory" "${cyc}value(ms)${noc} of ${grc}Pulse Audio Latency${noc}" "" "60"
+		if [[ "$input_ans" != [qQйЙ] ]]; then main_pulse="PULSE_LATENCY_MSEC=$input_ans "; fi
+	elif [[ "$1" == "Enable Gamemode" ]]; then main_gamemode="gamemoderun "
+	elif [[ "$1" == "Enable MangoHud" ]]; then main_mangohud="mangohud "
+	elif [[ "$1" == "Enable vkBasalt" ]]; then main_vkbasalt="ENABLE_VKBASALT=1 "; fi
+	if [[ "$1" == "Reset Options" ]]; then 
+		main_args=""; main_customoptions=""; main_pulse=""; main_gamemode=""; main_mangohud=""; main_vkbasalt=""; fi
+}
+
+strangleselector() {
+	if [[ "$1" == "Enable libstrangle" ]]; then strangle_status="strangle "
+	elif [[ "$1" == "Max Framerate" ]]; then
+		inputhistory "$HISTORYPATH/.framerate" "maximum ${cyc}framerate${noc}. ${cyc}0${noc} to disable. Any ${cyc}positive value${noc} to enable" "" "60"
+		if [[ "$input_ans" != [qQйЙ] ]]; then strangle_fps="STRANGLE_FPS=${input_ans} "; fi
+	elif [[ "$1" == "Max Framerate for Battery Power" ]]; then
+		inputhistory "$HISTORYPATH/.frameratebattery" "maximum ${cyc}framerate${noc} when running on battery power. ${cyc}0${noc} to disable. Any ${cyc}positive value${noc} to enable" "" "60"
+		if [[ "$input_ans" != [qQйЙ] ]]; then strangle_fps_battery="STRANGLE_FPS_BATTERY=${input_ans} "; fi
+	elif [[ "$1" == "Vsync" ]]; then
+		echo -e "\n	${mac}OpenGL${noc}\n ${cyc}-1${noc} - ${grc}Adaptive sync (unconfirmed if this actually works)${noc}\n ${cyc}0${noc} - ${grc}Force off${noc}\n ${cyc}1${noc} - ${grc}Force on${noc}\n ${cyc}n${noc} - ${grc}Sync to refresh rate / n${noc}\n	${mac}Vulkan${noc}\n ${cyc}0${noc} - ${grc}Force off${noc}\n ${cyc}1${noc} - ${grc}Mailbox mode. Vsync with uncapped framerate${noc}\n ${cyc}2${noc} - ${grc}Traditional vsync with framerate capped to refresh rate${noc}\n ${cyc}3${noc} - ${grc}Adaptive vsync with tearing at low framerates${noc}"
+		inputhistory "$HISTORYPATH/.vsyncstrangle" "${cyc}value${noc} from the list above" "" "2"
+		if [[ "$input_ans" != [qQйЙ] ]]; then strangle_vsync="STRANGLE_VSYNC=${input_ans} "; fi
+	elif [[ "$1" == "Run glFinish after every frame (OpenGL only)" ]]; then strangle_glfinish="STRANGLE_GLFINISH=1 "
+	elif [[ "$1" == "Mip-map LoD Bias" ]]; then
+		inputhistory "$HISTORYPATH/.vsyncstrangle" "${cyc}value${noc} between ${cyc}-16${noc} and ${cyc}16${noc}. Negative ${cyc}values${noc} will increase texture sharpness (and aliasing). Positive ${cyc}values${noc} will increase texture blurriness"
+		if [[ "$input_ans" != [qQйЙ] ]]; then if (( ans >= -16 && ans <= 16 )); then strangle_picmip="STRANGLE_PICMIP=${input_ans} "; fi; fi
+	elif [[ "$1" == "Anisotropic Filtering level (Vulkan Only)" ]]; then
+		inputhistory "$HISTORYPATH/.vsyncstrangle" "${cyc}value${noc} between ${cyc}1${noc} and ${cyc}16${noc}. Improves sharpness of textures viewed at an angle"
+		if [[ "$input_ans" != [qQйЙ] ]]; then if (( ans >= 1 && ans <= 16 )); then strangle_af="STRANGLE_AF=${input_ans} "; fi; fi
+	elif [[ "$1" == "Force Trilinear Filtering (Vulkan only)" ]]; then strangle_trilinear="STRANGLE_TRILINEAR=1 "
+	elif [[ "$1" == "Disables Linear Texture Filtering (Vulkan only)" ]]; then strangle_retro="STRANGLE_RETRO=1 "
+	elif [[ "$1" == "Disables the Hooking of Dlsym" ]]; then strangle_nodlsym="STRANGLE_NODLSYM=1 "
+	elif [[ "$1" == "Stops Strangle's OpenGL libs from loading" ]]; then strangle_vkonly="STRANGLE_VKONLY=1 "
+	elif [[ "$1" == "Enables the Implicit Vulkan layer" ]]; then strangle_enable_vklayer="ENABLE_VK_LAYER_TORKEL104_libstrangle=1 "
+	elif [[ "$1" == "Disables the Implicit Vulkan layer" ]]; then strangle_disable_vklayer="DISABLE_VK_LAYER_TORKEL104_libstrangle=1 "; fi
+	if [[ "$1" == "Reset Options" ]]; then 
+		strangle_fps=""; strangle_fps_battery=""; strangle_vsync=""; strangle_glfinish=""; strangle_picmip=""; strangle_af=""; strangle_trilinear=""; strangle_retro=""
+		strangle_nodlsym=""; strangle_vkonly=""; strangle_enable_vklayer=""; strangle_disable_vklayer=""; strangle_status=""; fi
+}
+
+dxvkhudselector() {
+	if [[ "$1" == "Enable DxvkHUD" ]]; then dxvkhud_status="DXVK_HUD="
+	elif [[ "$1" == "Enable All Options" ]]; then dxvkhud_full="full "; dxvkhud_devinfo=""; dxvkhud_fps=""; dxvkhud_frametimes=""; dxvkhud_submission=""; dxvkhud_drawcall=""
+		dxvkhud_pipelines=""; dxvkhud_memory=""; dxvkhud_gpuload=""; dxvkhud_version=""; dxvkhud_api=""; dxvkhud_compiler=""; dxvkhud_samplers=""; dxvkhud_scale=""
+	elif [[ "$1" == "Displays the name of the GPU and the driver version" ]]; then dxvkhud_devinfo="devinfo,"; dxvkhud_full=""
+	elif [[ "$1" == "Shows the current frame rate" ]]; then dxvkhud_fps="fps,"; dxvkhud_full=""
+	elif [[ "$1" == "Shows a frame time graph" ]]; then dxvkhud_frametimes="frametimes,"; dxvkhud_full=""
+	elif [[ "$1" == "Shows the number of command buffers submitted per frame" ]]; then dxvkhud_submission="submission,"; dxvkhud_full=""
+	elif [[ "$1" == "Shows the number of draw calls and render passes per frame" ]]; then dxvkhud_drawcall="drawcall,"; dxvkhud_full=""
+	elif [[ "$1" == "Shows the total number of graphics and compute pipelines" ]]; then dxvkhud_pipelines="pipelines,"; dxvkhud_full=""
+	elif [[ "$1" == "Shows the amount of device memory allocated and used" ]]; then dxvkhud_memory="memory,"; dxvkhud_full=""
+	elif [[ "$1" == "Shows estimated GPU load. May be inaccurate" ]]; then dxvkhud_gpuload="gpuload,"; dxvkhud_full=""
+	elif [[ "$1" == "Shows DXVK version" ]]; then dxvkhud_version="version,"; dxvkhud_full=""
+	elif [[ "$1" == "Shows the D3D feature level used by the application" ]]; then dxvkhud_api="api,"; dxvkhud_full=""
+	elif [[ "$1" == "Shows shader compiler activity" ]]; then dxvkhud_compiler="compiler,"; dxvkhud_full=""
+	elif [[ "$1" == "Shows the current number of sampler pairs used [D3D9 Only]" ]]; then dxvkhud_samplers="samplers,"; dxvkhud_full=""
+	elif [[ "$1" == "Scales the HUD" ]]; then
+		inputhistory "$HISTORYPATH/.scaledxvkhud" "${cyc}scale factor${noc} (Example: ${cyc}1.5${noc})"
+		if [[ "$input_ans" != [qQйЙ] ]]; then dxvkhud_scale="scale=$input_ans,"; dxvkhud_full=""; fi; fi
+	if [[ "$1" == "Reset Options" ]]; then
+		dxvkhud_full=""; dxvkhud_devinfo=""; dxvkhud_fps=""; dxvkhud_frametimes=""; dxvkhud_submission=""; dxvkhud_drawcall=""; dxvkhud_pipelines=""; dxvkhud_memory=""; dxvkhud_gpuload=""
+		dxvkhud_version=""; dxvkhud_api=""; dxvkhud_compiler=""; dxvkhud_samplers=""; dxvkhud_scale=""; dxvkhud_status=""; fi
+}
+
+dxvkselector() {
+	if [[ "$1" == "Enable Dxvk Async" ]]; then dxvk_async="DXVK_ASYNC=1 "
+	elif [[ "$1" == "Disable State Cache" ]]; then dxvk_cache="DXVK_STATE_CACHE=0 "; fi
+	if [[ "$1" == "Reset Options" ]]; then dxvk_async=""; dxvk_cache=""; fi
+}
+
+nvidiaselector() {
+	if [[ "$1" == "Enable NVIDIA Threaded Optimization" ]]; then nvidia_to="__GL_THREADED_OPTIMIZATIONS=1 "
+	elif [[ "$1" == "Enable NVIDIA Graphics API Visual Indicator" ]]; then nvidia_osd="__GL_SHOW_GRAPHICS_OSD=1 "; fi
+	if [[ "$1" == "Reset Options" ]]; then nvidia_to=""; nvidia_osd=""; fi
+}
+
+amdselector() {
+	if [[ "$1" == "Enable AMD Radeon ACO Vulkan Compiler" ]]; then amd_aco="RADV_PERFTEST=aco "
+	elif [[ "$1" == "Enable AMD Threaded Optimizations" ]]; then amd_to="mesa_glthread=true "; fi
+	if [[ "$1" == "Reset Options" ]]; then amd_aco=""; amd_to=""; fi
+}
+
+wineselector() {
+	if [[ "$1" == "Enable ESYNC" ]]; then wine_esync="WINEESYNC=1 "
+	elif [[ "$1" == "Enable FSYNC" ]]; then wine_fsync="WINEFSYNC=1 "
+	elif [[ "$1" == "Enable Virtual Desktop" ]]; then
+		inputhistory "$HISTORYPATH/.widthhistory" "${cycc}width${noc} of ${grc}Virtual Desktop${noc}" "" "1920"
+		if [[ "$input_ans" != [qQйЙ] ]]; then wine_vd="explorer /desktop='$2',${input_ans}x"; fi
+		inputhistory "$HISTORYPATH/.heighthistory" "${cycc}height${noc} of ${grc}Virtual Desktop${noc}" "" "1080"
+		if [[ "$input_ans" != [qQйЙ] ]]; then wine_vd="${wine_vd}${input_ans}"; fi; fi
+	if [[ "$1" == "Reset Options" ]]; then wine_esync=""; wine_fsync=""; wine_vd=""; fi
+}
+
+protonselector() {
+	if [[ "$1" == "Enable WineD3D" ]]; then proton_wined3d="PROTON_USE_WINED3D=1 "
+	elif [[ "$1" == "Enable Large Address Aware" ]]; then proton_large_address="PROTON_FORCE_LARGE_ADDRESS_AWARE=1 "
+	elif [[ "$1" == "Enable Old GL String" ]]; then proton_old_gl="PROTON_OLD_GL_STRING=1 "
+	elif [[ "$1" == "Enable Seccomp" ]]; then proton_seccomp="PROTON_USE_SECCOMP=1 "
+	elif [[ "$1" == "Disable D3D12" ]]; then proton_d3d12="PROTON_NO_D3D12=1 "
+	elif [[ "$1" == "Disable D3D11" ]]; then proton_d3d11="PROTON_NO_D3D11=1 "
+	elif [[ "$1" == "Disable D3D10" ]]; then proton_d3d10="PROTON_NO_D3D10=1 "
+	elif [[ "$1" == "Disable D3D9" ]]; then proton_d3d9="PROTON_NO_D3D9=1 "
+	elif [[ "$1" == "Disable ESYNC" ]]; then proton_esync="PROTON_NO_ESYNC=1 "
+	elif [[ "$1" == "Disable FSYNC" ]]; then proton_fsync="PROTON_NO_FSYNC=1 "
+	elif [[ "$1" == "Disable FUTEX2" ]]; then proton_futex2="PROTON_NO_FUTEX2=0 "; fi
+	if [[ "$1" == "Reset Options" ]]; then 
+		proton_wined3d=""; proton_large_address=""; proton_old_gl=""; proton_seccomp=""; proton_d3d12=""; proton_d3d11=""; proton_d3d10=""; proton_d3d9=""
+		proton_esync=""; proton_fsync=""; proton_futex2=""; fi
+}

@@ -1,0 +1,105 @@
+#!/bin/bash
+runnerfinder() {
+	hi_runners="$hi_runners_orig"
+	hi_runners_names="$hi_runners_names_orig"
+	IFS="|"
+	for item in $1; do
+		if [[ -f "$item" ]]; then
+			while read line; do
+				if [[ $(find "$line" -type f,l -name "wine") ]]; then
+					hi_runners="$hi_runners|$(find "$line" -type f,l -name "wine")"
+					if [[ -f "$line/version" ]]; then
+						runner_version="$(cat "$line/version")"
+						hi_runners_names="$hi_runners_names|${runner_version##* }"
+					else hi_runners_names="$hi_runners_names|$($(find "$line" -type f,l -name "wine") --version)"; fi
+				else
+					if [[ $(find "$line" -type f,l -name "proton_dist.tar") ]]; then
+						proton_tar=$(find "$line" -type f,l -name "proton_dist.tar"); cd "$(dirname "$proton_tar")"
+						tar -xf "$proton_tar"; hi_runners="$hi_runners|$(find "$line" -type f,l -name "wine")"; rm -f "$proton_tar"
+						runner_version="$(cat "$line/version")"
+						hi_runners_names="$hi_runners_names|${runner_version##* }"; fi; fi
+			done < "$item"; fi; done
+	IFS="$Def_IFS"
+}
+
+prefixfinder() {
+	hi_prefixes="$hi_prefixes_orig"
+	hi_prefixes_names="$hi_prefixes_names_orig"
+	IFS="|"
+	for item in $1; do
+		if [[ -f "$item" ]]; then
+			while read line; do
+			if [[ $(find "$line" -type d -name "drive_c") ]]; then
+				hi_prefixes="$hi_prefixes|$(dirname "$(find "$line" -type d -name "drive_c")")"
+				hi_prefixes_names="$hi_prefixes_names|$(basename "$(dirname "$(find "$line" -type d -name "drive_c")")")"; fi
+			done < "$item"; fi; done
+	IFS="$Def_IFS"
+}
+
+runnerinit() {
+	while : ; do
+		runnerfinder "$CONFPATH/addrun.cfg|$TEMPPATH/.steamrun"
+		listoptions "Runners" "$hi_runners_names|Add new runner" "" "" "" "$hi_runners"
+		selected_runner="${desc_array[select_ans-1]}"
+		if [[ ${list_array[select_ans-1]} == "Add new runner" ]]; then
+			addlines "runner" "dir" "" "tofile" "$CONFPATH/addrun.cfg" "winerun"
+		else break; fi; done
+}
+
+prefixinit() {
+	while : ; do
+		prefixfinder "$CONFPATH/addpfx.cfg"
+		listoptions "Prefixes" "$hi_prefixes_names|Add new prefix|Create new prefix" "" "" "" "$hi_prefixes"
+		selected_prefix="${desc_array[select_ans-1]}"
+		if [[ ${list_array[select_ans-1]} == "Add new prefix" ]]; then
+			addlines "prefix" "dir" "" "tofile" "$CONFPATH/addpfx.cfg" "winepfx"
+		elif [[ ${list_array[select_ans-1]} == "Create new prefix" ]]; then
+			prefixcreator; selected_prefix="$pfx_path"
+		else break; fi; done
+}
+
+prefixcreator() {
+	addlines "Prefix" "dir" "" "tofile" "$CONFPATH/addpfx.cfg" "pfx"; pfx_path=$line_path
+	if [[ ! -d "${pfx_path}/drive_c" ]]; then
+		listoptions "Prefix Version" "32bit|64bit"
+		if [[ "$select_ans" == "1" ]]; then
+			WINEARCH=win32 WINEPREFIX="$pfx_path" "$pfx_runner" wineboot -u;
+		elif [[ "$select_ans" == "2" ]]; then
+			WINEPREFIX="$pfx_path" "$selected_runner" wineboot -u; fi; fi
+}
+
+prefixcommands() {
+	prefixinit; command_prefix="$selected_prefix"
+	listoptions "Wine Functions" "Wine Config|Control Panel|Task Manager|Explorer|Install/Uninstall Apps|Registry Editor|Kill Running Apps|Force Kill Running Apps|Custom command"
+	case $select_ans in
+	"1")
+	command_func="winecfg"
+	;;
+	"2")
+	command_func="control"
+	;;
+	"3")
+	command_func="taskmgr"
+	;;
+	"4")
+	command_func="explorer"
+	;;
+	"5")
+	command_func="uninstaller"
+	;;
+	"6")
+	command_func="regedit"
+	;;
+	"7")
+	command_func="wineserver -k"
+	;;
+	"8")
+	command_func="wineserver -k9"
+	;;
+	"9")
+	inputhistory "$HISTORYPATH/.prefixcommand" "${grc}custom prefix command${noc} (Example: ${cyc}notepad.exe${noc})" "exit"; command_func="$input_ans"
+	esac
+	if [[ "$command_func" == "wineserver -k" || "$command_func" == "wineserver -k9" ]]; then  WINEPREFIX="$command_prefix" $command_func
+	else runnerinit; command_runner="$selected_runner"; WINEPREFIX="$command_prefix" "$command_runner" $command_func; fi
+}
+

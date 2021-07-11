@@ -1,0 +1,39 @@
+#!/bin/bash
+steamlauchoptions() {
+	readfiles "Steam games" "$TEMPPATH/.steamapps" "lines" "ans"; launcher_name="$file_line_name"; launcher_steam_appid="$file_line_dir"
+	if [[ -n "$launcher_steam_appid" ]]; then
+		readfiles "Steam local configs" "$TEMPPATH/.lcfiles" "lines" "ans"; launcher_lc="$file_line_dir"
+		launchersetup "$launcher_name" "steam"
+		if [[ "$video_driver" == *"NVIDIA"* ]]; then sl_video="${nvidia_to}${nvidia_osd}"
+		elif [[ "$video_driver" == *"AMD"* ]]; then sl_video="${amd_aco}${amd_to}"; fi
+		sl_vars="${proton_wined3d}${proton_large_address}${proton_old_gl}${proton_seccomp}${proton_d3d12}${proton_d3d11}${proton_d3d10}${proton_d3d9}${proton_esync}${proton_fsync}${proton_futex2}${sl_video}${dxvk_async}${dxvk_cache}${dxvkhud_status}${dxvkhud_full}${dxvkhud_devinfo}${dxvkhud_fps}${dxvkhud_frametimes}${dxvkhud_submission}${dxvkhud_drawcall}${dxvkhud_pipelines}${dxvkhud_memory}${dxvkhud_gpuload}${dxvkhud_version}${dxvkhud_api}${dxvkhud_compiler}${dxvkhud_samplers}${dxvkhud_scale}${strangle_status}${strangle_fps}${strangle_fps_battery}${strangle_vsync}${strangle_glfinish}${strangle_picmip}${strangle_af}${strangle_trilinear}${strangle_retro}${strangle_nodlsym}${strangle_vkonly}${strangle_enable_vklayer}${strangle_disable_vklayer}${main_pulse}${main_gamemode}${main_mangohud}${main_vkbasalt}${main_customoptions}"
+		line_number=0; pkill steam; sleep 3s
+		while read line; do 
+			let "line_number+=1"
+			if [[ $line == *'"Software"'* ]]; then flag=1; fi 
+			if [[ $flag == 1 && $line == *"Apps"* ]]; then flag=0
+				sed -i "$((line_number+2))i\ \t\t\t\t\t\"$launcher_steam_appid\"\n\t\t\t\t\t{\n\t\t\t\t\t\t\"LaunchOptions\" \t\"${sl_vars}%command% ${main_args}\"\n\t\t\t\t\t}" $launcher_lc; fi
+				done < "$launcher_lc"; fi 	
+}
+
+steamfinder() {
+	if [[ -f "$HOME/.steam/root/steamapps/libraryfolders.vdf" ]]; then
+		IFS=$'\n'
+		for D in ~/.steam/root $(egrep '^[^"]*"[0-9]+"' ~/.steam/root/steamapps/libraryfolders.vdf | cut -d\" -f4); do for F in "$D"/steamapps/appmanifest_*.acf; do 
+			steam_name=$(grep '"name"' "$F" | cut -d\" -f4); steam_appid=$(grep '"appid"' "$F" | cut -d\" -f4); steam_dir=$(grep '"installdir"' "$F" | cut -d\" -f4)
+			if [[ -d "$D/steamapps/compatdata/$steam_appid/pfx" ]]; then steam_pfx="$D/steamapps/compatdata/$steam_appid/pfx"; fi
+			if [[ "$steam_dir" == *"Proton"* ]]; then echo -e "$D/steamapps/common/$steam_dir" >> "$TEMPPATH/.steamrun"; fi
+			case $steam_name in
+			*"Proton"* | *"Runtime"* | *"Steamworks"*)
+			;;
+			*)
+			echo -e "${steam_name}\n${steam_appid}" >> "$TEMPPATH/.steamapps"
+			if [[ -n "$steam_pfx" ]]; then echo -e "$steam_name\n$steam_pfx" >> "$TEMPPATH/.steampfx"; fi
+			esac
+		done; IFS=$Def_IFS; done; fi
+	ls "/usr/share/steam/compatibilitytools.d/" | while read line; do
+		echo -e "/usr/share/steam/compatibilitytools.d/$line" >> "$TEMPPATH/.steamrun"; done
+	find "$HOME/.steam/steam/userdata/" -name "localconfig.vdf" | while read line; do
+		steam_profile_name=$(grep '"PersonaName"' "$line" | cut -d\" -f4)
+		echo -e "${steam_profile_name}\n${line}" >> "$TEMPPATH/.lcfiles"; done
+}

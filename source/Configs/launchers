@@ -1,0 +1,104 @@
+#!/bin/bash
+execinit() {
+	addlines "${1^} App" "dir" "" "" "" "${1}app"
+	case $1 in
+	"wine")
+		find "$line_path" -name "*.exe" -o -name "*.msi" | while read line; do fake_name=$(basename -s .exe "$line"); echo -e "$fake_name\n$line" >> "$TEMPPATH/.${1}files"; done
+	;;
+	"linux")
+		find "$line_path" -executable | while read line; do fake_name=$(basename "$line"); echo -e "$fake_name\n$line" >> "$TEMPPATH/.${1}files"; done
+	esac
+	readfiles "${1^} Executables" "$TEMPPATH/.${1}files" "lines" "ans"
+	init_result_name="$file_line_name"; init_result_dir=$(dirname "$file_line_dir"); init_result="$file_line_dir"
+}
+
+launchercreator() {
+	if [[ $1 == "wine" ]]; then runnerinit; prefixinit; fi
+	execinit "$1"
+	if [[ -z "$launcher_name" ]]; then
+		launcher_name=$init_result_name; launcher_exec_dir="$init_result_dir"; launcher_exec="$init_result"; fi
+	inputhistory "$HISTORYPATH/.launchername" "${cyc}name${noc} of the launcher" "exit" "$launcher_name"; launcher_name="$input_ans"
+	launchersetup "${launcher_name}" "$1" 
+	launchercompleteinit "$1" "$launcher_name" "created"
+}
+
+launchereditor () {
+	listoptions "Launchers" "$hi_launchers"
+	launcher_name="${list_array[select_ans-1]}"; launcher_path="$LAUNCHPATH/$launcher_name"
+	source "$launcher_path" "read_vars"
+	if [[ "$launcher_type" == "wine" ]]; then
+		listoptions "Launcher Setup" "Change Launch Options|Change Prefix|Change Runner|Change Executable"
+		if [[ "$select_ans" == "1" ]]; then launchersetup "$launcher_name" "$launcher_type"
+		elif [[ "$select_ans" == "2" ]]; then prefixinit
+		elif [[ "$select_ans" == "3" ]]; then runnerinit
+		elif [[ "$select_ans" == "4" ]]; then execinit "$launcher_type"; launcher_exec_dir="$init_result_dir"; launcher_exec="$init_result"; fi
+	elif [[ "$launcher_type" == "linux" ]]; then
+		listoptions "Launcher Setup" "Change Launch Options|Change Executable"
+		if [[ "$select_ans" == "1" ]]; then launchersetup "$launcher_name" "$launcher_type"
+		elif [[ "$select_ans" == "2" ]]; then execinit "$launcher_type"; launcher_exec_dir="$init_result_dir"; launcher_exec="$init_result"; fi; fi
+	launchercompleteinit "$launcher_type" "$launcher_name" "updated"
+}
+
+launchersetup() {
+	if [[ -f "/usr/bin/strangle" || -f "/usr/local/bin/strangle" ]]; then
+		settings_strangle="|Libstrangle Options"
+	else 
+		strangle_fps=""; strangle_fps_battery=""; strangle_vsync=""; strangle_glfinish=""; strangle_picmip=""; strangle_af=""; strangle_trilinear=""; strangle_retro=""
+		strangle_nodlsym=""; strangle_vkonly=""; strangle_enable_vklayer=""; strangle_disable_vklayer=""; strangle_status=""; fi
+	if [[ -f "/usr/bin/gamemoderun" ]]; then settings_gamemode="|Enable Gamemode"; settings_gamemode_init="|main_gamemode"; else main_gamemode=""; fi
+	if [[ -f "/usr/bin/mangohud" ]]; then settings_mangohud="|Enable MangoHud"; settings_mangohud_init="|main_mangohud"; else main_mangohud=""; fi
+	if [[ -f "/usr/bin/gamemoderun" ]]; then settings_vkbasalt="|Enable vkBasalt"; settings_vkbasalt_init="|main_vkbasalt"; else main_vkbasalt=""; fi
+	if [[ "$video_driver" == *"NVIDIA"* ]]; then launcher_video_driver="NVIDIA Options"
+	elif [[ "$video_driver" == *"AMD"* ]]; then launcher_video_driver="AMD Options"; fi
+	if [[ "$2" == "wine" ]]; then
+		listoptions "Launcher Setup" "Main Options${settings_strangle}|Wine Options|DxvkHUD Options|Dxvk Options|${launcher_video_driver}" "settings" "" "$1"
+	elif [[ "$2" == "linux" ]]; then
+		listoptions "Launcher Setup" "Main Options${settings_strangle}|${launcher_video_driver}" "settings" "" "$1"
+	elif [[ "$2" == "steam" ]]; then
+		listoptions "Launcher Setup" "Main Options${settings_strangle}|Proton Options|DxvkHUD Options|Dxvk Options|${launcher_video_driver}" "settings" "" "$1"; fi
+}
+
+launchersetupinit() {
+	launcher_main_init=" main_args=\"$main_args\"\n main_customoptions=\"$main_customoptions\"\n main_pulse=\"$main_pulse\"\n main_gamemode=\"$main_gamemode\"\n main_mangohud=\"$main_mangohud\"\n main_vkbasalt=\"$main_vkbasalt\"\n"
+	launcher_strangle_init=" strangle_status=\"$strangle_status\"\n strangle_fps=\"$strangle_fps\"\n strangle_fps_battery=\"$strangle_fps_battery\"\n strangle_vsync=\"$strangle_vsync\"\n strangle_glfinish=\"$strangle_glfinish\"\n strangle_picmip=\"$strangle_picmip\"\n strangle_af=\"$strangle_af\"\n strangle_trilinear=\"$strangle_trilinear\"\n strangle_retro=\"$strangle_retro\"\n strangle_nodlsym=\"$strangle_nodlsym\"\n strangle_vkonly=\"$strangle_vkonly\"\n strangle_enable_vklayer=\"$strangle_enable_vklayer\"\n strangle_disable_vklayer=\"$strangle_disable_vklayer\"\n"
+	if [[ "$1" != "linux" ]]; then launcher_dxvkhud_init=" dxvkhud_status=\"$dxvkhud_status\"\n dxvkhud_full=\"$dxvkhud_full\"\n dxvkhud_devinfo=\"$dxvkhud_devinfo\"\n dxvkhud_fps=\"$dxvkhud_fps\"\n dxvkhud_frametimes=\"$dxvkhud_frametimes\"\n dxvkhud_submission=\"$dxvkhud_submission\"\n dxvkhud_drawcall=\"$dxvkhud_drawcall\"\n dxvkhud_pipelines=\"$dxvkhud_pipelines\"\n dxvkhud_memory=\"$dxvkhud_memory\"\n dxvkhud_gpuload=\"$dxvkhud_gpuload\"\n dxvkhud_version=\"$dxvkhud_version\"\n dxvkhud_api=\"$dxvkhud_api\"\n dxvkhud_compiler=\"$dxvkhud_compiler\"\n dxvkhud_samplers=\"$dxvkhud_samplers\"\n dxvkhud_scale=\"$dxvkhud_scale\"\n"; fi
+	if [[ "$1" != "linux" ]]; then launcher_dxvk_init=" dxvk_async=\"$dxvk_async\"\n dxvk_cache=\"$dxvk_cache\"\n"; fi
+	if [[ "$video_driver" == *"NVIDIA"* ]]; then launcher_nvidia_init=" nvidia_to=\"$nvidia_to\"\n nvidia_osd=\"$nvidia_osd\"\n"; fi
+	if [[ "$video_driver" == *"AMD"* ]]; then launcher_amd_init=" amd_aco=\"$amd_aco\"\n amd_to=\"$amd_to\"\n"; fi
+	if [[ "$1" == "wine" ]]; then launcher_wine_init=" wine_esync=\"$wine_esync\"\n wine_fsync=\"$wine_fsync\"\n wine_vd=\"$wine_vd\"\n"; fi
+}
+
+launchercompleteinit() {
+	launchersetupinit "$1"
+	if [[ "$launcher_exec" == *".msi" ]]; then launcher_msi=" msiexec /i"; else launcher_msi=""; fi
+	launcher_main='${main_pulse}${main_gamemode}${main_mangohud}${main_vkbasalt}${main_customoptions}'
+	launcher_strangle='${strangle_status}${strangle_fps}${strangle_fps_battery}${strangle_vsync}${strangle_glfinish}${strangle_picmip}${strangle_af}${strangle_trilinear}${strangle_retro}${strangle_nodlsym}${strangle_vkonly}${strangle_enable_vklayer}${strangle_disable_vklayer}'
+	launcher_dxvkhud='${dxvkhud_status}${dxvkhud_full}${dxvkhud_devinfo}${dxvkhud_fps}${dxvkhud_frametimes}${dxvkhud_submission}${dxvkhud_drawcall}${dxvkhud_pipelines}${dxvkhud_memory}${dxvkhud_gpuload}${dxvkhud_version}${dxvkhud_api}${dxvkhud_compiler}${dxvkhud_samplers}${dxvkhud_scale}'
+	launcher_dxvk='${dxvk_async}${dxvk_cache}'
+	if [[ "$video_driver" == *"NVIDIA"* ]]; then launcher_video='${nvidia_to}${nvidia_osd}'
+	elif [[ "$video_driver" == *"AMD"* ]]; then launcher_video='${amd_aco}${amd_to}'; fi
+	launcher_wine='${wine_esync}${wine_fsync}'
+	launcher_proton='${proton_wined3d}${proton_large_address}${proton_old_gl}${proton_seccomp}${proton_d3d12}${proton_d3d11}${proton_d3d10}${proton_d3d9}${proton_esync}${proton_fsync}${proton_futex2}'
+	launcher_command=''
+	if [[ "$1" == "wine" ]]; then
+		launcher_vars=" launcher_type=\"$1\"\n launcher_exec_dir=\"$launcher_exec_dir\"\n selected_runner=\"$selected_runner\"\n selected_prefix=\"$selected_prefix\"\n launcher_exec=\"$launcher_exec\"\n launcher_msi=\"$launcher_msi\"\n"
+	elif [[ "$1" == "linux" ]]; then
+		launcher_vars=" launcher_exec_dir=\"$launcher_exec_dir\"\n launcher_exec=\"'$launcher_exec'\"\n"; fi
+	if [[ "$1" == "wine" ]]; then 
+		launcher_command="${launcher_command}${launcher_dxvkhud} ${launcher_video}${launcher_dxvk}${launcher_strangle}${launcher_wine}${launcher_main}"
+		launcher_command="${launcher_command} WINEPREFIX=\\\"\${selected_prefix}\\\" \\\"\${selected_runner}\\\" \${wine_vd} \${launcher_msi} \\\"\${launcher_exec}\\\" \${main_args}"
+	elif [[ "$1" == "linux" ]]; then
+		launcher_command="${launcher_command}${launcher_video}${launcher_strangle}${launcher_main}"
+		launcher_command="${launcher_command} \${launcher_exec} \${main_args}"; fi
+	if [[ ! -w "$launcher_exec_dir" ]]; then
+		if [[ -f "$LAUNCHPATH/$2" ]]; then rm "$LAUNCHPATH/$2"; fi
+		echo -e '#!/bin/bash'"\n${launcher_vars}${launcher_settings}"'if [[ $1 != "read_vars" ]]; then cd "${launcher_exec_dir}"; eval'" \"${launcher_command}\"; fi" > "$LAUNCHPATH/$2"
+		chmod +x "$LAUNCHPATH/$2"
+		echo -e "\nLauncher ${grc}${launcher_name}${noc} successfully $3 in the ${grc}$LAUNCHPATH${noc} folder."
+	else
+		echo -e '#!/bin/bash'"\n${launcher_vars}${launcher_settings}"'if [[ $1 != "read_vars" ]]; then cd "${launcher_exec_dir}"; eval'" \"${launcher_command}\"; fi" > "$launcher_exec_dir/$2"
+		chmod +x "$launcher_exec_dir/$2"
+		if [[ -f "$LAUNCHPATH/$2" || -L "$LAUNCHPATH/$2" ]]; then rm "$LAUNCHPATH/$2"; fi
+		ln -s "$launcher_exec_dir/$2" "$LAUNCHPATH/$2"
+		echo -e "\nLauncher ${grc}${launcher_name}${noc} successfully $3 in the ${grc}$launcher_exec_dir${noc} folder. Shortcut located in the ${grc}$LAUNCHPATH${noc} folder."; fi
+}
