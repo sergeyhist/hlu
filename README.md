@@ -1,8 +1,7 @@
-# Linux Game Helper by Hist
-## About:
-Small console program written in bash.
+# Hist Linux Utilities 
 ## Features:
-+ Creating, editing Launchers for Wine, Proton and Linux.   
++ Launchers Control:   
+ Creating, editing launchers for Wine and Linux Native apps.   
  Launchers support various settings:   
    - Selecting Prefix.   
    - Selecting Wine/Proton version.   
@@ -11,28 +10,29 @@ Small console program written in bash.
    - Enabling and setup DxvkHUD.   
    - Different Wine, Proton, Dxvk, Nvidia and AMD options.
 + Installing vkBasalt, Gamemode, Mangohud and libstrangle.
-+ Various Wine options:   
++ Wine Helper:   
    - Prefix Commands (winecfg, control, regedit, etc.).   
    - Winetricks.   
-   - Installing Dxvk, Vkd3d, MF, MF-Cab per Prefix.
-+ Prefixes and Runners Control:   
-   - Adding, creating and removing Wine/Proton Prefixes.   
-   - Adding and removing Wine/Proton Runners.   
-   - Reseting Steam Proton Prefixes
-+ Change Launch Options for Steam Games
+   - Installing Dxvk, Vkd3d, MF, MF-Cab per prefix. 
+   - Adding, creating and removing prefixes.   
+   - Adding and removing runners.   
+ + Steam Helper:     
+   - Change launch options for steam games.   
+   - Winetricks for steam games.   
+   - Reseting steam games prefixes. 
 ## Installation:
 Clone the repo:
 
-    git clone https://github.com/sergeyhist/linux-game-helper.git
-    cd linux-game-helper
+    git clone https://github.com/sergeyhist/hist-linux-utilities.git
+    cd hist-linux-utilities
 
 Run hgh-installer script:
 
-    sh lgh-installer.sh
+    sh hlu-installer.sh
     
 ## Usage:
 Simply input this command in terminal:
 
-    histgamehelper
+    histutilities
     
 
