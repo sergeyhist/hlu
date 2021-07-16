@@ -9,7 +9,6 @@
    - Enabling and setup libstrangle.   
    - Enabling and setup DxvkHUD.   
    - Different Wine, Proton, Dxvk, Nvidia and AMD options.
-+ Installing vkBasalt, Gamemode, Mangohud and libstrangle.
 + Wine Helper:   
    - Prefix Commands (winecfg, control, regedit, etc.).   
    - Winetricks.   
@@ -20,6 +19,7 @@
    - Change launch options for steam games.   
    - Winetricks for steam games.   
    - Reseting steam games prefixes. 
+ + Packages Installer for Dxvk, Vkd3d, GameMode, MangoHud, Libstrangle and VkBasalt.
 ## Installation:
 Clone the repo:
 
