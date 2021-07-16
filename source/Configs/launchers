@@ -84,7 +84,7 @@ launchercompleteinit() {
 	if [[ "$1" == "wine" ]]; then
 		launcher_vars=" launcher_type=\"$1\"\n launcher_exec_dir=\"$launcher_exec_dir\"\n selected_runner=\"$selected_runner\"\n selected_prefix=\"$selected_prefix\"\n launcher_exec=\"$launcher_exec\"\n launcher_msi=\"$launcher_msi\"\n"
 	elif [[ "$1" == "linux" ]]; then
-		launcher_vars=" launcher_exec_dir=\"$launcher_exec_dir\"\n launcher_exec=\"'$launcher_exec'\"\n"; fi
+		launcher_vars=" launcher_type=\"$1\"\n launcher_exec_dir=\"$launcher_exec_dir\"\n launcher_exec=\"'$launcher_exec'\"\n"; fi
 	if [[ "$1" == "wine" ]]; then 
 		launcher_command="${launcher_command}${launcher_dxvkhud} ${launcher_video}${launcher_dxvk}${launcher_strangle}${launcher_wine}${launcher_main}"
 		launcher_command="${launcher_command} WINEPREFIX=\\\"\${selected_prefix}\\\" \\\"\${selected_runner}\\\" \${wine_vd} \${launcher_msi} \\\"\${launcher_exec}\\\" \${main_args}"

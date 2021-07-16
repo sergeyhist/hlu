@@ -10,7 +10,7 @@ packsinstaller() {
 	cd  $PACKPATH; name=$(basename -s .git "$packageurl")
 	case $packagetype in
 	"branch")
-		listoptions "Options" "Install - ${blc}Check \"${cyc}$packageurl${blc}\" for additional information or necessary dependencies${noc}|Update|Uninstall"
+		listoptions "Options" "Install${noc} - ${blc}Check \"${cyc}$packageurl${blc}\" for additional information or necessary dependencies${noc}|Update|Uninstall"
 		if [[ -n "$CONFPATH/packs/$name" ]]; then
 			if [[ "$select_ans" == "1" ]]; then
 				if [[ -d "$name" ]]; then rm -rf "$name"; fi
