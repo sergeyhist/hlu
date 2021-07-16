@@ -1,12 +1,10 @@
 #!/bin/bash
 HIPATH="$HOME/Hist"; if [[ ! -d "$HIPATH"  ]]; then mkdir -p "$HIPATH"; fi 
-TOOLSPATH="$HIPATH/Tools"; if [[ ! -d "$TOOLSPATH"  ]]; then mkdir -p "$TOOLSPATH"; fi
 HISTORYPATH="$HIPATH/.historyfiles"; if [[ ! -d "$HISTORYPATH" ]]; then mkdir -p "$HISTORYPATH"; fi
 LAUNCHPATH="$HIPATH/Launchers"; if [[ ! -d "$LAUNCHPATH" ]]; then mkdir -p "$LAUNCHPATH"; fi
-PROTONPFXPATH="$HIPATH/Proton"; if [[ ! -d "$PROTONPFXPATH" ]]; then mkdir -p "$PROTONPFXPATH"; fi
 TEMPPATH="$HIPATH/.temp"; if [[ ! -d "$TEMPPATH" ]]; then mkdir -p "$TEMPPATH"; else rm -rf "$TEMPPATH"; mkdir -p "$TEMPPATH"; fi
 CONFPATH="$HIPATH/Configs"; if [[ ! -d "$CONFPATH" ]]; then mkdir -p "$CONFPATH"; fi
-PACKAGESPATH="$HIPATH/Packages"; if [[ ! -d "$PACKAGESPATH" ]]; then mkdir -p "$PACKAGESPATH"; fi 
+PACKPATH="$HIPATH/Packages"; if [[ ! -d "$PACKPATH" ]]; then mkdir -p "$PACKPATH"; fi 
 video_driver=$(lspci | grep -i --color 'vga\|3d\|2d')
 noc="\e[0m"; rec="\e[31m"; grc="\e[32m"; blc="\e[34m"; cyc="\e[36m"; mac="\e[91m"; Def_IFS=$IFS
 trap hi_exit EXIT

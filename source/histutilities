@@ -5,7 +5,7 @@ source "$CONFPATH/selector"
 source "$CONFPATH/launchers"
 source "$CONFPATH/wine"
 source "$CONFPATH/steam"
-source "$CONFPATH/tools"
+source "$CONFPATH/packages"
 steamfinder
 
 listoptions "Hist Linux Utilities" "Launchers Creator|Wine Helper|Steam Helper|Packages Installer"
@@ -35,11 +35,11 @@ case $select_ans in
 			listoptions "Launchers" "$hi_launchers"; "$LAUNCHPATH/${list_array[select_ans-1]}"; fi
 ;;
 "2") #Wine Helper
-	listoptions "Wine Utilities" "Prefix commands|Winetricks|Dxvk|Vkd3d|Install MF|Install MF-Cab|Install mfplat.dll|Tools updater|Prefixes manager|Runners manager|Reset default prefix"
+	listoptions "Wine Utilities" "Prefix commands|Winetricks|Dxvk|Vkd3d|Install MF|Install MF-Cab|Install mfplat.dll|Prefixes manager|Runners manager|Reset default prefix"
 	if [[ "$select_ans" == "1" ]]; then
 		prefixcommands		
 	elif [[ "$select_ans" == "2" ]]; then
-		runnerinit; prefixinit
+		prefixinit; runnerinit
 		inputhistory "$HISTORYPATH/.winetricks" "${cyc}winetricks arguments${noc}" "exit" "gui"
 		if [[ "$input_ans" == "gui" ]]; then 
 			WINEPREFIX="$selected_prefix" WINE="$selected_runner" winetricks; else WINEPREFIX="$selected_prefix" WINE="$selected_runner" winetricks $input_ans; fi
@@ -50,7 +50,7 @@ case $select_ans in
 			elif [[ "$select_ans" == "2" ]]; then update_option="uninstall"; fi
 			prefixinit
 			WINEPREFIX="$selected_prefix" "$TOOLSPATH/dxvk/dlls/dxvk-master/setup_dxvk.sh" $update_option
-		else echo -e "\nInstall ${grc}Dxvk${noc} from ${grc}Tools Updater${noc} menu!"; fi
+		else echo -e "\nInstall ${grc}Dxvk${noc} from ${grc}Packages Installer${noc}!"; fi
 	elif [[ "$select_ans" == "4" ]]; then
 		if [[ -d "$TOOLSPATH/vkd3d-proton" ]]; then
 			listoptions "Options List" "Install|Uninstall"; 
@@ -60,47 +60,42 @@ case $select_ans in
 			if [[ ! -f "$selected_prefix/drive_c/windows/system32/d3d12.dll" ]]; then touch "$selected_prefix/drive_c/windows/system32/d3d12.dll"
 			elif [[ ! -f "$selected_prefix/drive_c/windows/syswow64/d3d12.dll" ]]; then touch "$selected_prefix/drive_c/windows/syswow64/d3d12.dll"; fi
 			WINEPREFIX="$selected_prefix" "$TOOLSPATH/vkd3d-proton/dlls/vkd3d-proton-master/setup_vkd3d_proton.sh" $update_option
-		else echo -e "\nInstall ${grc}Vkd3d${noc} from ${grc}Tools Updater${noc} menu!"; fi
+		else echo -e "\nInstall ${grc}Vkd3d${noc} from ${grc}Packages Installer${noc}!"; fi
 	elif [[ "$select_ans" == "5" ]]; then
 		if [[ -d "$TOOLSPATH/mf-install" ]]; then
 			prefixinit
 			WINEPREFIX="$selected_prefix" "$TOOLSPATH/mf-install/mf-install.sh"
-		else echo -e "\nInstall ${grc}MF${noc} from ${grc}Tools Updater${noc} menu!"; fi
+		else echo -e "\nInstall ${grc}MF${noc} from ${grc}Packages Installer${noc}!"; fi
 	elif [[ "$select_ans" == "6" ]]; then
 		if [[ -d "$TOOLSPATH/mf-installcab" ]]; then
 			prefixinit
 			WINEPREFIX="$selected_prefix" "$TOOLSPATH/mf-installcab/install-mf-64.sh"
-		else echo -e "\nInstall ${grc}MF-Cab${noc} from ${grc}Tools Updater${noc} menu!"; fi
+		else echo -e "\nInstall ${grc}MF-Cab${noc} from ${grc}Packages Installer${noc}!"; fi
 	elif [[ "$select_ans" == "7" ]]; then
 		if [[ -d "$TOOLSPATH/mf-installcab" ]]; then execinit "wine"; cp "$TOOLSPATH/mf-installcab/mfplat.dll" "$init_result_dir"
-		else echo -e "\nInstall ${grc}MF-Cab${noc} from ${grc}Tools Updater${noc} menu!"; fi
-	elif [[ $select_ans == "8" ]]; then
-		readfiles "Tools Updater" "$CONFPATH/winetools.cfg" "lines" "ans"; tool_url="$file_line_dir"; tool_name="$file_line_name"
-		if [[ "$tool_name" == "Vkd3d" ]]; then toolsupdater "$tool_url" "--recursive"
-		elif [[ "$tool_name" == "MangoHud" ]]; then toolsupdater "$tool_url" "--recurse-submodules"
-		else toolsupdater "$tool_url"; fi
-	elif [[ $select_ans == "9"  ]]; then
+		else echo -e "\nInstall ${grc}MF-Cab${noc} from ${grc}Packages Installer${noc}!"; fi
+	elif [[ $select_ans == "8"  ]]; then
 		listoptions "Lists Manager" "Add prefix|Create prefix|Delete prefix"
 		if [[ "$select_ans" == "1" ]]; then addlines "prefix" "dir" "" "tofile" "$CONFPATH/addpfx.cfg" "winepfx"
-		elif [[ "$select_ans" == "2" ]]; then runnerinit; prefixcreator
+		elif [[ "$select_ans" == "2" ]]; then prefixcreator; runnerinit
 		elif [[ "$select_ans" == "3" ]]; then deletelines "Prefixes" "$CONFPATH/addpfx.cfg" "line"; fi
-	elif [[ $select_ans == "10"  ]]; then
+	elif [[ $select_ans == "9"  ]]; then
 		listoptions "Lists Manager" "Add runner|Delete runner"
 		if [[ "$select_ans" == "3" ]]; then addlines "runner" "dir" "" "tofile" "$CONFPATH/addrun.cfg" "winerun"
 		elif [[ "$select_ans" == "4" ]]; then deletelines "Runners" "$CONFPATH/addrun.cfg" "line"; fi
-	elif [[ $select_ans == "11"  ]]; then
-		rm -rf "$HOME/.wine"; mkdir "$HOME/.wine"; runnerinit "wine"; pfx_runner="$init_result"; WINEPREFIX="$HOME/.wine" "$pfx_runner" wineboot -u; fi
+	elif [[ $select_ans == "10"  ]]; then
+		rm -rf "$HOME/.wine"; mkdir "$HOME/.wine"; runnerinit; pfx_runner="$init_result"; WINEPREFIX="$HOME/.wine" "$pfx_runner" wineboot -u; fi
 ;;
 "3") #Steam Helper
 	listoptions "Steam Helper" "Set game launch options|Winetricks|Reset game prefix"
 	if [[ $select_ans == "1" ]]; then steamlauchoptions
 	elif [[ $select_ans == "2" ]]; then
-		runnerinit; readfiles "Steam game prefixes" "$TEMPPATH/.steampfx" "lines" "ans"; selected_prefix="$file_line_dir"
+		readfiles "Steam game prefixes" "$TEMPPATH/.steampfx" "lines" "ans"; selected_prefix="$file_line_dir"; runnerinit
 		inputhistory "$HISTORYPATH/.winetricks" "${cyc}winetricks arguments${noc}" "exit" "gui"
 		if [[ "$input_ans" == "gui" ]]; then 
 			WINEPREFIX="$selected_prefix" WINE="$selected_runner" winetricks; else WINEPREFIX="$selected_prefix" WINE="$selected_runner" winetricks $input_ans; fi
 	elif [[ $select_ans == "3" ]]; then deletelines "Steam Prefixes" "$TEMPPATH/.steampfx" "lines" "delete" "steam"; fi
 ;;
 "4") #Packages Installer
-	if [[ -d "/home/hist" ]]; then toolsinstaller; fi
+	packsinstaller
 esac

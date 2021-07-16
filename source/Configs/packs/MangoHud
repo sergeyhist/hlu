@@ -1,0 +1,14 @@
+#!/bin/bash
+packagetype="branch"
+packageurl="https://github.com/flightlessmango/MangoHud"
+packagevar="011"
+packagearg=""
+packageinstall() {
+    ./build.sh build
+    ./build.sh package
+    ./build.sh install
+}
+
+packageuninstall() {
+    ./build.sh uninstall
+}

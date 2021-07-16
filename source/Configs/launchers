@@ -13,7 +13,7 @@ execinit() {
 }
 
 launchercreator() {
-	if [[ $1 == "wine" ]]; then runnerinit; prefixinit; fi
+	if [[ $1 == "wine" ]]; then prefixinit; runnerinit; fi
 	execinit "$1"
 	if [[ -z "$launcher_name" ]]; then
 		launcher_name=$init_result_name; launcher_exec_dir="$init_result_dir"; launcher_exec="$init_result"; fi

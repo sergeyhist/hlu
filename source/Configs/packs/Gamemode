@@ -1,0 +1,14 @@
+#!/bin/bash
+packagetype="branch"
+packageurl="https://github.com/FeralInteractive/gamemode"
+packagevar="011"
+packagearg=""
+packageinstall() {
+    git checkout 1.6.1
+    ./bootstrap.sh
+}
+
+packageuninstall() {
+    systemctl --user stop gamemoded.service
+    sudo ninja uninstall -C builddir
+}

@@ -1,0 +1,13 @@
+#!/bin/bash
+packagetype="branch"
+packageurl="https://github.com/DadSchoorse/vkBasalt"
+packagevar="011"
+packagearg=""
+packageinstall() {
+    meson --buildtype=release --prefix=/usr builddir
+    ninja -C builddir install
+}
+
+packageuninstall() {
+    sudo ninja -C builddir uninstall
+}
