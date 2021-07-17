@@ -54,8 +54,10 @@ readfiles() {
 listoptions() {
 	IFS="|"; lo_count=0; sa_count=0; da_count=0
 	echo -e "\n ${mac}$1:${noc}\n"
-	for item in $6; do
-		desc_array[$da_count]="$item"; let "da_count+=1"; done
+	if [[ -n "$6" ]]; then
+		for item in $6; do
+			desc_array[$da_count]="$item"; let "da_count+=1"; done
+	else unset desc_array; fi
 	for item in $4; do
 		status_array[$sa_count]="$item"; let "sa_count+=1"; done
 	for option in $2; do 
