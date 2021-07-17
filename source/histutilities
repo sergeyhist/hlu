@@ -44,35 +44,35 @@ case $select_ans in
 		if [[ "$input_ans" == "gui" ]]; then 
 			WINEPREFIX="$selected_prefix" WINE="$selected_runner" winetricks; else WINEPREFIX="$selected_prefix" WINE="$selected_runner" winetricks $input_ans; fi
 	elif [[ "$select_ans" == "3" ]]; then
-		if [[ -d "$TOOLSPATH/dxvk" ]]; then
+		if [[ -d "$PACKPATH/dxvk" ]]; then
 			listoptions "Options List" "Install|Uninstall"; 
 			if [[ "$select_ans" == "1" ]]; then update_option="install"
 			elif [[ "$select_ans" == "2" ]]; then update_option="uninstall"; fi
 			prefixinit
-			WINEPREFIX="$selected_prefix" "$TOOLSPATH/dxvk/dlls/dxvk-master/setup_dxvk.sh" $update_option
+			WINEPREFIX="$selected_prefix" "$PACKPATH/dxvk/dlls/dxvk-master/setup_dxvk.sh" $update_option
 		else echo -e "\nInstall ${grc}Dxvk${noc} from ${grc}Packages Installer${noc}!"; fi
 	elif [[ "$select_ans" == "4" ]]; then
-		if [[ -d "$TOOLSPATH/vkd3d-proton" ]]; then
+		if [[ -d "$PACKPATH/vkd3d-proton" ]]; then
 			listoptions "Options List" "Install|Uninstall"; 
 			if [[ "$select_ans" == "1" ]]; then update_option="install"
 			elif [[ "$select_ans" == "2" ]]; then update_option="uninstall"; fi
 			prefixinit
 			if [[ ! -f "$selected_prefix/drive_c/windows/system32/d3d12.dll" ]]; then touch "$selected_prefix/drive_c/windows/system32/d3d12.dll"
 			elif [[ ! -f "$selected_prefix/drive_c/windows/syswow64/d3d12.dll" ]]; then touch "$selected_prefix/drive_c/windows/syswow64/d3d12.dll"; fi
-			WINEPREFIX="$selected_prefix" "$TOOLSPATH/vkd3d-proton/dlls/vkd3d-proton-master/setup_vkd3d_proton.sh" $update_option
+			WINEPREFIX="$selected_prefix" "$PACKPATH/vkd3d-proton/dlls/vkd3d-proton-master/setup_vkd3d_proton.sh" $update_option
 		else echo -e "\nInstall ${grc}Vkd3d${noc} from ${grc}Packages Installer${noc}!"; fi
 	elif [[ "$select_ans" == "5" ]]; then
-		if [[ -d "$TOOLSPATH/mf-install" ]]; then
+		if [[ -d "$PACKPATH/mf-install" ]]; then
 			prefixinit
-			WINEPREFIX="$selected_prefix" "$TOOLSPATH/mf-install/mf-install.sh"
+			WINEPREFIX="$selected_prefix" "$PACKPATH/mf-install/mf-install.sh"
 		else echo -e "\nInstall ${grc}MF${noc} from ${grc}Packages Installer${noc}!"; fi
 	elif [[ "$select_ans" == "6" ]]; then
-		if [[ -d "$TOOLSPATH/mf-installcab" ]]; then
+		if [[ -d "$PACKPATH/mf-installcab" ]]; then
 			prefixinit
-			WINEPREFIX="$selected_prefix" "$TOOLSPATH/mf-installcab/install-mf-64.sh"
+			WINEPREFIX="$selected_prefix" "$PACKPATH/mf-installcab/install-mf-64.sh"
 		else echo -e "\nInstall ${grc}MF-Cab${noc} from ${grc}Packages Installer${noc}!"; fi
 	elif [[ "$select_ans" == "7" ]]; then
-		if [[ -d "$TOOLSPATH/mf-installcab" ]]; then execinit "wine"; cp "$TOOLSPATH/mf-installcab/mfplat.dll" "$init_result_dir"
+		if [[ -d "$PACKPATH/mf-installcab" ]]; then execinit "wine"; cp "$PACKPATH/mf-installcab/mfplat.dll" "$init_result_dir"
 		else echo -e "\nInstall ${grc}MF-Cab${noc} from ${grc}Packages Installer${noc}!"; fi
 	elif [[ $select_ans == "8"  ]]; then
 		listoptions "Lists Manager" "Add prefix|Create prefix|Delete prefix"

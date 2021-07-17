@@ -97,9 +97,9 @@ launchercompleteinit() {
 		chmod +x "$LAUNCHPATH/$2"
 		echo -e "\nLauncher ${grc}${launcher_name}${noc} successfully $3 in the ${grc}$LAUNCHPATH${noc} folder."
 	else
-		echo -e '#!/bin/bash'"\n${launcher_vars}${launcher_settings}"'if [[ $1 != "read_vars" ]]; then cd "${launcher_exec_dir}"; eval'" \"${launcher_command}\"; fi" > "$launcher_exec_dir/$2"
-		chmod +x "$launcher_exec_dir/$2"
+		echo -e '#!/bin/bash'"\n${launcher_vars}${launcher_settings}"'if [[ $1 != "read_vars" ]]; then cd "${launcher_exec_dir}"; eval'" \"${launcher_command}\"; fi" > "$launcher_exec_dir/$2.hlu"
+		chmod +x "$launcher_exec_dir/$2.hlu"
 		if [[ -f "$LAUNCHPATH/$2" || -L "$LAUNCHPATH/$2" ]]; then rm "$LAUNCHPATH/$2"; fi
-		ln -s "$launcher_exec_dir/$2" "$LAUNCHPATH/$2"
+		ln -s "$launcher_exec_dir/$2.hlu" "$LAUNCHPATH/$2"
 		echo -e "\nLauncher ${grc}${launcher_name}${noc} successfully $3 in the ${grc}$launcher_exec_dir${noc} folder. Shortcut located in the ${grc}$LAUNCHPATH${noc} folder."; fi
 }

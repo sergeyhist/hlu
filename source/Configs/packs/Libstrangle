@@ -1,8 +1,6 @@
 #!/bin/bash
 packagetype="branch"
 packageurl="https://gitlab.com/torkel104/libstrangle"
-packagevar="011"
-packagearg=""
 packageinstall() {
     make
     sudo make install

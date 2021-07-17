@@ -69,7 +69,7 @@ listoptions() {
 			status_check=" - ${rec}OFF${noc}"; else status_check=""; fi
 		if [[ "$option" == "Reset Options" ]]; then status_check=""; fi
 		list_array[$lo_count]="$option"
-		if [[ -n "${desc_array[lo_count]}" ]]; then item_desc=" - ${blc}${desc_array[lo_count]}${noc}"; fi
+		if [[ -n "${desc_array[lo_count]}" ]]; then item_desc=" - ${blc}${desc_array[lo_count]}${noc}"; else item_desc=""; fi
 		echo -e " ${cyc}$((lo_count+=1))${noc}${status_check} - ${grc}$option${noc}${item_desc}"; done
 	echo -e "\nChoose ${cyc}Option${noc} from the list above (${cyc}q|Q${noc} for ${grc}exit${noc}):"; read -e "select_ans"
 	IFS="$Def_IFS"; let "lo_count+=1"

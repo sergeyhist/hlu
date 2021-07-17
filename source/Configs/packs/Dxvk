@@ -1,8 +1,6 @@
 #!/bin/bash
 packagetype="branch"
 packageurl="https://github.com/doitsujin/dxvk"
-packagevar="010"
-packagearg=""
 packageinstall() {
     if [[ -d "dlls" ]]; then rm -rf dlls; fi
     ./package-release.sh master dlls --no-package

@@ -1,7 +1,6 @@
 #!/bin/bash
 packagetype="branch"
 packageurl="https://github.com/HansKristian-Work/vkd3d-proton"
-packagevar="110"
 packagearg="--recursive"
 packageinstall() {
     if [[ -d "dlls" ]]; then rm -rf dlls; fi

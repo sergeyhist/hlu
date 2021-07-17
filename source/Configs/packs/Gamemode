@@ -1,8 +1,6 @@
 #!/bin/bash
 packagetype="branch"
 packageurl="https://github.com/FeralInteractive/gamemode"
-packagevar="011"
-packagearg=""
 packageinstall() {
     git checkout 1.6.1
     ./bootstrap.sh

@@ -11,37 +11,37 @@ packsinstaller() {
 	case $packagetype in
 	"branch")
 		listoptions "Options" "Install${noc} - ${blc}Check \"${cyc}$packageurl${blc}\" for additional information or necessary dependencies${noc}|Update|Uninstall"
-		if [[ -n "$CONFPATH/packs/$name" ]]; then
+		if [[ -n "$CONFPATH/packs/$selected_package" ]]; then
 			if [[ "$select_ans" == "1" ]]; then
 				if [[ -d "$name" ]]; then rm -rf "$name"; fi
-				if [[ $packagevar == "1"?? ]]; then git clone $packagearg $packageurl
+				if grep -oq "packagearg" "$CONFPATH/packs/$selected_package"; then git clone $packagearg $packageurl
 				else git clone $packageurl; fi
 				cd "$name"
-				if [[ $packagevar == ?"1"? ]]; then packageinstall; fi
+				if grep -oq "packageinstall" "$CONFPATH/packs/$selected_package"; then packageinstall; fi
 			elif [[ "$select_ans" == "2" ]]; then 
 				if [[ -d "$name" ]]; then
 					cd "$name"; git reset --hard
 					git pull $packageurl &> "$TEMPPATH/.toolcheck"
-					if grep -Fqx "Already up to date." "$TEMPPATH/.toolcheck"; then echo -e "\nAlready ${grc}up to date${noc}!"
-					else if [[ $packagevar == ?"1"? ]]; then packageinstall; fi; fi
+					if grep -oq "Already up to date" "$TEMPPATH/.toolcheck"; then echo -e "\nAlready ${grc}up to date${noc}!"
+					else if grep -oq "packageinstall" "$CONFPATH/packs/$selected_package"; then packageinstall; fi; fi
 				else echo -e "\nFirst install the ${grc}package${noc}\n"; fi
 			elif [[ "$select_ans" == "3" ]]; then
 				if [[ -d "$name" ]]; then
-					if [[ $packagevar == ??"1" ]]; then cd "$name"; packageuninstall; cd ..; fi
+					if grep -oq "packageuninstall" "$CONFPATH/packs/$selected_package"; then cd "$name"; packageuninstall; cd ..; fi
 					rm -rf "$name"
 				else echo -e "\nFirst install the ${grc}package${noc}\n"; fi; fi
 		else echo -e "\n${grc}Config file${noc} is ${mac}empty${noc}\n"; fi
 	;;
 	"release")
 		listoptions "Options" "Install|Uninstall"
-		if [[ -n "$CONFPATH/packs/$name" ]]; then
+		if [[ -n "$CONFPATH/packs/$selected_package" ]]; then
 			if [[ "$select_ans" == "1" ]]; then
 				if [[ -d "$name" ]]; then rm -rf "$name"; fi
 				git-latest "$packagename" "$packagever"
 				cd "$name"
-				if [[ $packagevar == "1"? ]]; then packageinstall; fi
+				if grep -oq "packageinstall" "$CONFPATH/packs/$selected_package"; then packageinstall; fi
 			elif [[ "$select_ans" == "2" ]]; then
-				if [[ $packagevar == ?"1" ]]; then packageuninstall; fi
+				if grep -oq "packageuninstall" "$CONFPATH/packs/$selected_package"; then packageuninstall; fi
 				rm -rf "$name"; fi
 		else echo -e "\n${grc}Config file${noc} is ${mac}empty${noc}\n"; fi
 	esac
