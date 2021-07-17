@@ -17,21 +17,17 @@ inputhistory() {
 }
 
 addlines() {
-	if [[ "$2" == "dir" ]]; then inputhistory "$HISTORYPATH/.${6}${2}" "${cyc}path${noc} to the ${grc}$1${noc} folder" "exit"; line_path="$input_ans"
-	elif [[ "$2" == "com" ]]; then inputhistory "$HISTORYPATH/.${2}" "${cyc}$1${noc}" "exit"; line_com="$input_ans"; fi
+	if [[ "$2" == "dir" ]]; then inputhistory "$HISTORYPATH/.${6}${2}" "${cyc}path${noc} to the ${grc}$1${noc} folder" "exit"; line_path="$input_ans"; fi
 	if [[ "$3" == "name" ]]; then inputhistory "$HISTORYPATH/.${6}${3}" "${cyc}name${noc} of the ${grc}$1${noc}" "exit"; line_name="$input_ans"; fi
 	if [[ "$4" == "tofile" ]] && [[ "$2" == "dir" ]]; then if [[ ! -d "$line_path" ]]; then mkdir -p "$line_path"; fi
-		if [[ -n "$line_name" ]]; then echo -e "$line_name\n$line_path" >> "$5"; else echo -e "$line_path" >> "$5"; fi
-	elif [[ "$4" == "tofile" ]] && [[ "$2" == "com" ]]; then
-		if [[ -n "$line_name" ]]; then echo -e "$line_name\n$line_com" >> "$5"; else echo -e "$line_com" >> "$5"; fi; fi
+		if [[ -n "$line_name" ]]; then echo -e "$line_name\n$line_path" >> "$5"; else echo -e "$line_path" >> "$5"; fi; fi
 }
 
 deletelines() {
 	readfiles "$1" "$2" "$3" "ans"
 	if [[ "$3" == "lines" ]]; then sed -i $((file_line_number*2-1)),$((file_line_number*2))d "$2"
 	elif [[ "$3" == "line" ]]; then sed -i ${file_line_number}d "$2"; fi
-	if [[ "$1" == "Git Packages" ]]; then if [[ -f "$CONFPATH/gitcomlist.cfg" ]]; then sed -i $((file_line_number*2-1)),$((file_line_number*2))d "$CONFPATH/gitcomlist.cfg"; fi; fi
-	if [[ -d "$file_line_dir" && "$1" != "Commands" ]]; then 
+	if [[ -d "$file_line_dir" ]]; then 
 		if [[ "$4" != "delete" ]]; then echo -e "\nDelete ${cyc}folder${noc} from filesystem? ${cyc}y|N${noc}"; read -e "ans"; else ans="y"; fi
 		if [[ "$ans" = [yY]* ]]; then if [[ "$5" != "steam" ]]; then rm -rf "$file_line_dir"; else rm -rf "$(dirname "$file_line_dir")"; fi; fi; fi
 	if [[ ! -s "$2" ]]; then rm "$2"; fi

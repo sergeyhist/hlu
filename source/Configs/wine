@@ -59,11 +59,12 @@ prefixinit() {
 }
 
 prefixcreator() {
+	if [[ -z "$selected_runner" ]]; then runnerinit; fi
 	addlines "Prefix" "dir" "" "tofile" "$CONFPATH/addpfx.cfg" "pfx"; pfx_path=$line_path
 	if [[ ! -d "${pfx_path}/drive_c" ]]; then
 		listoptions "Prefix Version" "32bit|64bit"
 		if [[ "$select_ans" == "1" ]]; then
-			WINEARCH=win32 WINEPREFIX="$pfx_path" "$pfx_runner" wineboot -u;
+			WINEARCH=win32 WINEPREFIX="$pfx_path" "$selected_runner" wineboot -u;
 		elif [[ "$select_ans" == "2" ]]; then
 			WINEPREFIX="$pfx_path" "$selected_runner" wineboot -u; fi; fi
 }

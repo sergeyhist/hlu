@@ -77,14 +77,16 @@ case $select_ans in
 	elif [[ $select_ans == "8"  ]]; then
 		listoptions "Lists Manager" "Add prefix|Create prefix|Delete prefix"
 		if [[ "$select_ans" == "1" ]]; then addlines "prefix" "dir" "" "tofile" "$CONFPATH/addpfx.cfg" "winepfx"
-		elif [[ "$select_ans" == "2" ]]; then prefixcreator; runnerinit
+		elif [[ "$select_ans" == "2" ]]; then prefixcreator
 		elif [[ "$select_ans" == "3" ]]; then deletelines "Prefixes" "$CONFPATH/addpfx.cfg" "line"; fi
 	elif [[ $select_ans == "9"  ]]; then
 		listoptions "Lists Manager" "Add runner|Delete runner"
-		if [[ "$select_ans" == "3" ]]; then addlines "runner" "dir" "" "tofile" "$CONFPATH/addrun.cfg" "winerun"
-		elif [[ "$select_ans" == "4" ]]; then deletelines "Runners" "$CONFPATH/addrun.cfg" "line"; fi
+		if [[ "$select_ans" == "1" ]]; then addlines "runner" "dir" "" "tofile" "$CONFPATH/addrun.cfg" "winerun"
+		elif [[ "$select_ans" == "2" ]]; then deletelines "Runners" "$CONFPATH/addrun.cfg" "line"; fi
 	elif [[ $select_ans == "10"  ]]; then
-		rm -rf "$HOME/.wine"; mkdir "$HOME/.wine"; runnerinit; pfx_runner="$init_result"; WINEPREFIX="$HOME/.wine" "$pfx_runner" wineboot -u; fi
+		listoptions "Are you sure?" "Yes|No"
+		if [[ "$select_ans" == "1" ]]; then
+			rm -rf "$HOME/.wine"; mkdir "$HOME/.wine"; runnerinit; pfx_runner="$init_result"; WINEPREFIX="$HOME/.wine" "$pfx_runner" wineboot -u; fi; fi
 ;;
 "3") #Steam Helper
 	listoptions "Steam Helper" "Set game launch options|Winetricks|Reset game prefix"
