@@ -18,7 +18,7 @@ launchercreator() {
 	if [[ -z "$launcher_name" ]]; then
 		launcher_name=$init_result_name; launcher_exec_dir="$init_result_dir"; launcher_exec="$init_result"; fi
 	inputhistory "$HISTORYPATH/.launchername" "${cyc}name${noc} of the launcher" "exit" "$launcher_name"; launcher_name="$input_ans"
-	launchersetup "${launcher_name}" "$1" 
+	launchersetup "$(echo "$launcher_name" | tr ' ' '_')" "$1" 
 	launchercompleteinit "$1" "$launcher_name" "created"
 }
 
@@ -28,13 +28,13 @@ launchereditor () {
 	source "$launcher_path" "read_vars"
 	if [[ "$launcher_type" == "wine" ]]; then
 		listoptions "Launcher Setup" "Change Launch Options|Change Prefix|Change Runner|Change Executable"
-		if [[ "$select_ans" == "1" ]]; then launchersetup "$launcher_name" "$launcher_type"
+		if [[ "$select_ans" == "1" ]]; then launchersetup "$(echo "$launcher_name" | tr ' ' '_')" "$launcher_type"
 		elif [[ "$select_ans" == "2" ]]; then prefixinit
 		elif [[ "$select_ans" == "3" ]]; then runnerinit
 		elif [[ "$select_ans" == "4" ]]; then execinit "$launcher_type"; launcher_exec_dir="$init_result_dir"; launcher_exec="$init_result"; fi
 	elif [[ "$launcher_type" == "linux" ]]; then
 		listoptions "Launcher Setup" "Change Launch Options|Change Executable"
-		if [[ "$select_ans" == "1" ]]; then launchersetup "$launcher_name" "$launcher_type"
+		if [[ "$select_ans" == "1" ]]; then launchersetup "$(echo "$launcher_name" | tr ' ' '_')" "$launcher_type"
 		elif [[ "$select_ans" == "2" ]]; then execinit "$launcher_type"; launcher_exec_dir="$init_result_dir"; launcher_exec="$init_result"; fi; fi
 	launchercompleteinit "$launcher_type" "$launcher_name" "updated"
 }
