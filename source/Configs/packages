@@ -20,10 +20,10 @@ packsinstaller() {
 				if grep -oq "packageinstall" "$CONFPATH/packs/$selected_package"; then packageinstall; fi
 			elif [[ "$select_ans" == "2" ]]; then 
 				if [[ -d "$name" ]]; then
-					cd "$name"; git reset --hard
-					git pull $packageurl &> "$TEMPPATH/.toolcheck"
-					if grep -oq "Already up to date" "$TEMPPATH/.toolcheck"; then echo -e "\nAlready ${grc}up to date${noc}!"
-					else if grep -oq "packageinstall" "$CONFPATH/packs/$selected_package"; then packageinstall; fi; fi
+					cd "$name"; git reset --hard; git pull $packageurl
+					listoptions "Options" "Install|Exit"
+					if [[ $select_ans == "1" ]]; then
+						if grep -oq "packageinstall" "$CONFPATH/packs/$selected_package"; then packageinstall; fi; fi
 				else echo -e "\nFirst install the ${grc}package${noc}\n"; fi
 			elif [[ "$select_ans" == "3" ]]; then
 				if [[ -d "$name" ]]; then
