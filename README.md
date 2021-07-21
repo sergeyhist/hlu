@@ -26,7 +26,7 @@ Clone the repo:
     git clone https://github.com/sergeyhist/hist-linux-utilities.git
     cd hist-linux-utilities
 
-Run hgh-installer script:
+Run installer script:
 
     sh hlu-installer.sh
     
