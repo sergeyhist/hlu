@@ -37,7 +37,7 @@ case $select_ans in
 "2") #Wine Helper
 	listoptions "Wine Utilities" "Prefix commands|Winetricks|Dxvk|Vkd3d|Install MF|Install MF-Cab|Install mfplat.dll|Prefixes manager|Runners manager|Reset default prefix"
 	if [[ "$select_ans" == "1" ]]; then
-		prefixcommands		
+		prefixinit; prefixcommands		
 	elif [[ "$select_ans" == "2" ]]; then
 		prefixinit; runnerinit
 		inputhistory "$HISTORYPATH/.winetricks" "${cyc}winetricks arguments${noc}" "exit" "gui"
@@ -89,14 +89,16 @@ case $select_ans in
 			rm -rf "$HOME/.wine"; mkdir "$HOME/.wine"; runnerinit; pfx_runner="$init_result"; WINEPREFIX="$HOME/.wine" "$pfx_runner" wineboot -u; fi; fi
 ;;
 "3") #Steam Helper
-	listoptions "Steam Helper" "Set game launch options|Winetricks|Reset game prefix"
+	listoptions "Steam Helper" "Set game launch options|Game prefix commands|Winetricks|Reset game prefix"
 	if [[ $select_ans == "1" ]]; then steamlauchoptions
 	elif [[ $select_ans == "2" ]]; then
+		readfiles "Steam game prefixes" "$TEMPPATH/.steampfx" "lines" "ans"; selected_prefix="$file_line_dir"; prefixcommands
+	elif [[ $select_ans == "3" ]]; then
 		readfiles "Steam game prefixes" "$TEMPPATH/.steampfx" "lines" "ans"; selected_prefix="$file_line_dir"; runnerinit
 		inputhistory "$HISTORYPATH/.winetricks" "${cyc}winetricks arguments${noc}" "exit" "gui"
 		if [[ "$input_ans" == "gui" ]]; then 
 			WINEPREFIX="$selected_prefix" WINE="$selected_runner" winetricks; else WINEPREFIX="$selected_prefix" WINE="$selected_runner" winetricks $input_ans; fi
-	elif [[ $select_ans == "3" ]]; then deletelines "Steam Prefixes" "$TEMPPATH/.steampfx" "lines" "delete" "steam"; fi
+	elif [[ $select_ans == "4" ]]; then deletelines "Steam game prefixes" "$TEMPPATH/.steampfx" "lines" "delete" "steam"; fi
 ;;
 "4") #Packages Installer
 	packsinstaller

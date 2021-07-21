@@ -73,7 +73,7 @@ prefixcreator() {
 }
 
 prefixcommands() {
-	prefixinit; command_prefix="$selected_prefix"
+	command_prefix="$selected_prefix"
 	listoptions "Wine Functions" "Wine Config|Control Panel|Task Manager|Explorer|Install/Uninstall Apps|Registry Editor|Kill Running Apps|Force Kill Running Apps|Custom command"
 	case $select_ans in
 	"1")

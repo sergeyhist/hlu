@@ -22,19 +22,20 @@ steamfinder() {
 		for item in $numbers; do
 			steam_folder=$(sed -n "${item}p" "$HOME/.steam/root/steamapps/libraryfolders.vdf" | cut -d\" -f4)
 			for item2 in "${steam_folder}/steamapps/appmanifest_"*'.acf'; do 
-			steam_name=$(grep '"name"' "$item2" | cut -d\" -f4)
-			steam_appid=$(grep '"appid"' "$item2" | cut -d\" -f4)
-			steam_dirname=$(grep '"installdir"' "$item2" | cut -d\" -f4)
-			if [[ -d "$steam_folder/steamapps/compatdata/$steam_appid/pfx" ]]; then steam_pfx="$steam_folder/steamapps/compatdata/$steam_appid/pfx"; fi
-			if [[ "$steam_dirname" == *"Proton"* ]]; then echo -e "$steam_folder/steamapps/common/$steam_dirname" >> "$TEMPPATH/.steamrun"; fi
-			case $steam_name in
-			*"Proton"* | *"Runtime"* | *"Steamworks"*)
-			;;
-			*)
-			echo -e "${steam_name}\n${steam_appid}" >> "$TEMPPATH/.steamapps"
-			if [[ -n "$steam_pfx" ]]; then echo -e "$steam_name\n$steam_pfx" >> "$TEMPPATH/.steampfx"; fi
-			esac
-		done; done; fi
+				if [[ -f "$item2" ]]; then
+					steam_name=$(grep '"name"' "$item2" | cut -d\" -f4)
+					steam_appid=$(grep '"appid"' "$item2" | cut -d\" -f4)
+					steam_dirname=$(grep '"installdir"' "$item2" | cut -d\" -f4)
+					if [[ -d "$steam_folder/steamapps/compatdata/$steam_appid/pfx" ]]; then steam_pfx="$steam_folder/steamapps/compatdata/$steam_appid/pfx"; fi
+					if [[ "$steam_dirname" == *"Proton"* ]]; then echo -e "$steam_folder/steamapps/common/$steam_dirname" >> "$TEMPPATH/.steamrun"; fi
+					case $steam_name in
+					*"Proton"* | *"Runtime"* | *"Steamworks"*)
+					;;
+					*)
+					echo -e "${steam_name}\n${steam_appid}" >> "$TEMPPATH/.steamapps"
+					if [[ -n "$steam_pfx" ]]; then echo -e "$steam_name\n$steam_pfx" >> "$TEMPPATH/.steampfx"; fi
+					esac; fi
+			done; done; fi
 	ls "/usr/share/steam/compatibilitytools.d/" | while read line; do
 		echo -e "/usr/share/steam/compatibilitytools.d/$line" >> "$TEMPPATH/.steamrun"; done
 	find "$HOME/.steam/steam/userdata/" -name "localconfig.vdf" | while read line; do
