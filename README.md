@@ -31,7 +31,7 @@ Run hgh-installer script:
     sh hlu-installer.sh
     
 ## Usage:
-Simply input this command in terminal:
+Input this command in terminal:
 
     histutilities
     
