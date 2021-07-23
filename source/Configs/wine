@@ -14,7 +14,8 @@ runnerfinder() {
 						if [[ -d "$line/share" ]]; then rm -rf "$line/share"; fi
 						proton_tar=$(find "$line" -type f -name "proton_dist"*)
 						cd "$(dirname "$proton_tar")"
-						tar -xf "$proton_tar"; rm -f "$proton_tar"; fi
+						tar -xf "$proton_tar"; rm -f "$proton_tar"
+						mkdir dist; mv -t dist bin lib lib64 share; cp version dist; fi
 					if [[ $(find "$line" -type f -name "wine") ]]; then
 						hi_runners="$hi_runners|$(find "$line" -type f -name "wine")"
 						if [[ -f "$line/version" ]]; then
