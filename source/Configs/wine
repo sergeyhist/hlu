@@ -7,15 +7,9 @@ runnerfinder() {
 		if [[ -f "$item" ]]; then
 			while read line; do
 					if [[ $(find "$line" -type f -name "proton_dist"*) ]]; then
-						if [[ -d "$line/dist" ]]; then rm -rf "$line/dist"; fi
-						if [[ -d "$line/bin" ]]; then rm -rf "$line/bin"; fi
-						if [[ -d "$line/lib" ]]; then rm -rf "$line/lib"; fi
-						if [[ -d "$line/lib64" ]]; then rm -rf "$line/lib64"; fi
-						if [[ -d "$line/share" ]]; then rm -rf "$line/share"; fi
-						proton_tar=$(find "$line" -type f -name "proton_dist"*)
-						cd "$(dirname "$proton_tar")"
-						tar -xf "$proton_tar"; rm -f "$proton_tar"
-						mkdir dist; mv -t dist bin lib lib64 share; cp version dist; fi
+						proton_tar=$(find "$line" -type f -name "proton_dist"*); proton_tar_dir=$(dirname "$proton_tar")
+						if [[ -d "$proton_tar_dir/dist" ]]; then rm -r "$proton_tar_dir/dist/"*; else mkdir "$proton_tar_dir/dist" ; fi
+						tar -xf "$proton_tar" -C "$proton_tar_dir/dist/"; rm "$proton_tar"; fi
 					if [[ $(find "$line" -type f -name "wine") ]]; then
 						hi_runners="$hi_runners|$(find "$line" -type f -name "wine")"
 						if [[ -f "$line/version" ]]; then
