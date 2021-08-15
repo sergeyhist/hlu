@@ -4,13 +4,14 @@ packsinstaller() {
 	while read line; do
 		if [[ -z "$hi_packs" ]]; then hi_packs="$line"
 		else hi_packs="$hi_packs|$line"; fi; done < "$TEMPPATH/.packs"
-	listoptions "Packages" "$hi_packs"
+	listoptions "Packages" "$hi_packs" "" "" "" ""
 	selected_package="${list_array[select_ans-1]}"
 	source "$CONFPATH/packs/$selected_package"
-	cd  $PACKPATH; name=$(basename -s .git "$packageurl")
+	cd  $PACKPATH
 	case $packagetype in
 	"branch")
-		listoptions "Options" "Install${noc} - ${blc}Check \"${cyc}$packageurl${blc}\" for additional information or necessary dependencies${noc}|Update|Uninstall"
+		name=$(basename -s .git "$packageurl")
+		listoptions "Options" "Install${noc} - ${blc}Check \"${cyc}$packageurl${blc}\" for additional information or necessary dependencies${noc}|Update|Uninstall" "" "" "" ""
 		if [[ -n "$CONFPATH/packs/$selected_package" ]]; then
 			if [[ "$select_ans" == "1" ]]; then
 				if [[ -d "$name" ]]; then rm -rf "$name"; fi
@@ -21,7 +22,7 @@ packsinstaller() {
 			elif [[ "$select_ans" == "2" ]]; then 
 				if [[ -d "$name" ]]; then
 					cd "$name"; git reset --hard; git pull $packageurl
-					listoptions "Options" "Install|Exit"
+					listoptions "Install? " "Yes|No" "" "" "" ""
 					if [[ $select_ans == "1" ]]; then
 						if grep -oq "packageinstall" "$CONFPATH/packs/$selected_package"; then packageinstall; fi; fi
 				else echo -e "\nFirst install the ${grc}package${noc}\n"; fi
@@ -33,12 +34,13 @@ packsinstaller() {
 		else echo -e "\n${grc}Config file${noc} is ${mac}empty${noc}\n"; fi
 	;;
 	"release")
-		listoptions "Options" "Install|Uninstall"
+		name=$(basename -s .git "$packagename")
+		listoptions "Options" "Install|Uninstall" "" "" "" ""
 		if [[ -n "$CONFPATH/packs/$selected_package" ]]; then
 			if [[ "$select_ans" == "1" ]]; then
 				if [[ -d "$name" ]]; then rm -rf "$name"; fi
+				mkdir "$name"; cd "$name"
 				git-latest "$packagename" "$packagever"
-				cd "$name"
 				if grep -oq "packageinstall" "$CONFPATH/packs/$selected_package"; then packageinstall; fi
 			elif [[ "$select_ans" == "2" ]]; then
 				if grep -oq "packageuninstall" "$CONFPATH/packs/$selected_package"; then packageuninstall; fi

@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 source "$HOME/Hist/Configs/vars"
 source "$CONFPATH/main"
 source "$CONFPATH/selector"
@@ -6,18 +7,18 @@ source "$CONFPATH/launchers"
 source "$CONFPATH/wine"
 source "$CONFPATH/steam"
 source "$CONFPATH/packages"
-steamfinder
-
-listoptions "Hist Linux Utilities" "Launchers Creator|Wine Helper|Steam Helper|Packages Installer"
+if [[ -d "$HOME/.steam" ]]; then steamfinder; fi
+if [[ -f "/usr/bin/yay" && -f "/usr/bin/checkupdates" ]]; then hi_archupdater="|Arch Updater"; else hi_archupdater=""; fi
+listoptions "Hist Linux Utilities" "Launchers Creator|Wine Helper|Steam Helper|Packages Installer$hi_archupdater" "" "" "" ""
 case $select_ans in
 "1") #Launcher Creator
 	ls $LAUNCHPATH > "$TEMPPATH/.launchers"
 	while read line; do
 		if [[ -z "$hi_launchers" ]]; then hi_launchers="$line"
 		else hi_launchers="$hi_launchers|$line"; fi; done < "$TEMPPATH/.launchers"
-	listoptions "Launchers Creator" "Create launcher|Edit launcher|Delete launcher|Open launcher in text editor|Run launcher"
+	listoptions "Launchers Creator" "Create launcher|Edit launcher|Delete launcher|Open launcher in text editor|Run launcher" "" "" "" ""
 		if [[ "$select_ans" == "1" ]]; then
-			listoptions "Launcher Creator" "Wine App|Linux App"
+			listoptions "Launcher Creator" "Wine App|Linux App" "" "" "" ""
 			if [[ "$select_ans" == "1" ]]; then
 				launchercreator "wine"
 			elif [[ "$select_ans" == "2" ]]; then
@@ -25,27 +26,26 @@ case $select_ans in
 		elif [[ "$select_ans" == "2" ]]; then
 			launchereditor
 		elif [[ "$select_ans" == "3" ]]; then
-			listoptions "Launchers" "$hi_launchers"
-			if [[ -L "$LAUNCHPATH/${list_array[select_ans-1]}" ]]; then
+			listoptions "Launchers" "$hi_launchers" "" "" "" ""
+			if [[ -L "$LAUNCHPATH/${list_array[select_ans-1]}" && $(readlink -f "$LAUNCHPATH/${list_array[select_ans-1]}") ]]; then
 				rm "$(readlink -f "$LAUNCHPATH/${list_array[select_ans-1]}")"; fi
 			rm "$LAUNCHPATH/${list_array[select_ans-1]}"
 		elif [[ "$select_ans" == "4" ]]; then
-			listoptions "Launchers" "$hi_launchers"; xdg-open "$LAUNCHPATH/${list_array[select_ans-1]}"
+			listoptions "Launchers" "$hi_launchers" "" "" "" ""; xdg-open "$LAUNCHPATH/${list_array[select_ans-1]}"
 		elif [[ "$select_ans" == "5" ]]; then
-			listoptions "Launchers" "$hi_launchers"; "$LAUNCHPATH/${list_array[select_ans-1]}"; fi
+			listoptions "Launchers" "$hi_launchers" "" "" "" ""; "$LAUNCHPATH/${list_array[select_ans-1]}"; fi
 ;;
 "2") #Wine Helper
-	listoptions "Wine Utilities" "Prefix commands|Winetricks|Dxvk|Vkd3d|Install MF|Install MF-Cab|Install mfplat.dll|Prefixes manager|Runners manager|Reset default prefix"
+	listoptions "Wine Utilities" "Prefix commands|Winetricks|Dxvk|Vkd3d|Install MF|Install MF-Cab|Install mfplat.dll|Prefixes manager|Runners manager|Reset default prefix" "" "" "" ""
 	if [[ "$select_ans" == "1" ]]; then
 		prefixinit; prefixcommands		
 	elif [[ "$select_ans" == "2" ]]; then
 		prefixinit; runnerinit
-		inputhistory "$HISTORYPATH/.winetricks" "${cyc}winetricks arguments${noc}" "exit" "gui"
-		if [[ "$input_ans" == "gui" ]]; then 
-			WINEPREFIX="$selected_prefix" WINE="$selected_runner" winetricks; else WINEPREFIX="$selected_prefix" WINE="$selected_runner" winetricks $input_ans; fi
+		generalinput "winetricks|--gui|exit" "${cyc}winetricks arguments${noc}"
+		WINEPREFIX="$selected_prefix" WINE="$selected_runner" winetricks $input_ans;
 	elif [[ "$select_ans" == "3" ]]; then
 		if [[ -d "$PACKPATH/dxvk" ]]; then
-			listoptions "Options List" "Install|Uninstall"; 
+			listoptions "Options List" "Install|Uninstall" "" "" "" "" 
 			if [[ "$select_ans" == "1" ]]; then update_option="install"
 			elif [[ "$select_ans" == "2" ]]; then update_option="uninstall"; fi
 			prefixinit
@@ -53,7 +53,7 @@ case $select_ans in
 		else echo -e "\nInstall ${grc}Dxvk${noc} from ${grc}Packages Installer${noc}!"; fi
 	elif [[ "$select_ans" == "4" ]]; then
 		if [[ -d "$PACKPATH/vkd3d-proton" ]]; then
-			listoptions "Options List" "Install|Uninstall"; 
+			listoptions "Options List" "Install|Uninstall" "" "" "" "" 
 			if [[ "$select_ans" == "1" ]]; then update_option="install"
 			elif [[ "$select_ans" == "2" ]]; then update_option="uninstall"; fi
 			prefixinit
@@ -75,31 +75,37 @@ case $select_ans in
 		if [[ -d "$PACKPATH/mf-installcab" ]]; then execinit "wine"; cp "$PACKPATH/mf-installcab/mfplat.dll" "$init_result_dir"
 		else echo -e "\nInstall ${grc}MF-Cab${noc} from ${grc}Packages Installer${noc}!"; fi
 	elif [[ $select_ans == "8"  ]]; then
-		listoptions "Lists Manager" "Add prefix|Create prefix|Delete prefix"
-		if [[ "$select_ans" == "1" ]]; then addlines "prefix" "dir" "" "tofile" "$CONFPATH/addpfx.cfg" "winepfx"
+		listoptions "Lists Manager" "Add prefix|Create prefix|Delete prefix" "" "" "" ""
+		if [[ "$select_ans" == "1" ]]; then addlines "prefix" "$CONFPATH/addpfx.cfg"
 		elif [[ "$select_ans" == "2" ]]; then prefixcreator
-		elif [[ "$select_ans" == "3" ]]; then deletelines "Prefixes" "$CONFPATH/addpfx.cfg" "line"; fi
+		elif [[ "$select_ans" == "3" ]]; then deletelines "Prefixes" "$CONFPATH/addpfx.cfg"; fi
 	elif [[ $select_ans == "9"  ]]; then
-		listoptions "Lists Manager" "Add runner|Delete runner"
-		if [[ "$select_ans" == "1" ]]; then addlines "runner" "dir" "" "tofile" "$CONFPATH/addrun.cfg" "winerun"
-		elif [[ "$select_ans" == "2" ]]; then deletelines "Runners" "$CONFPATH/addrun.cfg" "line"; fi
+		listoptions "Lists Manager" "Add runner|Delete runner" "" "" "" ""
+		if [[ "$select_ans" == "1" ]]; then addlines "runner" "$CONFPATH/addrun.cfg"
+		elif [[ "$select_ans" == "2" ]]; then deletelines "Runners" "$CONFPATH/addrun.cfg" "line" "" ""; fi
 	elif [[ $select_ans == "10"  ]]; then
-		listoptions "Are you sure?" "Yes|No"
+		listoptions "Are you sure?" "Yes|No" "" "" "" ""
 		if [[ "$select_ans" == "1" ]]; then
 			rm -rf "$HOME/.wine"; mkdir "$HOME/.wine"; runnerinit; pfx_runner="$init_result"; WINEPREFIX="$HOME/.wine" "$pfx_runner" wineboot -u; fi; fi
 ;;
 "3") #Steam Helper
-	listoptions "Steam Helper" "Set game launch options|Game prefix commands|Winetricks|Reset game prefix"
+	listoptions "Steam Helper" "Set game launch options|Game prefix commands|Winetricks|Reset game prefix" "" "" "" ""
 	if [[ $select_ans == "1" ]]; then steamlauchoptions
 	elif [[ $select_ans == "2" ]]; then
-		readfiles "Steam game prefixes" "$TEMPPATH/.steampfx" "lines" "ans"; selected_prefix="$file_line_dir"; prefixcommands
+		readfiles "Steam game prefixes" "$TEMPPATH/.steampfx"; selected_prefix="$read_result_dir"; prefixcommands
 	elif [[ $select_ans == "3" ]]; then
-		readfiles "Steam game prefixes" "$TEMPPATH/.steampfx" "lines" "ans"; selected_prefix="$file_line_dir"; runnerinit
-		inputhistory "$HISTORYPATH/.winetricks" "${cyc}winetricks arguments${noc}" "exit" "gui"
-		if [[ "$input_ans" == "gui" ]]; then 
-			WINEPREFIX="$selected_prefix" WINE="$selected_runner" winetricks; else WINEPREFIX="$selected_prefix" WINE="$selected_runner" winetricks $input_ans; fi
-	elif [[ $select_ans == "4" ]]; then deletelines "Steam game prefixes" "$TEMPPATH/.steampfx" "lines" "delete" "steam"; fi
+		readfiles "Steam game prefixes" "$TEMPPATH/.steampfx"; selected_prefix="$file_line_dir"; runnerinit
+		generalinput "winetricks|--gui|exit" "${cyc}winetricks arguments${noc}"
+		WINEPREFIX="$selected_prefix" WINE="$selected_runner" winetricks $input_ans
+	elif [[ $select_ans == "4" ]]; then deletelines "Steam game prefixes" "$TEMPPATH/.steampfx"; fi
 ;;
 "4") #Packages Installer
 	packsinstaller
+;;
+"5") #Arch Updater
+	if [[ $(sudo pacman -Qu; yay -Qua) ]]; then
+		echo -e "\n ${mac}Updates:${noc}\n\n$(checkupdates; yay -Qua)"
+		listoptions "Update?" "Yes|No" "" "" "" ""
+		if [[ "$select_ans" == "1" ]]; then eval "sudo pacman -Syu; yay -Syua"; fi
+	else echo -e "\n ${mac}No updates found${noc}"; fi
 esac

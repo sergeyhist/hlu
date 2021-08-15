@@ -8,8 +8,14 @@ runnerfinder() {
 			while read line; do
 					if [[ $(find "$line" -type f -name "proton_dist"*) ]]; then
 						proton_tar=$(find "$line" -type f -name "proton_dist"*); proton_tar_dir=$(dirname "$proton_tar")
-						if [[ -d "$proton_tar_dir/dist" ]]; then rm -r "$proton_tar_dir/dist/"*; else mkdir "$proton_tar_dir/dist" ; fi
-						tar -xf "$proton_tar" -C "$proton_tar_dir/dist/"; rm "$proton_tar"; fi
+						if [[ -d "$proton_tar_dir/dist" ]]; then 
+							if ! cmp -s "$proton_tar_dir/version" "$proton_tar_dir/dist/version"; then
+								rm -rf "$proton_tar_dir/dist"; mkdir "$proton_tar_dir/dist"
+								tar -xf "$proton_tar" -C "$proton_tar_dir/dist/"
+								cat "$proton_tar_dir/version" > "$proton_tar_dir/dist/version"; fi
+						else
+							mkdir "$proton_tar_dir/dist"
+							tar -xf "$proton_tar" -C "$proton_tar_dir/dist/"; fi; fi
 					if [[ $(find "$line" -type f -name "wine") ]]; then
 						hi_runners="$hi_runners|$(find "$line" -type f -name "wine")"
 						if [[ -f "$line/version" ]]; then
@@ -35,32 +41,28 @@ prefixfinder() {
 }
 
 runnerinit() {
-	while : ; do
-		runnerfinder "$CONFPATH/addrun.cfg|$TEMPPATH/.steamrun"
-		listoptions "Runners" "$hi_runners_names|Add new runner" "" "" "" "$hi_runners"
-		selected_runner="${desc_array[select_ans-1]}"
-		if [[ ${list_array[select_ans-1]} == "Add new runner" ]]; then
-			addlines "runner" "dir" "" "tofile" "$CONFPATH/addrun.cfg" "winerun"
-		else break; fi; done
+	if [[ -z "$selected_runner" ]]; then
+		while : ; do
+			runnerfinder "$CONFPATH/addrun.cfg|$TEMPPATH/.steamrun"
+			listoptions "Runners" "$hi_runners_names|Add new runner" "" "" "" "$hi_runners"
+			if [[ ${list_array[select_ans-1]} == "Add new runner" ]]; then addlines "runner" "$CONFPATH/addrun.cfg"
+			else selected_runner="${desc_array[select_ans-1]}"; break; fi; done; fi
 }
 
 prefixinit() {
 	while : ; do
 		prefixfinder "$CONFPATH/addpfx.cfg"
 		listoptions "Prefixes" "$hi_prefixes_names|Add new prefix|Create new prefix" "" "" "" "$hi_prefixes"
-		selected_prefix="${desc_array[select_ans-1]}"
-		if [[ ${list_array[select_ans-1]} == "Add new prefix" ]]; then
-			addlines "prefix" "dir" "" "tofile" "$CONFPATH/addpfx.cfg" "winepfx"
-		elif [[ ${list_array[select_ans-1]} == "Create new prefix" ]]; then
-			prefixcreator; selected_prefix="$pfx_path"
-		else break; fi; done
+		if [[ ${list_array[select_ans-1]} == "Add new prefix" ]]; then addlines "prefix" "$CONFPATH/addpfx.cfg"
+		elif [[ ${list_array[select_ans-1]} == "Create new prefix" ]]; then	prefixcreator
+		else selected_prefix="${desc_array[select_ans-1]}"; break; fi; done
 }
 
 prefixcreator() {
 	if [[ -z "$selected_runner" ]]; then runnerinit; fi
-	addlines "Prefix" "dir" "" "tofile" "$CONFPATH/addpfx.cfg" "pfx"; pfx_path=$line_path
+	addlines "prefix" "$CONFPATH/addpfx.cfg"; pfx_path=$line_path
 	if [[ ! -d "${pfx_path}/drive_c" ]]; then
-		listoptions "Prefix Version" "32bit|64bit"
+		listoptions "Prefix Version" "32bit|64bit" "" "" "" ""
 		if [[ "$select_ans" == "1" ]]; then
 			WINEARCH=win32 WINEPREFIX="$pfx_path" "$selected_runner" wineboot -u;
 		elif [[ "$select_ans" == "2" ]]; then
@@ -68,8 +70,7 @@ prefixcreator() {
 }
 
 prefixcommands() {
-	command_prefix="$selected_prefix"
-	listoptions "Wine Functions" "Wine Config|Control Panel|Task Manager|Explorer|Install/Uninstall Apps|Registry Editor|Kill Running Apps|Force Kill Running Apps|Custom command"
+	listoptions "Wine Functions" "Wine Config|Control Panel|Task Manager|Explorer|Install/Uninstall Apps|Registry Editor|Kill Running Apps|Force Kill Running Apps|Custom command" "" "" "" ""
 	case $select_ans in
 	"1")
 	command_func="winecfg"
@@ -96,8 +97,8 @@ prefixcommands() {
 	command_func="wineserver -k9"
 	;;
 	"9")
-	inputhistory "$HISTORYPATH/.prefixcommand" "${grc}custom prefix command${noc} (Example: ${cyc}notepad.exe${noc})" "exit"; command_func="$input_ans"
+	generalinput "prefixcommand|none|exit" "${grc}custom prefix command${noc} (Example: ${cyc}notepad.exe${noc})"; command_func="$input_ans"
 	esac
-	if [[ "$command_func" == "wineserver -k" || "$command_func" == "wineserver -k9" ]]; then  WINEPREFIX="$command_prefix" $command_func
-	else runnerinit; command_runner="$selected_runner"; WINEPREFIX="$command_prefix" "$command_runner" $command_func; fi
+	if [[ "$command_func" == "wineserver -k" || "$command_func" == "wineserver -k9" ]]; then eval "WINEPREFIX=\"$selected_prefix\" $command_func"
+	else runnerinit; eval "WINEPREFIX=\"$selected_prefix\" \"$selected_runner\" $command_func"; fi
 }

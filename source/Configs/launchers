@@ -1,39 +1,38 @@
 #!/bin/bash
 execinit() {
-	addlines "${1^} App" "dir" "" "" "" "${1}app"
+	generalinput "execfiles|none|exit" "${grc}path${noc} to executable"
 	case $1 in
 	"wine")
-		find "$line_path" -name "*.exe" -o -name "*.msi" | while read line; do fake_name=$(basename -s .exe "$line"); echo -e "$fake_name\n$line" >> "$TEMPPATH/.${1}files"; done
+		find "$input_ans" -name "*.exe" -o -name "*.msi" | while read line; do echo -e "$(basename -s .exe "$line") | $line" >> "$TEMPPATH/.${1}files"; done
 	;;
 	"linux")
-		find "$line_path" -executable | while read line; do fake_name=$(basename "$line"); echo -e "$fake_name\n$line" >> "$TEMPPATH/.${1}files"; done
+		find "$input_ans" -executable | while read line; do echo -e "$(basename "$line") | $line" >> "$TEMPPATH/.${1}files"; done
 	esac
-	readfiles "${1^} Executables" "$TEMPPATH/.${1}files" "lines" "ans"
-	init_result_name="$file_line_name"; init_result_dir=$(dirname "$file_line_dir"); init_result="$file_line_dir"
+	readfiles "${1^} Executables" "$TEMPPATH/.${1}files"
+	init_result_name="$read_result_name"; init_result_dir=$(dirname "$read_result_dir"); init_result="$read_result_dir"
 }
 
 launchercreator() {
 	if [[ $1 == "wine" ]]; then prefixinit; runnerinit; fi
 	execinit "$1"
-	if [[ -z "$launcher_name" ]]; then
-		launcher_name=$init_result_name; launcher_exec_dir="$init_result_dir"; launcher_exec="$init_result"; fi
-	inputhistory "$HISTORYPATH/.launchername" "${cyc}name${noc} of the launcher" "exit" "$launcher_name"; launcher_name="$input_ans"
+	launcher_name=$init_result_name; launcher_exec_dir="$init_result_dir"; launcher_exec="$init_result"
+	generalinput "launchername|$launcher_name|exit" "${cyc}name${noc} of the launcher"; launcher_name="$input_ans"
 	launchersetup "$(echo "$launcher_name" | tr ' ' '_')" "$1" 
 	launchercompleteinit "$1" "$launcher_name" "created"
 }
 
 launchereditor () {
-	listoptions "Launchers" "$hi_launchers"
+	listoptions "Launchers" "$hi_launchers" "" "" "" ""
 	launcher_name="${list_array[select_ans-1]}"; launcher_path="$LAUNCHPATH/$launcher_name"
 	source "$launcher_path" "read_vars"
 	if [[ "$launcher_type" == "wine" ]]; then
-		listoptions "Launcher Setup" "Change Launch Options|Change Prefix|Change Runner|Change Executable"
+		listoptions "Launcher Setup" "Change Launch Options|Change Prefix|Change Runner|Change Executable" "" "" "" ""
 		if [[ "$select_ans" == "1" ]]; then launchersetup "$(echo "$launcher_name" | tr ' ' '_')" "$launcher_type"
 		elif [[ "$select_ans" == "2" ]]; then prefixinit
-		elif [[ "$select_ans" == "3" ]]; then runnerinit
+		elif [[ "$select_ans" == "3" ]]; then selected_runner=""; runnerinit
 		elif [[ "$select_ans" == "4" ]]; then execinit "$launcher_type"; launcher_exec_dir="$init_result_dir"; launcher_exec="$init_result"; fi
 	elif [[ "$launcher_type" == "linux" ]]; then
-		listoptions "Launcher Setup" "Change Launch Options|Change Executable"
+		listoptions "Launcher Setup" "Change Launch Options|Change Executable" "" "" "" ""
 		if [[ "$select_ans" == "1" ]]; then launchersetup "$(echo "$launcher_name" | tr ' ' '_')" "$launcher_type"
 		elif [[ "$select_ans" == "2" ]]; then execinit "$launcher_type"; launcher_exec_dir="$init_result_dir"; launcher_exec="$init_result"; fi; fi
 	launchercompleteinit "$launcher_type" "$launcher_name" "updated"
@@ -51,11 +50,11 @@ launchersetup() {
 	if [[ "$video_driver" == *"NVIDIA"* ]]; then launcher_video_driver="NVIDIA Options"
 	elif [[ "$video_driver" == *"AMD"* ]]; then launcher_video_driver="AMD Options"; fi
 	if [[ "$2" == "wine" ]]; then
-		listoptions "Launcher Setup" "Main Options${settings_strangle}|Wine Options|DxvkHUD Options|Dxvk Options|${launcher_video_driver}" "settings" "" "$1"
+		listoptions "Launcher Setup" "Main Options${settings_strangle}|Wine Options|DxvkHUD Options|Dxvk Options|${launcher_video_driver}" "settings" "" "$1" ""
 	elif [[ "$2" == "linux" ]]; then
-		listoptions "Launcher Setup" "Main Options${settings_strangle}|${launcher_video_driver}" "settings" "" "$1"
+		listoptions "Launcher Setup" "Main Options${settings_strangle}|${launcher_video_driver}" "settings" "" "$1" ""
 	elif [[ "$2" == "steam" ]]; then
-		listoptions "Launcher Setup" "Main Options${settings_strangle}|Proton Options|DxvkHUD Options|Dxvk Options|${launcher_video_driver}" "settings" "" "$1"; fi
+		listoptions "Launcher Setup" "Main Options${settings_strangle}|Proton Options|DxvkHUD Options|Dxvk Options|${launcher_video_driver}" "settings" "" "$1" ""; fi
 }
 
 launchersetupinit() {
@@ -65,8 +64,8 @@ launchersetupinit() {
 	if [[ "$1" != "linux" ]]; then launcher_dxvk_init=" dxvk_async=\"$dxvk_async\"\n dxvk_cache=\"$dxvk_cache\"\n"; fi
 	if [[ "$video_driver" == *"NVIDIA"* ]]; then launcher_nvidia_init=" nvidia_to=\"$nvidia_to\"\n nvidia_osd=\"$nvidia_osd\"\n"; fi
 	if [[ "$video_driver" == *"AMD"* ]]; then launcher_amd_init=" amd_aco=\"$amd_aco\"\n amd_to=\"$amd_to\"\n"; fi
-	if [[ "$1" == "wine" ]]; then launcher_wine_init=" wine_esync=\"$wine_esync\"\n wine_fsync=\"$wine_fsync\"\n wine_vd=\"$wine_vd\"\n"; fi
-	launcher_settings="${launcher_main_init}${launcher_strangle_init}${launcher_dxvkhud_init}${launcher_dxvk_init}${launcher_nvidia_init}${launcher_amd_init}${launcher_wine_init}${launcher_proton_init}"
+	if [[ "$1" == "wine" ]]; then launcher_wine_init=" wine_esync=\"$wine_esync\"\n wine_fsync=\"$wine_fsync\"\n wine_fsr=\"$wine_fsr\"\n wine_fsr_strength=\"$wine_fsr_strength\"\n wine_vd=\"$wine_vd\"\n"; fi
+	launcher_settings="${launcher_main_init}${launcher_strangle_init}${launcher_dxvkhud_init}${launcher_dxvk_init}${launcher_nvidia_init}${launcher_amd_init}${launcher_wine_init}"
 }
 
 launchercompleteinit() {
@@ -78,8 +77,7 @@ launchercompleteinit() {
 	launcher_dxvk='${dxvk_async}${dxvk_cache}'
 	if [[ "$video_driver" == *"NVIDIA"* ]]; then launcher_video='${nvidia_to}${nvidia_osd}'
 	elif [[ "$video_driver" == *"AMD"* ]]; then launcher_video='${amd_aco}${amd_to}'; fi
-	launcher_wine='${wine_esync}${wine_fsync}'
-	launcher_proton='${proton_wined3d}${proton_large_address}${proton_old_gl}${proton_seccomp}${proton_d3d12}${proton_d3d11}${proton_d3d10}${proton_d3d9}${proton_esync}${proton_fsync}${proton_futex2}'
+	launcher_wine='${wine_esync}${wine_fsync}${wine_fsr}${wine_fsr_strength}'
 	launcher_command=''
 	if [[ "$1" == "wine" ]]; then
 		launcher_vars=" launcher_type=\"$1\"\n launcher_exec_dir=\"$launcher_exec_dir\"\n selected_runner=\"$selected_runner\"\n selected_prefix=\"$selected_prefix\"\n launcher_exec=\"$launcher_exec\"\n launcher_msi=\"$launcher_msi\"\n"

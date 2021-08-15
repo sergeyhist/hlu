@@ -1,13 +1,14 @@
 #!/bin/bash
 steamlauchoptions() {
-	readfiles "Steam games" "$TEMPPATH/.steamapps" "lines" "ans"; launcher_name="$file_line_name"; launcher_steam_appid="$file_line_dir"
+	flag=0; line_number=0
+	readfiles "Steam games" "$TEMPPATH/.steamapps"; launcher_name="$read_result_name"; launcher_steam_appid="$read_result_dir"
 	if [[ -n "$launcher_steam_appid" ]]; then
-		readfiles "Steam local configs" "$TEMPPATH/.lcfiles" "lines" "ans"; launcher_lc="$file_line_dir"
+		readfiles "Steam local configs" "$TEMPPATH/.lcfiles"; launcher_lc="$read_result_dir"
 		launchersetup "$launcher_name" "steam"
 		if [[ "$video_driver" == *"NVIDIA"* ]]; then sl_video="${nvidia_to}${nvidia_osd}"
 		elif [[ "$video_driver" == *"AMD"* ]]; then sl_video="${amd_aco}${amd_to}"; fi
-		sl_vars="${proton_wined3d}${proton_large_address}${proton_old_gl}${proton_seccomp}${proton_d3d12}${proton_d3d11}${proton_d3d10}${proton_d3d9}${proton_esync}${proton_fsync}${proton_futex2}${sl_video}${dxvk_async}${dxvk_cache}${dxvkhud_status}${dxvkhud_full}${dxvkhud_devinfo}${dxvkhud_fps}${dxvkhud_frametimes}${dxvkhud_submission}${dxvkhud_drawcall}${dxvkhud_pipelines}${dxvkhud_memory}${dxvkhud_gpuload}${dxvkhud_version}${dxvkhud_api}${dxvkhud_compiler}${dxvkhud_samplers}${dxvkhud_scale}${strangle_status}${strangle_fps}${strangle_fps_battery}${strangle_vsync}${strangle_glfinish}${strangle_picmip}${strangle_af}${strangle_trilinear}${strangle_retro}${strangle_nodlsym}${strangle_vkonly}${strangle_enable_vklayer}${strangle_disable_vklayer}${main_pulse}${main_gamemode}${main_mangohud}${main_vkbasalt}${main_customoptions}"
-		line_number=0; pkill steam; sleep 3s
+		sl_vars="${proton_wined3d}${proton_large_address}${proton_old_gl}${proton_seccomp}${wine_fsr}${wine_fsr_strength}${proton_d3d12}${proton_d3d11}${proton_d3d10}${proton_d3d9}${proton_esync}${proton_fsync}${proton_futex2}${sl_video}${dxvk_async}${dxvk_cache}${dxvkhud_status}${dxvkhud_full}${dxvkhud_devinfo}${dxvkhud_fps}${dxvkhud_frametimes}${dxvkhud_submission}${dxvkhud_drawcall}${dxvkhud_pipelines}${dxvkhud_memory}${dxvkhud_gpuload}${dxvkhud_version}${dxvkhud_api}${dxvkhud_compiler}${dxvkhud_samplers}${dxvkhud_scale}${strangle_status}${strangle_fps}${strangle_fps_battery}${strangle_vsync}${strangle_glfinish}${strangle_picmip}${strangle_af}${strangle_trilinear}${strangle_retro}${strangle_nodlsym}${strangle_vkonly}${strangle_enable_vklayer}${strangle_disable_vklayer}${main_pulse}${main_gamemode}${main_mangohud}${main_vkbasalt}${main_customoptions}"
+		while pkill steam; do sleep 1s; done
 		while read line; do 
 			let "line_number+=1"
 			if [[ $line == *'"Software"'* ]]; then flag=1; fi 
@@ -26,19 +27,19 @@ steamfinder() {
 					steam_name=$(grep '"name"' "$item2" | cut -d\" -f4)
 					steam_appid=$(grep '"appid"' "$item2" | cut -d\" -f4)
 					steam_dirname=$(grep '"installdir"' "$item2" | cut -d\" -f4)
-					if [[ -d "$steam_folder/steamapps/compatdata/$steam_appid/pfx" ]]; then steam_pfx="$steam_folder/steamapps/compatdata/$steam_appid/pfx"; fi
+					if [[ -d "$steam_folder/steamapps/compatdata/$steam_appid/pfx" ]]; then
+					echo -e "$steam_name | $steam_folder/steamapps/compatdata/$steam_appid/pfx" >> "$TEMPPATH/.steampfx"; fi
 					if [[ "$steam_dirname" == *"Proton"* ]]; then echo -e "$steam_folder/steamapps/common/$steam_dirname" >> "$TEMPPATH/.steamrun"; fi
 					case $steam_name in
 					*"Proton"* | *"Runtime"* | *"Steamworks"*)
 					;;
 					*)
-					echo -e "${steam_name}\n${steam_appid}" >> "$TEMPPATH/.steamapps"
-					if [[ -n "$steam_pfx" ]]; then echo -e "$steam_name\n$steam_pfx" >> "$TEMPPATH/.steampfx"; fi
+					echo -e "$steam_name | $steam_appid" >> "$TEMPPATH/.steamapps"
 					esac; fi
 			done; done; fi
 	ls "/usr/share/steam/compatibilitytools.d/" | while read line; do
 		echo -e "/usr/share/steam/compatibilitytools.d/$line" >> "$TEMPPATH/.steamrun"; done
 	find "$HOME/.steam/steam/userdata/" -name "localconfig.vdf" | while read line; do
 		steam_profile_name=$(grep '"PersonaName"' "$line" | cut -d\" -f4)
-		echo -e "${steam_profile_name}\n${line}" >> "$TEMPPATH/.lcfiles"; done
+		echo -e "${steam_profile_name} | ${line}" >> "$TEMPPATH/.lcfiles"; done
 }
