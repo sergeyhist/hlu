@@ -1,15 +1,18 @@
 #!/bin/bash
 execinit() {
-	generalinput "execfiles|none|exit" "${grc}path${noc} to executable"
-	case $1 in
-	"wine")
-		find "$input_ans" -name "*.exe" -o -name "*.msi" | while read line; do echo -e "$(basename -s .exe "$line") | $line" >> "$TEMPPATH/.${1}files"; done
-	;;
-	"linux")
-		find "$input_ans" -executable | while read line; do echo -e "$(basename "$line") | $line" >> "$TEMPPATH/.${1}files"; done
-	esac
-	readfiles "${1^} Executables" "$TEMPPATH/.${1}files"
-	init_result_name="$read_result_name"; init_result_dir=$(dirname "$read_result_dir"); init_result="$read_result_dir"
+	generalinput "execfiles|none|exit" "${cyc}path${noc} to ${grc}folder${noc} with executable or ${cyc}full path${noc} to ${grc}executable${noc}"
+	if [[ -f "$input_ans" ]]; then
+		init_result_name="$(basename -s .exe "$input_ans")"; init_result_dir=$(dirname "$input_ans"); init_result="$input_ans"
+	else
+		case $1 in
+		"wine")
+			find "$input_ans" -name "*.exe" -o -name "*.msi" | while read line; do echo -e "$(basename -s .exe "$line") | $line" >> "$TEMPPATH/.${1}files"; done
+		;;
+		"linux")
+			find "$input_ans" -executable | while read line; do echo -e "$(basename "$line") | $line" >> "$TEMPPATH/.${1}files"; done
+		esac
+		readfiles "${1^} Executables" "$TEMPPATH/.${1}files"
+		init_result_name="$read_result_name"; init_result_dir=$(dirname "$read_result_dir"); init_result="$read_result_dir"; fi
 }
 
 launchercreator() {
