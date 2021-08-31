@@ -89,15 +89,33 @@ case $select_ans in
 			rm -rf "$HOME/.wine"; mkdir "$HOME/.wine"; runnerinit; pfx_runner="$init_result"; WINEPREFIX="$HOME/.wine" "$pfx_runner" wineboot -u; fi; fi
 ;;
 "3") #Steam Helper
-	listoptions "Steam Helper" "Set game launch options|Game prefix commands|Winetricks|Reset game prefix" "" "" "" ""
+	listoptions "Steam Helper" "Set game launch options|Game prefix commands|Winetricks|Reset game prefix|Install MF|Install MFCab|Install mfplat.dll" "" "" "" ""
 	if [[ $select_ans == "1" ]]; then steamlauchoptions
 	elif [[ $select_ans == "2" ]]; then
 		readfiles "Steam game prefixes" "$TEMPPATH/.steampfx"; selected_prefix="$read_result_dir"; prefixcommands
 	elif [[ $select_ans == "3" ]]; then
-		readfiles "Steam game prefixes" "$TEMPPATH/.steampfx"; selected_prefix="$file_line_dir"; runnerinit
+		readfiles "Steam game prefixes" "$TEMPPATH/.steampfx"; selected_prefix="$read_result_dir"; runnerinit
 		generalinput "winetricks|--gui|exit" "${cyc}winetricks arguments${noc}"
 		WINEPREFIX="$selected_prefix" WINE="$selected_runner" winetricks $input_ans
-	elif [[ $select_ans == "4" ]]; then deletelines "Steam game prefixes" "$TEMPPATH/.steampfx"; fi
+	elif [[ $select_ans == "4" ]]; then deletelines "Steam game prefixes" "$TEMPPATH/.steampfx"
+	elif [[ $select_ans == "5" ]]; then
+		if [[ -d "$PACKPATH/mf-install" ]]; then
+			readfiles "Steam game prefixes" "$TEMPPATH/.steampfx"; selected_prefix="$read_result_dir"
+			WINEPREFIX="$selected_prefix" "$PACKPATH/mf-install/mf-install.sh"
+		else echo -e "\nInstall ${grc}MF${noc} from ${grc}Packages Installer${noc}!"; fi
+	elif [[ $select_ans == "6" ]]; then
+		if [[ -d "$PACKPATH/mf-installcab" ]]; then
+			readfiles "Steam game prefixes" "$TEMPPATH/.steampfx"; selected_prefix="$read_result_dir"
+			WINEPREFIX="$selected_prefix" "$PACKPATH/mf-installcab/install-mf-64.sh"
+		else echo -e "\nInstall ${grc}MF-Cab${noc} from ${grc}Packages Installer${noc}!"; fi
+	elif [[ "$select_ans" == "7" ]]; then
+		if [[ -d "$PACKPATH/mf-installcab" ]]; then
+			readfiles "Steam games" "$TEMPPATH/.steamdirs"
+			find "$read_result_dir" -name "*.exe" | while read line; do echo -e "$(basename -s .exe "$line") | $line" >> "$TEMPPATH/.steamexes"; done
+			readfiles "Exe files" "$TEMPPATH/.steamexes"
+			cp "$PACKPATH/mf-installcab/mfplat.dll" "$(dirname "$read_result_dir")"
+		else echo -e "\nInstall ${grc}MF-Cab${noc} from ${grc}Packages Installer${noc}!"; fi; fi
+		
 ;;
 "4") #Packages Installer
 	packsinstaller
