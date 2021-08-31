@@ -1,7 +1,8 @@
 #!/bin/bash
 execinit() {
 	generalinput "execfiles|none|exit" "${cyc}path${noc} to ${grc}folder${noc} with executable or ${cyc}full path${noc} to ${grc}executable${noc}"
-	if [[ -f "$input_ans" ]]; then
+	if [[ -f $(echo "$input_ans" | sed "s/ *$//") ]]; then
+		input_ans="$(echo "$input_ans" | sed "s/ *$//")"
 		init_result_name="$(basename -s .exe "$input_ans")"; init_result_dir=$(dirname "$input_ans"); init_result="$input_ans"
 	else
 		case $1 in

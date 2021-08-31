@@ -11,7 +11,7 @@ generalinput() {
 	if [[ ! -f "$gi_file" ]]; then touch "$gi_file"; fi
 	history -r "$gi_file"
 	if [[ "${gi_default}" == "none" ]]; then echo -e "\nEnter $2 (${cyc}q|Q${noc} for ${grc}exit${noc}):"
-	else echo -e "\nEnter $2 (Default: ${grc}${gi_default}${noc}) (${cyc}d|D${noc} for ${grc}default${noc}, ${cyc}q|Q${noc} for ${grc}exit${noc}):"; fi; read -e "input_ans" 
+	else echo -e "\nEnter $2 (Default: ${grc}${gi_default}${noc}) (${cyc}d|D${noc} for ${grc}default${noc}, ${cyc}q|Q${noc} for ${grc}exit${noc}):"; fi; read -e "input_ans"
 	if [[ "$input_ans" == [qQйЙ] ]]; then
 		if [[ "$gi_end" != "exit" ]]; then input_ans=""; else exit; fi
 	elif [[ "$input_ans" == [dDвВ] && "${gi_default}" != "none" ]]; then input_ans="${gi_default}"
@@ -44,20 +44,21 @@ deletelines() {
 readfiles() {
 	rf_count=0
 	if [[ -n "$2" ]]; then
-			echo -e "\n ${mac}$1${noc}\n"
-			while read line; do
-				if echo "$line" | grep -qo " | "; then
-					file_names[$rf_count]="$(echo "$line" | awk -F" [|] " '{print $1}')"
-					file_dirs[$rf_count]="$(echo "$line" | awk -F" [|] " '{print $2}')"
-					echo -e " ${cyc}$((rf_count+=1))${noc} - ${grc}$(echo "$line" | awk -F" [|] " '{print $1}')${noc} - ${blc}$(echo "$line" | awk -F" [|] " '{print $2}')${noc}"	
-				else
-					file_dirs[$rf_count]="$line"
-					echo -e " ${cyc}$((rf_count+=1))${noc} - ${grc}${line}${noc}"; fi; done < "$2"
-			echo -e "\nChoose ${cyc}item${noc} from the ${grc}list${noc} above (${cyc}q|Q${noc} for ${grc}exit${noc}):"; read -e "select_ans"
-			if [[ -n "${file_names:+nex}" ]]; then read_result_name="${file_names[select_ans-1]}"; fi
-			read_result_dir="${file_dirs[select_ans-1]}"
+		echo -e "\n ${mac}$1${noc}\n"
+		while read line; do
+			if echo "$line" | grep -qo " | "; then
+				file_names[$rf_count]="$(echo "$line" | awk -F" [|] " '{print $1}')"
+				file_dirs[$rf_count]="$(echo "$line" | awk -F" [|] " '{print $2}')"
+				echo -e " ${cyc}$((rf_count+=1))${noc} - ${grc}$(echo "$line" | awk -F" [|] " '{print $1}')${noc} - ${blc}$(echo "$line" | awk -F" [|] " '{print $2}')${noc}"	
+			else
+				file_dirs[$rf_count]="$line"
+				echo -e " ${cyc}$((rf_count+=1))${noc} - ${grc}${line}${noc}"; fi; done < "$2"
+		echo -e "\nChoose ${cyc}item${noc} from the ${grc}list${noc} above (${cyc}q|Q${noc} for ${grc}exit${noc}):"; read -e "select_ans"
 		if [[ "$select_ans" == [qQйЙ] ]]; then exit
-		elif [[ "$select_ans" -ge "$((rf_count+1))" || "$select_ans" -le "0" ]]; then readfiles "$1" "$2"; fi
+		elif [[ "$select_ans" -ge "$((rf_count+1))" || "$select_ans" -le "0" ]]; then readfiles "$1" "$2"
+		else 
+			if [[ -n "${file_names:+nex}" ]]; then read_result_name="${file_names[select_ans-1]}"; fi
+			read_result_dir="${file_dirs[select_ans-1]}"; fi
 	else echo -e "\n${grc}File${noc} is ${rec}empty${noc}"; exit; fi
 }
 
