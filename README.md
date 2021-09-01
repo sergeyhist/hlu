@@ -5,6 +5,7 @@
      - Selecting prefix.   
      - Selecting wine/proton version.   
      - Enabling gamemode, mangohud, vkbasalt.    
+     - Enabling FSR
      - Enabling and setup libstrangle.   
      - Enabling and setup dxvkhud.   
      - Various wine, proton, dxvk, nvidia and amd options.
@@ -15,9 +16,11 @@
    - Add, create and remove prefixes.   
    - Add and remove wine runners.   
  + Steam Helper:     
-   - Change launch options for steam game.   
-   - Winetricks for steam game prefix.   
-   - Reset steam games prefix. 
+   - Change launch options for game. 
+   - Wine commands for game prefix (winecfg, explorer, etc.)  
+   - Winetricks for game prefix.   
+   - Reset game prefix.   
+   - Install MF, MF-Cab, mfplat.dll.
  + Packages Installer:
    - Install dxvk, vkd3d, gamemode, mangohud, libstrangle and vkbasalt.
 ## Installation:
