@@ -15,8 +15,8 @@ packsinstaller() {
 		if [[ -n "$CONFPATH/packs/$selected_package" ]]; then
 			if [[ "$select_ans" == "1" ]]; then
 				if [[ -d "$name" ]]; then rm -rf "$name"; fi
-				if grep -oq "packagearg" "$CONFPATH/packs/$selected_package"; then git clone $packagearg $packageurl
-				else git clone $packageurl; fi
+				if grep -oq "packagearg" "$CONFPATH/packs/$selected_package"; then eval "git clone $packagearg $packageurl"
+				else eval "git clone $packageurl"; fi
 				cd "$name"
 				if grep -oq "packageinstall" "$CONFPATH/packs/$selected_package"; then packageinstall; fi
 			elif [[ "$select_ans" == "2" ]]; then 
