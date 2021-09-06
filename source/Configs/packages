@@ -22,9 +22,10 @@ packsinstaller() {
 			elif [[ "$select_ans" == "2" ]]; then 
 				if [[ -d "$name" ]]; then
 					cd "$name"; git reset --hard; git pull $packageurl
-					listoptions "Install? " "Yes|No" "" "" "" ""
-					if [[ $select_ans == "1" ]]; then
-						if grep -oq "packageinstall" "$CONFPATH/packs/$selected_package"; then packageinstall; fi; fi
+					if grep -oq "packageinstall" "$CONFPATH/packs/$selected_package"; then
+						listoptions "Install? " "Yes|No" "" "" "" ""
+						if [[ $select_ans == "1" ]]; then
+							packageinstall; fi; fi
 				else echo -e "\nFirst install the ${grc}package${noc}\n"; fi
 			elif [[ "$select_ans" == "3" ]]; then
 				if [[ -d "$name" ]]; then
