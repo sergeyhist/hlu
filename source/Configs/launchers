@@ -94,7 +94,7 @@ launchercompleteinit() {
 		launcher_command="${launcher_command}${launcher_video}${launcher_strangle}${launcher_main}"
 		launcher_command="${launcher_command} \${launcher_exec} \${main_args}"; fi
 	if [[ ! -w "$launcher_exec_dir" ]]; then
-		if [[ -f "$LAUNCHPATH/$2" ]]; then rm "$LAUNCHPATH/$2"; fi
+		if [[ -f "$LAUNCHPATH/$2" || -L "$LAUNCHPATH/$2" ]]; then rm "$LAUNCHPATH/$2"; fi
 		echo -e '#!/bin/bash'"\n${launcher_vars}${launcher_settings}"'if [[ $1 != "read_vars" ]]; then cd "${launcher_exec_dir}"; eval'" \"${launcher_command}\"; fi" > "$LAUNCHPATH/$2"
 		chmod +x "$LAUNCHPATH/$2"
 		echo -e "\nLauncher ${grc}${launcher_name}${noc} successfully $3 in the ${grc}$LAUNCHPATH${noc} folder."
