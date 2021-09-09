@@ -1,6 +1,10 @@
 #!/bin/bash
 hi_exit() {
-	echo -e "\n${rec}Exit${noc}\n"; rm -rf "$TEMPPATH"
+	rm -rf "$TEMPPATH"
+	if [[ $list_name != "Hist Linux Utilities" ]]; then
+		listoptions "Restart?" "Yes|No" "" "" "" ""
+		if [[ "$select_ans" == "1" ]]; then exec "$0"; fi
+	else echo -e "\n${rec}Exit${noc}"; fi
 }
 
 generalinput() {
@@ -64,7 +68,8 @@ readfiles() {
 
 listoptions() {
 	IFS="|"; lo_count=0; sa_count=0; da_count=0
-	echo -e "\n ${mac}$1${noc}\n"
+	list_name="$1"
+	echo -e "\n ${mac}$list_name${noc}\n"
 	if [[ -n "$6" ]]; then
 		for item in $6; do
 			desc_array[$da_count]="$item"; let "da_count+=1"; done
