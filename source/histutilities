@@ -9,7 +9,7 @@ source "$CONFPATH/steam"
 source "$CONFPATH/packages"
 if [[ -d "$HOME/.steam" ]]; then steamfinder; fi
 if [[ -f "/usr/bin/yay" && -f "/usr/bin/checkupdates" ]]; then hi_archupdater="|Arch Updater"; else hi_archupdater=""; fi
-listoptions "Hist Linux Utilities" "Launchers Creator|Wine Helper|Steam Helper|Packages Installer$hi_archupdater" "" "" "" ""
+exit_flag="1"; listoptions "Hist Linux Utilities" "Launchers Creator|Wine Helper|Steam Helper|Packages Installer$hi_archupdater" "" "" "" ""; exit_flag="0"
 case $select_ans in
 "1") #Launcher Creator
 	ls $LAUNCHPATH > "$TEMPPATH/.launchers"
