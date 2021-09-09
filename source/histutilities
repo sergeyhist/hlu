@@ -33,7 +33,7 @@ case $select_ans in
 		elif [[ "$select_ans" == "4" ]]; then
 			listoptions "Launchers" "$hi_launchers" "" "" "" ""; xdg-open "$LAUNCHPATH/${list_array[select_ans-1]}"
 		elif [[ "$select_ans" == "5" ]]; then
-			listoptions "Launchers" "$hi_launchers" "" "" "" ""; "$LAUNCHPATH/${list_array[select_ans-1]}"; fi
+			listoptions "Launchers" "$hi_launchers" "" "" "" ""; eval "\"$LAUNCHPATH/${list_array[select_ans-1]}\""; fi
 ;;
 "2") #Wine Helper
 	listoptions "Wine Utilities" "Prefix commands|Winetricks|Dxvk|Vkd3d|Install MF|Install MF-Cab|Install mfplat.dll|Prefixes manager|Runners manager|Reset default prefix" "" "" "" ""

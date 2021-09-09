@@ -2,7 +2,7 @@
 hi_exit() {
 	rm -rf "$TEMPPATH"
 	if [[ "$exit_flag" == "0" ]]; then
-		listoptions "Restart?" "Yes|No" "" "" "" ""
+		listoptions "Restart HLU?" "Yes|No" "" "" "" ""
 		if [[ "$select_ans" == "1" ]]; then exec "$0"; fi
 	else echo -e "\n${rec}Exit${noc}"; fi
 }
