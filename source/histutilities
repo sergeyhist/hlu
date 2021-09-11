@@ -121,7 +121,7 @@ case $select_ans in
 	packsinstaller
 ;;
 "5") #Arch Updater
-	if [[ $(sudo pacman -Qu; yay -Qua) ]]; then
+	if [[ $(checkupdates; yay -Qua) ]]; then
 		echo -e "\n ${mac}Updates:${noc}\n\n$(checkupdates; yay -Qua)"
 		listoptions "Update?" "Yes|No" "" "" "" ""
 		if [[ "$select_ans" == "1" ]]; then eval "sudo pacman -Syu; yay -Syua"; fi
