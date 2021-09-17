@@ -305,7 +305,9 @@ prefixcommands() {
 	generalinput "prefixcommand|none|exit" "${grc}custom prefix command${noc} (Example: ${cyc}notepad.exe${noc})"; command_func="$input_ans"
 	esac
 	if [[ "$command_func" == "wineserver -k" || "$command_func" == "wineserver -k9" ]]; then eval "WINEPREFIX=\"$selected_prefix\" $command_func"
-	else runnerinit "all"; eval "WINEPREFIX=\"$selected_prefix\" \"$selected_runner\" $command_func"; fi
+	else 
+		if [[ "$1" == "proton" ]]; then runnerinit "proton"; else runnerinit "all"; fi
+		eval "WINEPREFIX=\"$selected_prefix\" \"$selected_runner\" $command_func"; fi
 }
 
 packsinstaller() {
@@ -678,7 +680,7 @@ case $select_ans in
 "2") #Wine Helper
 	listoptions "Wine Utilities" "Prefix commands|Winetricks|Dxvk|Vkd3d|Install MF|Install MF-Cab|Install mfplat.dll|Prefixes manager|Runners manager|Reset default prefix" "" "" "" ""
 	if [[ "$select_ans" == "1" ]]; then
-		prefixinit; prefixcommands		
+		prefixinit; prefixcommands	"all"	
 	elif [[ "$select_ans" == "2" ]]; then
 		prefixinit; runnerinit "all"
 		generalinput "winetricks|--gui|exit" "${cyc}winetricks arguments${noc}"
@@ -733,7 +735,7 @@ case $select_ans in
 	listoptions "Steam Helper" "Set game launch options|Game prefix commands|Winetricks|Reset game prefix|Install MF|Install MFCab|Install mfplat.dll" "" "" "" ""
 	if [[ $select_ans == "1" ]]; then steamlauchoptions
 	elif [[ $select_ans == "2" ]]; then
-		readfiles "Steam game prefixes" "$TEMPPATH/.steampfx"; selected_prefix="$read_result_dir"; prefixcommands
+		readfiles "Steam game prefixes" "$TEMPPATH/.steampfx"; selected_prefix="$read_result_dir"; prefixcommands "proton"
 	elif [[ $select_ans == "3" ]]; then
 		readfiles "Steam game prefixes" "$TEMPPATH/.steampfx"; selected_prefix="$read_result_dir"; runnerinit "proton"
 		generalinput "winetricks|--gui|exit" "${cyc}winetricks arguments${noc}"
