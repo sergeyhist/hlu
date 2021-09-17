@@ -652,12 +652,11 @@ protonselector() {
 if [[ -d "$HOME/.steam" ]]; then steamfinder; fi
 if [[ -f "/usr/bin/yay" && -f "/usr/bin/checkupdates" ]]; then hi_archupdater="|Arch Updater"; else hi_archupdater=""; fi
 exit_flag="1"; listoptions "Hist Linux Utilities" "Launchers Creator|Wine Helper|Steam Helper|Packages Installer$hi_archupdater" "" "" "" ""; exit_flag="0"
-case $select_ans in
+case "$select_ans" in
 "1") #Launcher Creator
-	ls $LAUNCHPATH > "$TEMPPATH/.launchers"
 	while read -r line; do
-		if [[ -z "$hi_launchers" ]]; then hi_launchers="$line"
-		else hi_launchers="$hi_launchers|$line"; fi; done < "$TEMPPATH/.launchers"
+		if [[ -f "$line" ]]; then hi_launchers="$hi_launchers$(basename "$line")|"; fi; done < <(find "$LAUNCHPATH" -maxdepth 1 -mindepth 1)
+	hi_launchers="${hi_launchers::-1}"
 	listoptions "Launchers Creator" "Create launcher|Edit launcher|Delete launcher|Open launcher in text editor|Run launcher" "" "" "" ""
 		if [[ "$select_ans" == "1" ]]; then
 			listoptions "Launcher Creator" "Wine App|Linux App" "" "" "" ""
