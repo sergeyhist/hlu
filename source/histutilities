@@ -323,7 +323,7 @@ packsinstaller() {
 	"branch")
 		name=$(basename -s .git "$packageurl")
 		listoptions "Options" "Install${noc} - ${blc}Check \"${cyc}$packageurl${blc}\" for additional information or necessary dependencies${noc}|Update|Uninstall" "" "" "" ""
-		if [[ -d "$INSTPATH/$selected_package" ]]; then
+		if [[ -f "$INSTPATH/$selected_package" ]]; then
 			if [[ "$select_ans" == "1" ]]; then
 				if [[ -d "$name" ]]; then rm -rf "$name"; fi
 				if grep -oq "packagearg" "$INSTPATH/$selected_package"; then eval "git clone $packagearg $packageurl"
