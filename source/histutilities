@@ -2,6 +2,7 @@
 set -euo pipefail
 trap hi_exit EXIT
 Def_IFS=$'\n'
+IFS=$Def_IFS
 HIPATH="$HOME/Hist"; if [[ ! -d "$HIPATH"  ]]; then mkdir -p "$HIPATH"; fi 
 HISTORYPATH="$HIPATH/.historyfiles"; if [[ ! -d "$HISTORYPATH" ]]; then mkdir -p "$HISTORYPATH"; fi
 LAUNCHPATH="$HIPATH/Launchers"; if [[ ! -d "$LAUNCHPATH" ]]; then mkdir -p "$LAUNCHPATH"; fi
