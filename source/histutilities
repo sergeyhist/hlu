@@ -35,6 +35,17 @@ launcher_dxvkhud_init=""
 launcher_dxvk_init=""
 launcher_wine_init=""
 launcher_type=""
+launcher_video_driver=""
+launcher_wine=""
+launcher_wine_init=""
+settings_strangle=""
+settings_gamemode=""
+settings_gamemode_init=""
+settings_vkbasalt=""
+settings_vkbasalt_init=""
+settings_gamemode_init=""
+settings_mangohud=""
+settings_mangohud_init=""
 main_args=""
 main_customoptions=""
 main_pulse=""
@@ -116,12 +127,11 @@ generalinput() {
 	else
 		flg=0
 		if [[ ! -f "$gi_file" ]]; then touch "$gi_file"; fi
-		if [[ ! -s "$gi_file" ]]; then echo "$input_ans" > "$gi_file"
-		else
-			while (( flg == 0 )); do
-				listcount=0; flg=1
+		while (( flg == 0 )); do
+			listcount=0; flg=1
+			if [[ -s "$gi_file" ]]; then
 				while read -r line; do ((listcount += 1)); if [[ "$line" = "$input_ans" ]]; then flg=0; break; fi; done < "$gi_file"
-			sed -i "${listcount}d" "$gi_file"; done; echo "$input_ans" >> "$gi_file"; fi; fi
+				sed -i "${listcount}d" "$gi_file"; fi; done; echo "$input_ans" >> "$gi_file"; fi
 	history -c 
 }
 
@@ -162,35 +172,37 @@ readfiles() {
 }
 
 listoptions() {
-	IFS="|"; lo_count=0; sa_count=0; da_count=0
-	list_name="$1"
-	echo -e "\n ${mac}$list_name${noc}\n"
-	if [[ -n "$6" ]]; then
-		for item in $6; do
-			desc_array[$da_count]="$item"; ((da_count+=1)); done
-	else unset desc_array; fi
-	for item in $4; do
-		status_array[$sa_count]="$item"; ((sa_count+=1)); done
-	for option in $2; do 
-		if [[ -n "$4" && -n "${!status_array[lo_count]:+nex}" ]]; then
-			status_check=" - ${grc}ON${noc}${cyc} ( ${!status_array[lo_count]})${noc}"
-		elif [[ -n "$4" ]]; then
-			status_check=" - ${rec}OFF${noc}"; else status_check=""; fi
-		if [[ "$option" == "Reset Options" ]]; then status_check=""; fi
-		list_array[$lo_count]="$option"
-		if [[ -n "${desc_array[lo_count]:+nex}" ]]; then item_desc=" - ${blc}${desc_array[lo_count]}${noc}"; else item_desc=""; fi
-		echo -e " ${cyc}$((lo_count+=1))${noc}${status_check} - ${grc}$option${noc}${item_desc}"; done; IFS="$Def_IFS"; ((lo_count+=1))
-	if [[ "$2" == "Yes|No" ]]; then echo -e "\nChoose ${cyc}Option${noc} from the list above:"
-	else echo -e "\nChoose ${cyc}Option${noc} from the list above (${cyc}q|Q${noc} for ${grc}exit${noc}):"; fi
-	read -r -e "select_ans"
-	if [[ "$select_ans" == [qQйЙ] && "$2" != "Yes|No" ]]; then
-		if [[ -z "$3" ]]; then exit; fi
-	elif [[ "$select_ans" == [a-zA-Z] ]]; then
-		listoptions "$1" "$2" "$3" "$4" "$5" "$6"
-	elif [[ "$select_ans" -ge "$lo_count" || "$select_ans" -le "0" ]]; then
-		listoptions "$1" "$2" "$3" "$4" "$5" "$6"
-	elif [[ -n "$3" ]]; then
-		"${3}"selector "${list_array[select_ans-1]}" "$5"; listoptions "$1" "$2" "$3" "$4" "$5" "$6"; fi;  
+	if [[ -n "$2" ]]; then
+		IFS="|"; lo_count=0; sa_count=0; da_count=0
+		list_name="$1"
+		echo -e "\n ${mac}$list_name${noc}\n"
+		if [[ -n "$6" ]]; then
+			for item in $6; do
+				desc_array[$da_count]="$item"; ((da_count+=1)); done
+		else unset desc_array; fi
+		for item in $4; do
+			status_array[$sa_count]="$item"; ((sa_count+=1)); done
+		for option in $2; do 
+			if [[ -n "$4" && -n "${!status_array[lo_count]:+nex}" ]]; then
+				status_check=" - ${grc}ON${noc}${cyc} ( ${!status_array[lo_count]})${noc}"
+			elif [[ -n "$4" ]]; then
+				status_check=" - ${rec}OFF${noc}"; else status_check=""; fi
+			if [[ "$option" == "Reset Options" ]]; then status_check=""; fi
+			list_array[$lo_count]="$option"
+			if [[ -n "${desc_array[lo_count]:+nex}" ]]; then item_desc=" - ${blc}${desc_array[lo_count]}${noc}"; else item_desc=""; fi
+			echo -e " ${cyc}$((lo_count+=1))${noc}${status_check} - ${grc}$option${noc}${item_desc}"; done; IFS="$Def_IFS"; ((lo_count+=1))
+		if [[ "$2" == "Yes|No" ]]; then echo -e "\nChoose ${cyc}Option${noc} from the list above:"
+		else echo -e "\nChoose ${cyc}Option${noc} from the list above (${cyc}q|Q${noc} for ${grc}exit${noc}):"; fi
+		read -r -e "select_ans"
+		if [[ "$select_ans" == [qQйЙ] && "$2" != "Yes|No" ]]; then
+			if [[ -z "$3" ]]; then exit; fi
+		elif [[ "$select_ans" == [a-zA-Z] ]]; then
+			listoptions "$1" "$2" "$3" "$4" "$5" "$6"
+		elif [[ "$select_ans" -ge "$lo_count" || "$select_ans" -le "0" ]]; then
+			listoptions "$1" "$2" "$3" "$4" "$5" "$6"
+		elif [[ -n "$3" ]]; then
+			"${3}"selector "${list_array[select_ans-1]}" "$5"; listoptions "$1" "$2" "$3" "$4" "$5" "$6"; fi
+	else echo -e "\n${grc}List${noc} is ${mac}empty${noc}\n"; exit; fi  
 }
 
 git-latest() {
@@ -655,9 +667,10 @@ if [[ -f "/usr/bin/yay" && -f "/usr/bin/checkupdates" ]]; then hi_archupdater="|
 exit_flag="1"; listoptions "Hist Linux Utilities" "Launchers Creator|Wine Helper|Steam Helper|Packages Installer$hi_archupdater" "" "" "" ""; exit_flag="0"
 case "$select_ans" in
 "1") #Launcher Creator
-	while read -r line; do
-		if [[ -f "$line" ]]; then hi_launchers="$hi_launchers$(basename "$line")|"; fi; done < <(find "$LAUNCHPATH" -maxdepth 1 -mindepth 1)
-	hi_launchers="${hi_launchers::-1}"
+	if [[ -n $(find "$LAUNCHPATH" -maxdepth 1 -mindepth 1) ]]; then 
+		while read -r line; do
+			if [[ -f "$line" ]]; then hi_launchers="$hi_launchers$(basename "$line")|"; fi; done < <(find "$LAUNCHPATH" -maxdepth 1 -mindepth 1)
+		hi_launchers="${hi_launchers::-1}"; fi
 	listoptions "Launchers Creator" "Create launcher|Edit launcher|Delete launcher|Open launcher in text editor|Run launcher" "" "" "" ""
 		if [[ "$select_ans" == "1" ]]; then
 			listoptions "Launcher Creator" "Wine App|Linux App" "" "" "" ""
