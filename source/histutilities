@@ -115,13 +115,13 @@ generalinput() {
 	elif [[ "$input_ans" == "" ]]; then generalinput "$1" "$2"
 	else
 		flg=0
-		if [[ ! -f "$gi_file" ]]; then touch "$gi_file"
+		if [[ ! -f "$gi_file" ]]; then touch "$gi_file"; fi
+		if [[ ! -s "$gi_file" ]]; then echo "$input_ans" > "$gi_file"
 		else
 			while (( flg == 0 )); do
 				listcount=0; flg=1
 				while read -r line; do ((listcount += 1)); if [[ "$line" = "$input_ans" ]]; then flg=0; break; fi; done < "$gi_file"
-			sed -i "${listcount}d" "$gi_file"; done; fi
-		echo "$input_ans" >> "$gi_file"; fi
+			sed -i "${listcount}d" "$gi_file"; done; echo "$input_ans" >> "$gi_file"; fi; fi
 	history -c 
 }
 
@@ -333,7 +333,7 @@ packsinstaller() {
 				if grep -oq "packageinstall" "$INSTPATH/$selected_package"; then packageinstall; fi
 			elif [[ "$select_ans" == "2" ]]; then 
 				if [[ -d "$name" ]]; then
-					cd "$name"; git reset --hard; git pull $packageurl
+					cd "$name"; git reset --hard; git pull "$packageurl"
 					if grep -oq "packageinstall" "$INSTPATH/$selected_package"; then
 						listoptions "Install? " "Yes|No" "" "" "" ""
 						if [[ $select_ans == "1" ]]; then
@@ -376,7 +376,7 @@ steamlauchoptions() {
 			((line_number+=1))
 			if [[ $line == *'"Software"'* ]]; then flag=1; fi 
 			if [[ $flag == 1 && $line == *"Apps"* ]]; then flag=0
-				sed -i "$((line_number+2))i\ \t\t\t\t\t\"$launcher_steam_appid\"\n\t\t\t\t\t{\n\t\t\t\t\t\t\"LaunchOptions\" \t\"${sl_vars}%command% ${main_args}\"\n\t\t\t\t\t}" $launcher_lc; fi
+				sed -i "$((line_number+2))i\ \t\t\t\t\t\"$launcher_steam_appid\"\n\t\t\t\t\t{\n\t\t\t\t\t\t\"LaunchOptions\" \t\"${sl_vars}%command% ${main_args}\"\n\t\t\t\t\t}" "$launcher_lc"; fi
 				done < "$launcher_lc"; fi 	
 }
 

@@ -4,7 +4,7 @@ Hist_folder="$HOME/Hist"
 Exec_folder="$(dirname "$0")/source"
 if [[ ! -d "$Hist_folder" ]]; then mkdir -p "$Hist_folder"; fi
 noc=$(tput sgr0); rec=$(tput setaf 1); grc=$(tput setaf 2); cyc=$(tput setaf 6)
-if [[ -f "$Bin_folder/histgamehelper" ]]; then
+if [[ -f "$Bin_folder/histutilities" ]]; then
 	echo -e "\n ${cyc}1${noc} - ${grc}Update${noc}"
 	echo -e " ${cyc}2${noc} - ${grc}Uninstall${noc}"
 	echo -e "\nChoose ${cyc}option${noc} from the ${grc}list${noc} above:"; read -r -e "installer_ans"
