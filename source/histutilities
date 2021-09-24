@@ -119,7 +119,8 @@ generalinput() {
 	if [[ ! -f "$gi_file" ]]; then touch "$gi_file"; fi
 	history -r "$gi_file"
 	if [[ "${gi_default}" == "none" ]]; then echo -e "\nEnter $2 (${cyc}q|Q${noc} for ${grc}exit${noc}):"
-	else echo -e "\nEnter $2 (Default: ${grc}${gi_default}${noc}) (${cyc}d|D${noc} for ${grc}default${noc}, ${cyc}q|Q${noc} for ${grc}exit${noc}):"; fi; read -r -e "input_ans"
+	else echo -e "\nEnter $2 (Default: ${grc}${gi_default}${noc}) (${cyc}d|D${noc} for ${grc}default${noc}, ${cyc}q|Q${noc} for ${grc}exit${noc}):"; fi; read -re "input_ans"
+	input_ans=${input_ans//\\/}
 	if [[ "$input_ans" == [qQйЙ] ]]; then
 		if [[ "$gi_end" != "exit" ]]; then input_ans=""; else exit; fi
 	elif [[ "$input_ans" == [dDвВ] && "${gi_default}" != "none" ]]; then input_ans="${gi_default}"
