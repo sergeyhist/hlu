@@ -22,9 +22,33 @@
    - Reset game prefix.   
    - Install MF, MF-Cab, mfplat.dll.
  + Packages Installer:
-   - Dxvk, vkd3d.
-   - Gamemode, mangohud, libstrangle, vkbasalt.
-   - Proton-GE
+   - Arch
+     - Linux-Tkg
+     - Nvidia
+     - Proton-Tkg
+     - Wine-Tkg
+     - Yay
+   - Emulators
+     - Ryujinx
+     - Yuzu
+   - Runners
+     - Luxtorpeda-dev
+     - Proton-GE
+   - Themes
+     - FlatRemix-GTK
+     - Skeuos-GTK
+     - Vimix-GTK
+   - Tools
+     - Gamemode
+     - Libstrangle
+     - MangoHud
+     - VkBasalt
+   - Wine
+     - Dxvk
+     - MF
+     - MF-Cab
+     - Vkd3d
+     
 ## Installation:
 Clone the repo:
 

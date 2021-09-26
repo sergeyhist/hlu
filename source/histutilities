@@ -671,7 +671,8 @@ if [[ -f "/usr/bin/yay" && -f "/usr/bin/checkupdates" ]]; then hi_archupdater="|
 exit_flag="1"; listoptions "Hist Linux Utilities" "Launchers Creator|Wine Helper|Steam Helper|Packages Installer$hi_archupdater" "" "" "" ""; exit_flag="0"
 case "$select_ans" in
 "1") #Launcher Creator
-	find "$LAUNCHPATH" -maxdepth 1 -mindepth 1 -type f,l | while read -r line; do basename "$line" >> "$TEMPPATH/.launcherslist"; done
+	find "$LAUNCHPATH" -maxdepth 1 -mindepth 1 -type f,l | while read -r line; do
+		if [[ -f "$line" ]]; then basename "$line" >> "$TEMPPATH/.launcherslist"; fi; done
 	listoptions "Launchers Creator" "Create launcher|Edit launcher|Delete launcher|Open launcher in text editor|Run launcher" "" "" "" ""
 		if [[ "$select_ans" == "1" ]]; then
 			listoptions "Launcher Creator" "Wine App|Linux App" "" "" "" ""
