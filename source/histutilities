@@ -11,6 +11,7 @@ INSTPATH="$HIPATH/Installers"; if [[ ! -d "$INSTPATH" ]]; then mkdir -p "$INSTPA
 PACKPATH="$HIPATH/Packages"; if [[ ! -d "$PACKPATH" ]]; then mkdir -p "$PACKPATH"; fi 
 video_driver=$(lspci | grep -i --color 'vga\|3d\|2d')
 noc="\e[0m"; rec="\e[31m"; grc="\e[32m"; blc="\e[34m"; cyc="\e[36m"; mac="\e[91m"
+exit_flag="0"
 packagetype=""
 packageurl=""
 packagearg=""
@@ -108,7 +109,7 @@ hi_exit() {
 	if [[ "$exit_flag" == "0" ]]; then
 		listoptions "Restart HLU?" "Yes|No" "" "" "" ""
 		if [[ "$select_ans" == "1" ]]; then exec "$0"; fi
-	else echo -e "\n${rec}Exit${noc}"; fi
+	else echo -e "\n${rec}Exit${noc}\n"; fi
 }
 
 generalinput() {
@@ -126,13 +127,8 @@ generalinput() {
 	elif [[ "$input_ans" == [dDвВ] && "${gi_default}" != "none" ]]; then input_ans="${gi_default}"
 	elif [[ "$input_ans" == "" ]]; then generalinput "$1" "$2"
 	else
-		flg=0
-		if [[ ! -f "$gi_file" ]]; then touch "$gi_file"; fi
-		while (( flg == 0 )); do
-			listcount=0; flg=1
-			if [[ -s "$gi_file" ]]; then
-				while read -r line; do ((listcount += 1)); if [[ "$line" = "$input_ans" ]]; then flg=0; break; fi; done < "$gi_file"
-				sed -i "${listcount}d" "$gi_file"; fi; done; echo "$input_ans" >> "$gi_file"; fi
+		sed -i "\|${input_ans}|d" "$gi_file"
+		echo "$input_ans" >> "$gi_file"; fi
 	history -c 
 }
 
@@ -208,7 +204,6 @@ listoptions() {
 
 git-latest() {
   	git_version=$(curl --silent "https://api.github.com/repos/$1/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
-	wget "https://github.com/$1/releases/download/${git_version}/$2"
 }
 
 runnerfinder() {
@@ -362,11 +357,12 @@ packsinstaller() {
 	"release")
 		name=$(basename -s .git "$packagename")
 		listoptions "Options" "Install|Uninstall" "" "" "" ""
-		if [[ -d "$INSTPATH/$selected_package" ]]; then
+		if [[ -f "$INSTPATH/$selected_package" ]]; then
 			if [[ "$select_ans" == "1" ]]; then
 				if [[ -d "$name" ]]; then rm -rf "$name"; fi
 				mkdir "$name"; cd "$name"
-				git-latest "$packagename" "$packagever"
+				git-latest "$packagename"
+				eval "wget \"https://github.com/$packagename/releases/download/${git_version}/${packagever//VERSION/$git_version}\""
 				if grep -oq "packageinstall" "$INSTPATH/$selected_package"; then packageinstall; fi
 			elif [[ "$select_ans" == "2" ]]; then
 				if grep -oq "packageuninstall" "$INSTPATH/$selected_package"; then packageuninstall; fi
@@ -388,9 +384,8 @@ steamlauchoptions() {
 		while read -r line; do 
 			((line_number+=1))
 			if [[ $line == *'"Software"'* ]]; then flag=1; fi 
-			if [[ $flag == 1 && $line == *"Apps"* ]]; then flag=0
-				sed -i "$((line_number+2))i\ \t\t\t\t\t\"$launcher_steam_appid\"\n\t\t\t\t\t{\n\t\t\t\t\t\t\"LaunchOptions\" \t\"${sl_vars}%command% ${main_args}\"\n\t\t\t\t\t}" "$launcher_lc"; fi
-				done < "$launcher_lc"; fi 	
+			if [[ $flag == 1 && $line == *"Apps"* ]]; then flag=0; ((line_number+=2)); break; fi; done < "$launcher_lc"; fi
+		sed -i "${line_number}i\ \t\t\t\t\t\"$launcher_steam_appid\"\n\t\t\t\t\t{\n\t\t\t\t\t\t\"LaunchOptions\" \t\"${sl_vars}%command% ${main_args}\"\n\t\t\t\t\t}" "$launcher_lc" 	
 }
 
 steamfinder() {
@@ -415,8 +410,12 @@ steamfinder() {
 					echo -e "$steam_name | $steam_appid" >> "$TEMPPATH/.steamapps"
 					esac; fi
 			done; done; fi
-	find "/usr/share/steam/compatibilitytools.d/" -maxdepth 1 -mindepth 1 | while read -r line; do
-		echo -e "$line" >> "$TEMPPATH/.steamrun"; done
+	if [[ -d "/usr/share/steam/compatibilitytools.d/" ]]; then
+		find "/usr/share/steam/compatibilitytools.d/" -maxdepth 1 -mindepth 1 | while read -r line; do
+			echo -e "$line" >> "$TEMPPATH/.steamrun"; done; fi
+	if [[ -d "$HOME/.steam/root/compatibilitytools.d" ]]; then
+		find "$HOME/.steam/root/compatibilitytools.d" -maxdepth 1 -mindepth 1 | while read -r line; do
+			echo -e "$line" >> "$TEMPPATH/.steamrun"; done; fi
 	find "$HOME/.steam/steam/userdata/" -name "localconfig.vdf" | while read -r line; do
 		steam_profile_name=$(grep '"PersonaName"' "$line" | cut -d\" -f4)
 		echo -e "${steam_profile_name} | ${line}" >> "$TEMPPATH/.lcfiles"; done
@@ -435,8 +434,10 @@ execinit() {
 		"linux")
 			find "$input_ans" -executable | while read -r line; do echo -e "$(basename "$line") | $line" >> "$TEMPPATH/.${1}files"; done
 		esac
-		readfiles "${1^} Executables" "$TEMPPATH/.${1}files"
-		init_result_name="$read_result_name"; init_result_dir=$(dirname "$read_result_dir"); init_result="$read_result_dir"; fi
+		if [[ -s "$TEMPPATH/.${1}files" ]]; then
+			readfiles "${1^} Executables" "$TEMPPATH/.${1}files"
+			init_result_name="$read_result_name"; init_result_dir=$(dirname "$read_result_dir"); init_result="$read_result_dir"
+		else echo -e "\n ${grc}Executable${noc} ${mac}not found${noc}\n"; exit; fi; fi
 }
 
 launchercreator() {

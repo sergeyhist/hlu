@@ -16,13 +16,15 @@
    - Add, create and remove prefixes.   
    - Add and remove wine runners.   
  + Steam Helper:     
-   - Change launch options for game. 
+   - Change launch options for game. (Gamemode, FSR, mangohud, etc.)
    - Wine commands for game prefix (winecfg, explorer, etc.)  
    - Winetricks for game prefix.   
    - Reset game prefix.   
    - Install MF, MF-Cab, mfplat.dll.
  + Packages Installer:
-   - Install dxvk, vkd3d, gamemode, mangohud, libstrangle and vkbasalt.
+   - Dxvk, vkd3d.
+   - Gamemode, mangohud, libstrangle, vkbasalt.
+   - Proton-GE
 ## Installation:
 Clone the repo:
 

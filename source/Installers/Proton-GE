@@ -1,0 +1,14 @@
+#!/bin/bash
+packagetype="release"
+packagename="GloriousEggroll/proton-ge-custom"
+packagever="Proton-VERSION.tar.gz"
+packageinstall() {
+	tar -xf Proton*
+	rm *.tar.gz
+	if [[ ! -d "/usr/share/steam/compatibilitytools.d" ]]; then sudo mkdir -p "/usr/share/steam/compatibilitytools.d"; fi
+	if [[ -d "/usr/share/steam/compatibilitytools.d/Proton-GE" ]]; then sudo rm -rf "/usr/share/steam/compatibilitytools.d/Proton-GE"; fi
+	sudo mv Proton* "/usr/share/steam/compatibilitytools.d/Proton-GE"
+}
+packageuninstall() {
+	sudo rm -rvf "/usr/share/steam/compatibilitytools.d/Proton-GE"
+}
