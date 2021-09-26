@@ -1,4 +1,19 @@
-# Hist Linux Utilities 
+# Hist Linux Utilities
+## Installation:
+Clone the repo:
+
+    git clone https://github.com/sergeyhist/hist-linux-utilities.git
+    cd hist-linux-utilities
+
+Run installer script:
+
+    sh hlu-installer.sh
+    
+## Usage:
+Input this command in terminal:
+
+    histutilities
+    
 ## Features:
 + Launchers Creator:   
    - Create, edit launchers for wine and linux native apps. Launchers support various settings:   
@@ -47,21 +62,4 @@
      - Dxvk
      - MF
      - MF-Cab
-     - Vkd3d
-     
-## Installation:
-Clone the repo:
-
-    git clone https://github.com/sergeyhist/hist-linux-utilities.git
-    cd hist-linux-utilities
-
-Run installer script:
-
-    sh hlu-installer.sh
-    
-## Usage:
-Input this command in terminal:
-
-    histutilities
-    
-
+     - Vkd3d   
