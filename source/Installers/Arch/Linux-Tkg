@@ -1,0 +1,6 @@
+#!/bin/bash
+packagetype="branch"
+packageurl="https://github.com/Frogging-Family/linux-tkg"
+packageinstall() {
+    makepkg -si
+}

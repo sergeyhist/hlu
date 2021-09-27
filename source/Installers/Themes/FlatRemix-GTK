@@ -1,0 +1,12 @@
+#!/bin/bash
+packagetype="branch"
+packageurl="https://github.com/daniruiz/Flat-Remix-GTK"
+packageinstall() {
+	if [[ ! -f "$HOME/.local/share/themes" ]]; then mkdir -p "$HOME/.local/share/themes"; fi
+	sudo cp -r Flat-Remix* "/usr/share/themes"
+	echo -e "\n${grc}Complete${noc}\n"
+}
+packageuninstall() {
+	sudo rm -rf "/usr/share/themes/Flat-Remix"*
+	echo -e "\n${grc}Complete${noc}\n"
+}

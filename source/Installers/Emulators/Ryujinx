@@ -1,0 +1,6 @@
+#!/bin/bash
+packagetype="branch"
+packageurl="https://github.com/Ryujinx/Ryujinx"
+packageinstall() {
+    dotnet publish -c Release
+}

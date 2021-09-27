@@ -1,0 +1,10 @@
+#!/bin/bash
+packagetype="branch"
+packageurl="https://github.com/vinceliuice/vimix-gtk-themes"
+packageinstall() {
+	sudo sh install.sh
+}
+packageuninstall() {
+	sudo rm -rf "/usr/share/themes/vimix"*
+	echo -e "\n${grc}Complete${noc}\n"
+}

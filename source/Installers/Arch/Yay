@@ -1,0 +1,6 @@
+#!/bin/bash
+packagetype="branch"
+packageurl="https://aur.archlinux.org/yay.git"
+packageinstall() {
+    makepkg -si
+}

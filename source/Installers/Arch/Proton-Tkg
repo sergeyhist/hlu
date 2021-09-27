@@ -1,0 +1,7 @@
+#!/bin/bash
+packagetype="branch"
+packageurl="https://github.com/Frogging-Family/wine-tkg-git"
+packageinstall() {
+    cd proton-tkg
+    makepkg -si
+}

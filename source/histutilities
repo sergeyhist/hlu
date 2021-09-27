@@ -1,17 +1,7 @@
 #!/bin/bash
 set -euo pipefail
-trap hi_exit EXIT
-Def_IFS=$'\n'
-IFS=$Def_IFS
-HIPATH="$HOME/Hist"; if [[ ! -d "$HIPATH"  ]]; then mkdir -p "$HIPATH"; fi 
-HISTORYPATH="$HIPATH/.historyfiles"; if [[ ! -d "$HISTORYPATH" ]]; then mkdir -p "$HISTORYPATH"; fi
-LAUNCHPATH="$HIPATH/Launchers"; if [[ ! -d "$LAUNCHPATH" ]]; then mkdir -p "$LAUNCHPATH"; fi
-TEMPPATH="$HIPATH/.temp"; if [[ ! -d "$TEMPPATH" ]]; then mkdir -p "$TEMPPATH"; else rm -rf "$TEMPPATH"; mkdir -p "$TEMPPATH"; fi
-INSTPATH="$HIPATH/Installers"; if [[ ! -d "$INSTPATH" ]]; then mkdir -p "$INSTPATH"; fi
-PACKPATH="$HIPATH/Packages"; if [[ ! -d "$PACKPATH" ]]; then mkdir -p "$PACKPATH"; fi 
-video_driver=$(lspci | grep -i --color 'vga\|3d\|2d')
-noc="\e[0m"; rec="\e[31m"; grc="\e[32m"; blc="\e[34m"; cyc="\e[36m"; mac="\e[91m"
 exit_flag="0"
+osversion=""
 packagetype=""
 packageurl=""
 packagearg=""
@@ -21,8 +11,6 @@ hi_prefixes=""
 hi_prefixes_names=""
 hi_runners=""
 hi_runners_names=""
-hi_launchers=""
-hi_packs=""
 select_ans=""
 input_ans=""
 list_name=""
@@ -149,16 +137,16 @@ deletelines() {
 
 readfiles() {
 	rf_count=0
-	if [[ -n "$2" ]]; then
+	if [[ -s "$2" ]]; then
 		echo -e "\n ${mac}$1${noc}\n"
 		while read -r line; do
 			if echo "$line" | grep -qo " | "; then
 				file_names[$rf_count]="$(echo "$line" | awk -F" [|] " '{print $1}')"
 				file_dirs[$rf_count]="$(echo "$line" | awk -F" [|] " '{print $2}')"
-				echo -e " ${cyc}$((rf_count+=1))${noc} - ${grc}$(echo "$line" | awk -F" [|] " '{print $1}')${noc} - ${blc}$(echo "$line" | awk -F" [|] " '{print $2}')${noc}"	
+				echo -e " ${cyc}$((rf_count+=1))${noc} - ${grc}${file_names[rf_count-1]}${noc} - ${blc}${file_dirs[rf_count-1]}${noc}"	
 			else
 				file_dirs[$rf_count]="$line"
-				echo -e " ${cyc}$((rf_count+=1))${noc} - ${grc}${line}${noc}"; fi; done < "$2"
+				echo -e " ${cyc}$((rf_count+=1))${noc} - ${grc}${line}${noc}"; fi; done < <(sort "$2")
 		echo -e "\nChoose ${cyc}item${noc} from the ${grc}list${noc} above (${cyc}q|Q${noc} for ${grc}exit${noc}):"; read -r -e "select_ans"
 		if [[ "$select_ans" == [qQйЙ] ]]; then exit
 		elif [[ "$select_ans" -ge "$((rf_count+1))" || "$select_ans" -le "0" ]]; then readfiles "$1" "$2"
@@ -320,52 +308,54 @@ prefixcommands() {
 }
 
 packsinstaller() {
-	ls "$INSTPATH" > "$TEMPPATH/.packs"
-	while read -r line; do
-		if [[ -z "$hi_packs" ]]; then hi_packs="$line"
-		else hi_packs="$hi_packs|$line"; fi; done < "$TEMPPATH/.packs"
-	listoptions "Packages" "$hi_packs" "" "" "" ""
-	selected_package="${list_array[select_ans-1]}"
-	. "/$INSTPATH/$selected_package"
+	find "$INSTPATH" -maxdepth 1 -mindepth 1 -type d | while read -r line; do basename "$line" >> "$TEMPPATH/.packsfolders"; done
+	if [[ "$osversion" != "ArchLinux" ]]; then sed -i "/Arch/d" "$TEMPPATH/.packsfolders"; fi
+	readfiles "Categories" "$TEMPPATH/.packsfolders"
+	selected_package_type="$read_result_dir"
+	find "$INSTPATH/$selected_package_type" -maxdepth 1 -mindepth 1 -type f | while read -r line; do basename "$line" >> "$TEMPPATH/.packs"; done
+	readfiles "Packages" "$TEMPPATH/.packs"
+	selected_package_name="$read_result_dir"
+	selected_package="$INSTPATH/$selected_package_type/$selected_package_name"
+	. "$selected_package"
 	cd  "$PACKPATH"
 	case "$packagetype" in
 	"branch")
 		name=$(basename -s .git "$packageurl")
-		listoptions "Options" "Install${noc} - ${blc}Check \"${cyc}$packageurl${blc}\" for additional information or necessary dependencies${noc}|Update|Uninstall" "" "" "" ""
-		if [[ -f "$INSTPATH/$selected_package" ]]; then
+		listoptions "Options" "Install/Reinstall ${noc} - ${blc}Check \"${cyc}$packageurl${blc}\" for additional information or necessary dependencies${noc}|Update|Uninstall" "" "" "" ""
+		if [[ -f "$selected_package" ]]; then
 			if [[ "$select_ans" == "1" ]]; then
 				if [[ -d "$name" ]]; then rm -rf "$name"; fi
-				if grep -oq "packagearg" "$INSTPATH/$selected_package"; then eval "git clone $packagearg $packageurl"
+				if grep -oq "packagearg" "$selected_package"; then eval "git clone $packagearg $packageurl"
 				else eval "git clone $packageurl"; fi
 				cd "$name"
-				if grep -oq "packageinstall" "$INSTPATH/$selected_package"; then packageinstall; fi
+				if grep -oq "packageinstall" "$selected_package"; then packageinstall; fi
 			elif [[ "$select_ans" == "2" ]]; then 
 				if [[ -d "$name" ]]; then
 					cd "$name"; git reset --hard; git pull "$packageurl"
-					if grep -oq "packageinstall" "$INSTPATH/$selected_package"; then
+					if grep -oq "packageinstall" "$selected_package"; then
 						listoptions "Install? " "Yes|No" "" "" "" ""
 						if [[ $select_ans == "1" ]]; then
 							packageinstall; fi; fi
 				else echo -e "\nFirst install the ${grc}package${noc}\n"; fi
 			elif [[ "$select_ans" == "3" ]]; then
 				if [[ -d "$name" ]]; then
-					if grep -oq "packageuninstall" "$INSTPATH/$selected_package"; then cd "$name"; packageuninstall; cd ..; fi
+					if grep -oq "packageuninstall" "$selected_package"; then cd "$name"; packageuninstall; cd ..; fi
 					rm -rf "$name"
 				else echo -e "\nFirst install the ${grc}package${noc}\n"; fi; fi
 		else echo -e "\n${grc}Config file${noc} is ${mac}empty${noc}\n"; fi
 	;;
 	"release")
 		name=$(basename -s .git "$packagename")
-		listoptions "Options" "Install|Uninstall" "" "" "" ""
-		if [[ -f "$INSTPATH/$selected_package" ]]; then
+		listoptions "Options" "Install/Update|Uninstall" "" "" "" ""
+		if [[ -f "$selected_package" ]]; then
 			if [[ "$select_ans" == "1" ]]; then
 				if [[ -d "$name" ]]; then rm -rf "$name"; fi
 				mkdir "$name"; cd "$name"
 				git-latest "$packagename"
 				eval "wget \"https://github.com/$packagename/releases/download/${git_version}/${packagever//VERSION/$git_version}\""
-				if grep -oq "packageinstall" "$INSTPATH/$selected_package"; then packageinstall; fi
+				if grep -oq "packageinstall" "$selected_package"; then packageinstall; fi
 			elif [[ "$select_ans" == "2" ]]; then
-				if grep -oq "packageuninstall" "$INSTPATH/$selected_package"; then packageuninstall; fi
+				if grep -oq "packageuninstall" "$selected_package"; then packageuninstall; fi
 				rm -rf "$name"; fi
 		else echo -e "\n${grc}Config file${noc} is ${mac}empty${noc}\n"; fi
 	esac
@@ -450,8 +440,7 @@ launchercreator() {
 }
 
 launchereditor () {
-	listoptions "Launchers" "$hi_launchers" "" "" "" ""
-	launcher_name="${list_array[select_ans-1]}"; launcher_path="$LAUNCHPATH/$launcher_name"
+	launcher_name="$1"; launcher_path="$LAUNCHPATH/$1"
 	. "$launcher_path" "read_vars"
 	if [[ "$launcher_type" == "wine" ]]; then
 		listoptions "Launcher Setup" "Change Launch Options|Change Prefix|Change Runner|Change Executable" "" "" "" ""
@@ -664,15 +653,25 @@ protonselector() {
 		proton_esync=""; proton_fsync=""; proton_futex2=""; wine_fsr=""; wine_fsr_strength=""; fi
 }
 
+trap hi_exit EXIT
+Def_IFS=$'\n'
+IFS=$Def_IFS
+HIPATH="$HOME/Hist"; if [[ ! -d "$HIPATH"  ]]; then mkdir -p "$HIPATH"; fi 
+HISTORYPATH="$HIPATH/.historyfiles"; if [[ ! -d "$HISTORYPATH" ]]; then mkdir -p "$HISTORYPATH"; fi
+LAUNCHPATH="$HIPATH/Launchers"; if [[ ! -d "$LAUNCHPATH" ]]; then mkdir -p "$LAUNCHPATH"; fi
+TEMPPATH="$HIPATH/.temp"; if [[ ! -d "$TEMPPATH" ]]; then mkdir -p "$TEMPPATH"; else rm -rf "$TEMPPATH"; mkdir -p "$TEMPPATH"; fi
+INSTPATH="$HIPATH/Installers"; if [[ ! -d "$INSTPATH" ]]; then mkdir -p "$INSTPATH"; fi
+PACKPATH="$HIPATH/Packages"; if [[ ! -d "$PACKPATH" ]]; then mkdir -p "$PACKPATH"; fi
+noc="\e[0m"; rec="\e[31m"; grc="\e[32m"; blc="\e[34m"; cyc="\e[36m"; mac="\e[91m"
+eval "hostnamectl > \"$TEMPPATH/.osinfo\""
+osversion="$(grep "Operating System" "$TEMPPATH/.osinfo" | cut -d: -f2)"; osversion=${osversion// /} 
+video_driver=$(lspci | grep -i --color 'vga\|3d\|2d')
 if [[ -d "$HOME/.steam" ]]; then steamfinder; fi
 if [[ -f "/usr/bin/yay" && -f "/usr/bin/checkupdates" ]]; then hi_archupdater="|Arch Updater"; else hi_archupdater=""; fi
 exit_flag="1"; listoptions "Hist Linux Utilities" "Launchers Creator|Wine Helper|Steam Helper|Packages Installer$hi_archupdater" "" "" "" ""; exit_flag="0"
 case "$select_ans" in
 "1") #Launcher Creator
-	if [[ -n $(find "$LAUNCHPATH" -maxdepth 1 -mindepth 1) ]]; then 
-		while read -r line; do
-			if [[ -f "$line" ]]; then hi_launchers="$hi_launchers$(basename "$line")|"; fi; done < <(find "$LAUNCHPATH" -maxdepth 1 -mindepth 1)
-		hi_launchers="${hi_launchers::-1}"; fi
+	find "$LAUNCHPATH" -maxdepth 1 -mindepth 1 -type f,l | while read -r line; do basename "$line" >> "$TEMPPATH/.launcherslist"; done
 	listoptions "Launchers Creator" "Create launcher|Edit launcher|Delete launcher|Open launcher in text editor|Run launcher" "" "" "" ""
 		if [[ "$select_ans" == "1" ]]; then
 			listoptions "Launcher Creator" "Wine App|Linux App" "" "" "" ""
@@ -681,16 +680,16 @@ case "$select_ans" in
 			elif [[ "$select_ans" == "2" ]]; then
 				launchercreator "linux"; fi
 		elif [[ "$select_ans" == "2" ]]; then
-			launchereditor
+			readfiles "Launchers" "$TEMPPATH/.launcherslist"; launchereditor "$read_result_dir"
 		elif [[ "$select_ans" == "3" ]]; then
-			listoptions "Launchers" "$hi_launchers" "" "" "" ""
-			if [[ -L "$LAUNCHPATH/${list_array[select_ans-1]}" && $(readlink -f "$LAUNCHPATH/${list_array[select_ans-1]}") ]]; then
-				rm "$(readlink -f "$LAUNCHPATH/${list_array[select_ans-1]}")"; fi
-			rm "$LAUNCHPATH/${list_array[select_ans-1]}"
+			readfiles "Launchers" "$TEMPPATH/.launcherslist"
+			if [[ -L "$LAUNCHPATH/$read_result_dir}" && $(readlink -f "$LAUNCHPATH/$read_result_dir") ]]; then
+				rm "$(readlink -f "$LAUNCHPATH/$read_result_dir")"; fi
+			rm "$LAUNCHPATH/$read_result_dir"
 		elif [[ "$select_ans" == "4" ]]; then
-			listoptions "Launchers" "$hi_launchers" "" "" "" ""; xdg-open "$LAUNCHPATH/${list_array[select_ans-1]}"
+			readfiles "Launchers" "$TEMPPATH/.launcherslist"; xdg-open "$LAUNCHPATH/$read_result_dir"
 		elif [[ "$select_ans" == "5" ]]; then
-			listoptions "Launchers" "$hi_launchers" "" "" "" ""; eval "\"$LAUNCHPATH/${list_array[select_ans-1]}\""; fi
+			readfiles "Launchers" "$TEMPPATH/.launcherslist"; eval "\"$LAUNCHPATH/$read_result_dir\""; fi
 ;;
 "2") #Wine Helper
 	listoptions "Wine Utilities" "Prefix commands|Winetricks|Dxvk|Vkd3d|Install MF|Install MF-Cab|Install mfplat.dll|Prefixes manager|Runners manager|Reset default prefix" "" "" "" ""
@@ -776,7 +775,8 @@ case "$select_ans" in
 		
 ;;
 "4") #Packages Installer
-	packsinstaller
+	if [[ -f "/usr/bin/git" ]]; then packsinstaller
+	else echo -e "\n ${grc}Git ${mac}must be installed!${noc}"; fi
 ;;
 "5") #Arch Updater
 	if [[ $(checkupdates; yay -Qua --devel) ]]; then

@@ -1,0 +1,7 @@
+#!/bin/bash
+packagetype="branch"
+packageurl="https://github.com/Frogging-Family/nvidia-all.git"
+packageinstall() {
+    makepkg -si
+    sudo mkinitcpio -P
+}

@@ -1,0 +1,6 @@
+#!/bin/bash
+packagetype="branch"
+packageurl="https://github.com/luxtorpeda-dev/luxtorpeda.git"
+packageinstall() {
+    make user-install
+}
