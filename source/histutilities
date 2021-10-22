@@ -1,118 +1,34 @@
 #!/bin/bash
+# Version: 1.0
 set -euo pipefail
-exit_flag="0"
-osversion=""
-packagetype=""
-packageurl=""
-packagearg=""
-packagename=""
-packagever=""
-hi_prefixes=""
-hi_prefixes_names=""
-hi_runners=""
-hi_runners_names=""
-select_ans=""
-input_ans=""
-list_name=""
-selected_runner=""
-selected_prefix=""
-launcher_nvidia_init=""
-launcher_amd_init=""
-launcher_main_init=""
-launcher_strangle_init=""
-launcher_dxvkhud_init=""
-launcher_dxvk_init=""
-launcher_wine_init=""
-launcher_type=""
-launcher_video_driver=""
-launcher_wine=""
-launcher_wine_init=""
-settings_strangle=""
-settings_gamemode=""
-settings_gamemode_init=""
-settings_vkbasalt=""
-settings_vkbasalt_init=""
-settings_gamemode_init=""
-settings_mangohud=""
-settings_mangohud_init=""
-main_args=""
-main_customoptions=""
-main_pulse=""
-main_gamemode=""
-main_mangohud=""
-main_vkbasalt=""
-strangle_fps=""
-strangle_fps_battery=""
-strangle_vsync=""
-strangle_glfinish=""
-strangle_picmip=""
-strangle_af=""
-strangle_trilinear=""
-strangle_retro=""
-strangle_nodlsym=""
-strangle_vkonly=""
-strangle_enable_vklayer=""
-strangle_disable_vklayer=""
-strangle_status=""
-dxvkhud_full=""
-dxvkhud_devinfo=""
-dxvkhud_fps=""
-dxvkhud_frametimes=""
-dxvkhud_submission=""
-dxvkhud_drawcall=""
-dxvkhud_pipelines=""
-dxvkhud_memory=""
-dxvkhud_gpuload=""
-dxvkhud_version=""
-dxvkhud_api=""
-dxvkhud_compiler=""
-dxvkhud_samplers=""
-dxvkhud_scale=""
-dxvkhud_status=""
-dxvk_async=""
-dxvk_cache=""
-nvidia_to=""
-nvidia_osd=""
-amd_aco=""
-amd_to=""
-wine_esync=""
-wine_fsync=""
-wine_vd=""
-wine_fsr=""
-wine_fsr_strength=""
-proton_wined3d=""
-proton_large_address=""
-proton_old_gl=""
-proton_seccomp=""
-proton_d3d12=""
-proton_d3d11=""
-proton_d3d10=""
-proton_d3d9=""
-proton_esync=""
-proton_fsync=""
-proton_futex2=""
 
 hi_exit() {
 	rm -rf "$TEMPPATH"
 	if [[ "$exit_flag" == "0" ]]; then
-		listoptions "Restart HLU?" "Yes|No" "" "" "" ""
+		listoptions "Restart HLU?" "Yes|No"
 		if [[ "$select_ans" == "1" ]]; then exec "$0"; fi
 	else echo -e "\n${rec}Exit${noc}\n"; fi
 }
 
 generalinput() {
-	gi_name="$(echo "$1" | cut -d'|' -f1)"
-	gi_default="$(echo "$1" | cut -d'|' -f2)"
-	gi_end="$(echo "$1" | cut -d'|' -f3)"
-	gi_file="$HISTORYPATH/.${gi_name}"
+	if [[ "$1" == *'|'* ]]; then
+		gi_name="$(echo "$1" | cut -d'|' -f1)"
+		gi_options="$(echo "$1" | cut -d'|' -f2)"
+	else gi_name="$1"; gi_options="none"; fi
+	if [[ "$gi_name" == *' ___ '* ]]; then
+		gi_default="$(echo "$gi_name" | awk -F" ___ " '{print $2}')"
+		gi_name="$(echo "$gi_name" | awk -F" ___ " '{print $1}')"
+	else gi_default="none"; fi
+	gi_file="$HISTORYPATH/.$gi_name"
+	if [[ "$gi_options" == *"continue"* ]]; then gi_exit_string="/${grc}reset${noc}"; else gi_exit_string=""; fi
 	if [[ ! -f "$gi_file" ]]; then touch "$gi_file"; fi
 	history -r "$gi_file"
-	if [[ "${gi_default}" == "none" ]]; then echo -e "\nEnter $2 (${cyc}q|Q${noc} for ${grc}exit${noc}):"
-	else echo -e "\nEnter $2 (Default: ${grc}${gi_default}${noc}) (${cyc}d|D${noc} for ${grc}default${noc}, ${cyc}q|Q${noc} for ${grc}exit${noc}):"; fi; read -re "input_ans"
+	if [[ "$gi_default" == "none" ]]; then echo -e "\nEnter $2 (${cyc}q|Q${noc} for ${grc}exit${noc}$gi_exit_string):"
+	else echo -e "\nEnter $2 (Default: ${cyc}$gi_default${noc}) (${cyc}d|D${noc} for ${grc}default${noc}, ${cyc}q|Q${noc} for ${grc}exit${noc}$gi_exit_string):"; fi; read -re "input_ans"
 	input_ans=${input_ans//\\/}
-	if [[ "$input_ans" == [qQйЙ] ]]; then
-		if [[ "$gi_end" != "exit" ]]; then input_ans=""; else exit; fi
-	elif [[ "$input_ans" == [dDвВ] && "${gi_default}" != "none" ]]; then input_ans="${gi_default}"
+	if [[ "$input_ans" == [qQ] ]]; then
+		if [[ "$gi_options" == *"continue"* ]]; then input_ans="none"; else exit; fi
+	elif [[ "$input_ans" == [dD] && "${gi_default}" != "none" ]]; then input_ans="${gi_default}"
 	elif [[ "$input_ans" == "" ]]; then generalinput "$1" "$2"
 	else
 		sed -i "\|${input_ans}|d" "$gi_file"
@@ -120,8 +36,33 @@ generalinput() {
 	history -c 
 }
 
+readfiles() {
+	rf_count=0; unset file_names; unset file_dirs
+	if [[ "$1" == *'|'* ]]; then
+		file_title="$(echo "$1" | cut -d'|' -f1)"
+		file_sort="$(echo "$1" | cut -d'|' -f2)"
+	else file_title="$1"; file_sort="cat"; fi
+	if [[ -s "$2" ]]; then
+		echo -e "\n ${mac}$file_title${noc}\n"
+		while read -r line; do
+			if echo "$line" | grep -qo " | "; then
+				file_names[$rf_count]="$(echo "$line" | awk -F" [|] " '{print $1}')"
+				file_dirs[$rf_count]="$(echo "$line" | awk -F" [|] " '{print $2}')"
+				echo -e " ${cyc}$((rf_count+=1))${noc} - ${grc}${file_names[rf_count-1]}${noc} - ${blc}${file_dirs[rf_count-1]}${noc}"	
+			else
+				file_dirs[$rf_count]="$line"
+				echo -e " ${cyc}$((rf_count+=1))${noc} - ${grc}${line}${noc}"; fi; done < <($file_sort "$2")
+		echo -e "\nChoose ${cyc}item${noc} from the ${grc}list${noc} above (${cyc}q|Q${noc} for ${grc}exit${noc}):"; read -r -e "select_ans"
+		if [[ "$select_ans" == [qQйЙ] ]]; then exit
+		elif [[ "$select_ans" == *[!0-9]* ]] || [[ "$select_ans" -gt "$((rf_count))" || "$select_ans" -lt "1" ]]; then readfiles "$1" "$2"
+		else 
+			if [[ -n "${file_names[select_ans]:+x}" ]]; then read_result_name="${file_names[select_ans-1]}"; fi
+			read_result_dir="${file_dirs[select_ans-1]}"; fi
+	else echo -e "\n${grc}File${noc} is ${rec}empty${noc}"; exit; fi
+}
+
 addlines() {
-	generalinput "$1|none|exit" "${cyc}path${noc} to the ${grc}$1${noc} folder"; line_path="$input_ans"
+	generalinput "$1" "${cyc}path${noc} to the ${grc}$1${noc} folder"; line_path="$input_ans"
 	if [[ ! -d "$line_path" ]]; then mkdir -p "$line_path"; fi
 	echo -e "$line_path" >> "$2"
 }
@@ -130,63 +71,42 @@ deletelines() {
 	readfiles "$1" "$2"
 	sed -i "${select_ans}d" "$2"
 	if [[ -d "$read_result_dir" ]]; then
-		listoptions "Delete folder from filesystem?" "Yes|No" "" "" "" ""
+		listoptions "Delete folder from filesystem?" "Yes|No"
 		if [[ "$select_ans" == "1" ]]; then rm -rf "$read_result_dir"; fi; fi
 	if [[ ! -s "$2" ]]; then rm "$2"; fi
 }
 
-readfiles() {
-	rf_count=0
-	if [[ -s "$2" ]]; then
-		echo -e "\n ${mac}$1${noc}\n"
-		while read -r line; do
-			if echo "$line" | grep -qo " | "; then
-				file_names[$rf_count]="$(echo "$line" | awk -F" [|] " '{print $1}')"
-				file_dirs[$rf_count]="$(echo "$line" | awk -F" [|] " '{print $2}')"
-				echo -e " ${cyc}$((rf_count+=1))${noc} - ${grc}${file_names[rf_count-1]}${noc} - ${blc}${file_dirs[rf_count-1]}${noc}"	
-			else
-				file_dirs[$rf_count]="$line"
-				echo -e " ${cyc}$((rf_count+=1))${noc} - ${grc}${line}${noc}"; fi; done < <(sort "$2")
-		echo -e "\nChoose ${cyc}item${noc} from the ${grc}list${noc} above (${cyc}q|Q${noc} for ${grc}exit${noc}):"; read -r -e "select_ans"
-		if [[ "$select_ans" == [qQйЙ] ]]; then exit
-		elif [[ "$select_ans" -ge "$((rf_count+1))" || "$select_ans" -le "0" ]]; then readfiles "$1" "$2"
-		else 
-			if [[ -n "${file_names:+nex}" ]]; then read_result_name="${file_names[select_ans-1]}"; fi
-			read_result_dir="${file_dirs[select_ans-1]}"; fi
-	else echo -e "\n${grc}File${noc} is ${rec}empty${noc}"; exit; fi
-}
-
 listoptions() {
-	if [[ -n "$2" ]]; then
-		IFS="|"; lo_count=0; sa_count=0; da_count=0
-		list_name="$1"
-		echo -e "\n ${mac}$list_name${noc}\n"
-		if [[ -n "$6" ]]; then
-			for item in $6; do
-				desc_array[$da_count]="$item"; ((da_count+=1)); done
-		else unset desc_array; fi
-		for item in $4; do
+	if [[ "$1" == *'|'* ]]; then
+		list_title="$(echo "$1" | cut -d'|' -f1)"
+		list_settings="$(echo "$1" | cut -d'|' -f2)"
+	else list_title="$1"; list_settings="none"; fi
+	if [[ "$2" == *' ___ '* ]]; then
+		list_items="$(echo "$2" | awk -F" ___ " '{print $1}')"
+		list_values="$(echo "$2" | awk -F" ___ " '{print $2}')"
+	else list_items="$2"; list_values="none"; fi
+	if [[ -n "$list_items" ]]; then
+		IFS="|"; lo_count=0; sa_count=0
+		echo -e "\n ${mac}$list_title${noc}\n"
+		for item in $list_values; do
 			status_array[$sa_count]="$item"; ((sa_count+=1)); done
-		for option in $2; do 
-			if [[ -n "$4" && -n "${!status_array[lo_count]:+nex}" ]]; then
-				status_check=" - ${grc}ON${noc}${cyc} ( ${!status_array[lo_count]})${noc}"
-			elif [[ -n "$4" ]]; then
+		for option in $list_items; do 
+			if [[ "$list_values" != "none" && -n "${!status_array[lo_count]:+nex}" ]]; then
+				status_check=" - ${grc}ON${noc}${cyc} (${!status_array[lo_count]})${noc}"
+			elif [[ "$list_values" != "none" ]]; then
 				status_check=" - ${rec}OFF${noc}"; else status_check=""; fi
 			if [[ "$option" == "Reset Options" ]]; then status_check=""; fi
 			list_array[$lo_count]="$option"
-			if [[ -n "${desc_array[lo_count]:+nex}" ]]; then item_desc=" - ${blc}${desc_array[lo_count]}${noc}"; else item_desc=""; fi
-			echo -e " ${cyc}$((lo_count+=1))${noc}${status_check} - ${grc}$option${noc}${item_desc}"; done; IFS="$Def_IFS"; ((lo_count+=1))
-		if [[ "$2" == "Yes|No" ]]; then echo -e "\nChoose ${cyc}Option${noc} from the list above:"
-		else echo -e "\nChoose ${cyc}Option${noc} from the list above (${cyc}q|Q${noc} for ${grc}exit${noc}):"; fi
-		read -r -e "select_ans"
-		if [[ "$select_ans" == [qQйЙ] && "$2" != "Yes|No" ]]; then
-			if [[ -z "$3" ]]; then exit; fi
-		elif [[ "$select_ans" == [a-zA-Z] ]]; then
-			listoptions "$1" "$2" "$3" "$4" "$5" "$6"
-		elif [[ "$select_ans" -ge "$lo_count" || "$select_ans" -le "0" ]]; then
-			listoptions "$1" "$2" "$3" "$4" "$5" "$6"
-		elif [[ -n "$3" ]]; then
-			"${3}"selector "${list_array[select_ans-1]}" "$5"; listoptions "$1" "$2" "$3" "$4" "$5" "$6"; fi
+			echo -e " ${cyc}$((lo_count+=1))${noc}${status_check} - ${grc}$option${noc}"; done
+		IFS="$Def_IFS"
+		if [[ "$list_items" == "Yes|No" ]]; then echo -e "\nChoose ${cyc}Option${noc} from the list above:"
+		else echo -e "\nChoose ${cyc}Option${noc} from the list above (${cyc}q|Q${noc} for ${grc}exit${noc}):"; fi; read -r -e "select_ans"
+		if [[ "$select_ans" == [qQйЙ] && "$list_items" != "Yes|No" ]]; then
+			if [[ "$list_settings" == *"continue"* ]]; then list_result_name="none"; list_result_number="0"
+			elif [[ "$list_settings" == *"exit"* ]]; then exit_flag="1"; exit
+			else exit; fi
+		elif [[ "$select_ans" == *[!0-9]* ]] || [[ "$select_ans" -gt "$lo_count" || "$select_ans" -lt "1" ]]; then listoptions "$1" "$2"
+		else list_result_name="${list_array[select_ans-1]}"; list_result_number="$select_ans"; fi
 	else echo -e "\n${grc}List${noc} is ${mac}empty${noc}\n"; exit; fi  
 }
 
@@ -197,8 +117,6 @@ git-latest() {
 runnerfinder() {
 	IFS="|"
 	for item in $1; do
-		if [[ "$item" == "Default" ]]; then hi_runners="/usr/bin/wine|"; hi_runners_names="Default runner|"
-		else
 			if [[ -f "$item" ]]; then
 				while read -r line; do
 					if [[ -d "$line" || -f "$line" ]]; then
@@ -213,58 +131,57 @@ runnerfinder() {
 								mkdir "$proton_tar_dir/dist"
 								tar -xf "$proton_tar" -C "$proton_tar_dir/dist/"; fi; fi
 						if [[ $(find "$line" -type f -name "wine") ]]; then
-							hi_runners="$hi_runners$(find "$line" -type f -name "wine")|"
-							if [[ -f "$line/version" ]]; then
-								runner_version="$(cat "$line/version")"
-								hi_runners_names="$hi_runners_names${runner_version##* }|"
-							else hi_runners_names="$hi_runners_names$($(find "$line" -type f -name "wine") --version)|"; fi; fi
-					fi; done < "$item"; fi; fi; done
-	hi_runners="${hi_runners::-1}"; hi_runners_names="${hi_runners_names::-1}"
+							runner_path="$(find "$line" -type f -name "wine")"
+							if [[ -f "$line/version" ]]; then runner_version="$(cut -d' ' -f2 < "$line/version")"
+							else runner_version="$($runner_path --version)"; fi
+							echo "$runner_version | $runner_path" >> "$TEMPPATH/.runnerslist"; fi
+					fi; done < "$item"; fi; done
 	IFS="$Def_IFS"
 }
 
 prefixfinder() {
 	IFS="|"
 	for item in $1; do
-		if [[ "$item" == "Default" ]]; then hi_prefixes="$HOME/.wine|"; hi_prefixes_names="Default prefix|"
-		else
-			if [[ -f "$item" ]]; then
-				while read -r line; do
-				if [[ -d "$line" || -f "$line" ]]; then
-					if [[ $(find "$line" -type d -name "drive_c") ]]; then
-						hi_prefixes="$hi_prefixes$(dirname "$(find "$line" -type d -name "drive_c")")|"
-						hi_prefixes_names="$hi_prefixes_names$(basename "$(dirname "$(find "$line" -type d -name "drive_c")")")|"; fi
-					fi; done < "$item"; fi; fi; done
-	hi_prefixes="${hi_prefixes::-1}"; hi_prefixes_names="${hi_prefixes_names::-1}"
+		if [[ -f "$item" ]]; then
+			while read -r line; do
+			if [[ -d "$line" && $(find "$line" -type d -name "drive_c") ]]; then
+					prefix_path="$(dirname "$(find "$line" -type d -name "drive_c")")"
+					echo "$(basename "$prefix_path") | $prefix_path" >> "$TEMPPATH/.prefixeslist"; fi; done < "$item"; fi; done
 	IFS="$Def_IFS"
 }
 
 runnerinit() {
+	selected_runner=""; selected_runner_path=""
 	if [[ -z "$selected_runner" ]]; then
 		while : ; do
-			add_runner="|Add new runner"
-			if [[ "$1" == "all" ]]; then runnerfinder "Default|$HIPATH/addrun.cfg|$TEMPPATH/.steamrun"
-			elif [[ "$1" == "wine" ]]; then runnerfinder "Default|$HIPATH/addrun.cfg"
-			elif [[ "$1" == "proton" ]]; then runnerfinder "$TEMPPATH/.steamrun"; add_runner=""; fi
-			listoptions "Runners" "$hi_runners_names$add_runner" "" "" "" "$hi_runners"
-			if [[ ${list_array[select_ans-1]} == "Add new runner" ]]; then addlines "runner" "$HIPATH/addrun.cfg"
-			else selected_runner="${desc_array[select_ans-1]}"; selected_runner_path=$(dirname "${desc_array[select_ans-1]}"); break; fi; done; fi
+			echo "$(/usr/bin/wine --version) | /usr/bin/wine" > "$TEMPPATH/.runnerslist"
+			if [[ "$1" == "all" ]]; then runnerfinder "$HIPATH/addrun.cfg|$TEMPPATH/.steamrun"
+			elif [[ "$1" == "wine" ]]; then runnerfinder "$HIPATH/addrun.cfg"
+			elif [[ "$1" == "proton" ]]; then runnerfinder "$TEMPPATH/.steamrun"; fi
+			echo "Add new runner" >> "$TEMPPATH/.runnerslist"
+			readfiles "Runners" "$TEMPPATH/.runnerslist"
+			if [[ "$read_result_dir" == "Add new runner" ]]; then addlines "runner" "$HIPATH/addrun.cfg"
+			else selected_runner="$read_result_dir"; selected_runner_path=$(dirname "$read_result_dir"); break; fi; done; fi
 }
 
 prefixinit() {
+	selected_prefix=""
 	while : ; do
-		prefixfinder "Default|$HIPATH/addpfx.cfg"
-		listoptions "Prefixes" "$hi_prefixes_names|Add new prefix|Create new prefix" "" "" "" "$hi_prefixes"
-		if [[ ${list_array[select_ans-1]} == "Add new prefix" ]]; then addlines "prefix" "$HIPATH/addpfx.cfg"
-		elif [[ ${list_array[select_ans-1]} == "Create new prefix" ]]; then	prefixcreator
-		else selected_prefix="${desc_array[select_ans-1]}"; break; fi; done
+		echo "Default prefix | $HOME/.wine" > "$TEMPPATH/.prefixeslist"
+		prefixfinder "$HIPATH/addpfx.cfg"
+		echo "Add new prefix" >> "$TEMPPATH/.prefixeslist"
+		echo "Create new prefix" >> "$TEMPPATH/.prefixeslist"
+		readfiles "Prefixes" "$TEMPPATH/.prefixeslist"
+		if [[ "$read_result_dir" == "Add new prefix" ]]; then addlines "prefix" "$HIPATH/addpfx.cfg"
+		elif [[ "$read_result_dir" == "Create new prefix" ]]; then	prefixcreator
+		else selected_prefix="$read_result_dir"; break; fi; done
 }
 
 prefixcreator() {
-	if [[ -z "$selected_runner" ]]; then runnerinit "all"; fi
-	addlines "prefix" "$HIPATH/addpfx.cfg"; pfx_path=$line_path
+	if [[ -z "${selected_runner:+x}" ]]; then runnerinit "all"; fi
+	addlines "prefix" "$HIPATH/addpfx.cfg"; pfx_path="$line_path"
 	if [[ ! -d "${pfx_path}/drive_c" ]]; then
-		listoptions "Prefix Version" "32bit|64bit" "" "" "" ""
+		listoptions "Prefix Version" "32bit|64bit"
 		if [[ "$select_ans" == "1" ]]; then
 			WINEARCH=win32 WINEPREFIX="$pfx_path" "$selected_runner" wineboot -u;
 		elif [[ "$select_ans" == "2" ]]; then
@@ -272,8 +189,8 @@ prefixcreator() {
 }
 
 prefixcommands() {
-	listoptions "Wine Functions" "Wine Config|Control Panel|Task Manager|Explorer|Install/Uninstall Apps|Registry Editor|Kill Running Apps|Force Kill Running Apps|Custom command" "" "" "" ""
-	case $select_ans in
+	listoptions "Wine Functions" "Wine Config|Control Panel|Task Manager|Explorer|Install/Uninstall Apps|Registry Editor|Kill Running Apps|Force Kill Running Apps|Custom command"
+	case "$select_ans" in
 	"1")
 	command_func="winecfg"
 	;;
@@ -299,7 +216,7 @@ prefixcommands() {
 	command_func="wineserver -k9"
 	;;
 	"9")
-	generalinput "prefixcommand|none|exit" "${grc}custom prefix command${noc} (Example: ${cyc}notepad.exe${noc})"; command_func="$input_ans"
+	generalinput "prefixcommand" "${cyc}custom command${noc} (Example: ${cyc}notepad.exe${noc})"; command_func="$input_ans"
 	esac
 	if [[ "$command_func" == "wineserver -k" || "$command_func" == "wineserver -k9" ]]; then eval "WINEPREFIX=\"$selected_prefix\" $command_func"
 	else 
@@ -308,12 +225,13 @@ prefixcommands() {
 }
 
 packsinstaller() {
+	packagetype=""; packageurl=""; packagearg=""; packagename=""; packagever=""
 	find "$INSTPATH" -maxdepth 1 -mindepth 1 -type d | while read -r line; do basename "$line" >> "$TEMPPATH/.packsfolders"; done
 	if [[ "$osversion" != "ArchLinux" ]]; then sed -i "/Arch/d" "$TEMPPATH/.packsfolders"; fi
-	readfiles "Categories" "$TEMPPATH/.packsfolders"
+	readfiles "Categories|sort" "$TEMPPATH/.packsfolders"
 	selected_package_type="$read_result_dir"
 	find "$INSTPATH/$selected_package_type" -maxdepth 1 -mindepth 1 -type f | while read -r line; do basename "$line" >> "$TEMPPATH/.packs"; done
-	readfiles "Packages" "$TEMPPATH/.packs"
+	readfiles "Packages|sort" "$TEMPPATH/.packs"
 	selected_package_name="$read_result_dir"
 	selected_package="$INSTPATH/$selected_package_type/$selected_package_name"
 	. "$selected_package"
@@ -321,7 +239,7 @@ packsinstaller() {
 	case "$packagetype" in
 	"branch")
 		name=$(basename -s .git "$packageurl")
-		listoptions "Options" "Install/Reinstall ${noc} - ${blc}Check \"${cyc}$packageurl${blc}\" for additional information or necessary dependencies${noc}|Update|Uninstall" "" "" "" ""
+		listoptions "Options" "Install/Reinstall ${noc} - ${blc}Check \"${cyc}$packageurl${blc}\" for additional information or necessary dependencies${noc}|Update|Uninstall"
 		if [[ -f "$selected_package" ]]; then
 			if [[ "$select_ans" == "1" ]]; then
 				if [[ -d "$name" ]]; then rm -rf "$name"; fi
@@ -333,7 +251,7 @@ packsinstaller() {
 				if [[ -d "$name" ]]; then
 					cd "$name"; git reset --hard; git pull "$packageurl"
 					if grep -oq "packageinstall" "$selected_package"; then
-						listoptions "Install? " "Yes|No" "" "" "" ""
+						listoptions "Install? " "Yes|No"
 						if [[ $select_ans == "1" ]]; then
 							packageinstall; fi; fi
 				else echo -e "\nFirst install the ${grc}package${noc}\n"; fi
@@ -346,7 +264,7 @@ packsinstaller() {
 	;;
 	"release")
 		name=$(basename -s .git "$packagename")
-		listoptions "Options" "Install/Update|Uninstall" "" "" "" ""
+		listoptions "Options" "Install/Update|Uninstall"
 		if [[ -f "$selected_package" ]]; then
 			if [[ "$select_ans" == "1" ]]; then
 				if [[ -d "$name" ]]; then rm -rf "$name"; fi
@@ -362,20 +280,21 @@ packsinstaller() {
 }
 
 steamlauchoptions() {
-	flag=0; line_number=0
-	readfiles "Steam games" "$TEMPPATH/.steamapps"; launcher_name="$read_result_name"; launcher_steam_appid="$read_result_dir"
+	flag=0; line_number=0; steam_command="%command%"
+	readfiles "Steam games|sort" "$TEMPPATH/.steamapps"; launcher_name="$read_result_name"; launcher_steam_appid="$read_result_dir"; launcher_type="steam"
 	if [[ -n "$launcher_steam_appid" ]]; then
-		readfiles "Steam local configs" "$TEMPPATH/.lcfiles"; launcher_lc="$read_result_dir"
-		launchersetup "$launcher_name" "steam"
-		if [[ "$video_driver" == *"NVIDIA"* ]]; then sl_video="${nvidia_to}${nvidia_osd}"
-		elif [[ "$video_driver" == *"AMD"* ]]; then sl_video="${amd_aco}${amd_to}"; fi
-		sl_vars="${proton_wined3d}${proton_large_address}${proton_old_gl}${proton_seccomp}${wine_fsr}${wine_fsr_strength}${proton_d3d12}${proton_d3d11}${proton_d3d10}${proton_d3d9}${proton_esync}${proton_fsync}${proton_futex2}${sl_video}${dxvk_async}${dxvk_cache}${dxvkhud_status}${dxvkhud_full}${dxvkhud_devinfo}${dxvkhud_fps}${dxvkhud_frametimes}${dxvkhud_submission}${dxvkhud_drawcall}${dxvkhud_pipelines}${dxvkhud_memory}${dxvkhud_gpuload}${dxvkhud_version}${dxvkhud_api}${dxvkhud_compiler}${dxvkhud_samplers}${dxvkhud_scale}${strangle_status}${strangle_fps}${strangle_fps_battery}${strangle_vsync}${strangle_glfinish}${strangle_picmip}${strangle_af}${strangle_trilinear}${strangle_retro}${strangle_nodlsym}${strangle_vkonly}${strangle_enable_vklayer}${strangle_disable_vklayer}${main_pulse}${main_gamemode}${main_mangohud}${main_vkbasalt}${main_customoptions}"
+		readfiles "Steam local configs|sort" "$TEMPPATH/.lcfiles"; launcher_lc="$read_result_dir"; settingsinit
+		IFS='|'
+			for item in $settings_overall_values; do
+				if [[ "$item" == "custom_args" ]]; then steam_command="$steam_command ${!item}"
+				else steam_command="${!item} $steam_command"; fi; done
+		IFS="$Def_IFS"
 		while pkill steam; do sleep 1s; done
 		while read -r line; do 
 			((line_number+=1))
 			if [[ $line == *'"Software"'* ]]; then flag=1; fi 
 			if [[ $flag == 1 && $line == *"Apps"* ]]; then flag=0; ((line_number+=2)); break; fi; done < "$launcher_lc"; fi
-		sed -i "${line_number}i\ \t\t\t\t\t\"$launcher_steam_appid\"\n\t\t\t\t\t{\n\t\t\t\t\t\t\"LaunchOptions\" \t\"${sl_vars}%command% ${main_args}\"\n\t\t\t\t\t}" "$launcher_lc" 	
+		sed -i "${line_number}i\ \t\t\t\t\t\"$launcher_steam_appid\"\n\t\t\t\t\t{\n\t\t\t\t\t\t\"LaunchOptions\" \t\"$steam_command\"\n\t\t\t\t\t}" "$launcher_lc" 	
 }
 
 steamfinder() {
@@ -412,7 +331,7 @@ steamfinder() {
 }
 
 execinit() {
-	generalinput "execfiles|none|exit" "${cyc}path${noc} to ${grc}folder${noc} with executable or ${cyc}full path${noc} to ${grc}executable${noc}"
+	generalinput "execfiles" "${cyc}path${noc} to the ${grc}folder with executable${noc} or ${cyc}full path${noc} to ${grc}executable${noc}"
 	if [[ -f $(echo "$input_ans" | awk '{$1=$1};1') ]]; then
 		input_ans="$(echo "$input_ans" | awk '{$1=$1};1')"
 		init_result_name="$(basename -s .exe "$input_ans")"; init_result_dir=$(dirname "$input_ans"); init_result="$input_ans"
@@ -425,284 +344,189 @@ execinit() {
 			find "$input_ans" -executable | while read -r line; do echo -e "$(basename "$line") | $line" >> "$TEMPPATH/.${1}files"; done
 		esac
 		if [[ -s "$TEMPPATH/.${1}files" ]]; then
-			readfiles "${1^} Executables" "$TEMPPATH/.${1}files"
+			readfiles "${1^} Executables|sort" "$TEMPPATH/.${1}files"
 			init_result_name="$read_result_name"; init_result_dir=$(dirname "$read_result_dir"); init_result="$read_result_dir"
 		else echo -e "\n ${grc}Executable${noc} ${mac}not found${noc}\n"; exit; fi; fi
 }
 
 launchercreator() {
-	if [[ $1 == "wine" ]]; then prefixinit; runnerinit "all"; fi
-	execinit "$1"
+	launcher_type="$1"
+	if [[ "$launcher_type" == "wine" ]]; then prefixinit; runnerinit "all"; fi
+	execinit "$launcher_type"
 	launcher_name=$init_result_name; launcher_exec_dir="$init_result_dir"; launcher_exec="$init_result"
-	generalinput "launchername|$launcher_name|exit" "${cyc}name${noc} of the launcher"; launcher_name="$input_ans"
-	launchersetup "$(echo "$launcher_name" | tr ' ' '_')" "$1" 
-	launchercompleteinit "$1" "$launcher_name" "created"
+	generalinput "launchername ___ $launcher_name" "${cyc}name${noc} of the ${grc}launcher${noc}"; launcher_name="$input_ans"
+	settingsinit; launchercompleteinit "created"
 }
 
 launchereditor () {
 	launcher_name="$1"; launcher_path="$LAUNCHPATH/$1"
 	. "$launcher_path" "read_vars"
 	if [[ "$launcher_type" == "wine" ]]; then
-		listoptions "Launcher Setup" "Change Launch Options|Change Prefix|Change Runner|Change Executable" "" "" "" ""
-		if [[ "$select_ans" == "1" ]]; then launchersetup "$(echo "$launcher_name" | tr ' ' '_')" "$launcher_type"
+		listoptions "Launcher Setup" "Change Launch Options|Change Prefix|Change Runner|Change Executable"
+		if [[ "$select_ans" == "1" ]]; then settingsinit
 		elif [[ "$select_ans" == "2" ]]; then prefixinit
-		elif [[ "$select_ans" == "3" ]]; then selected_runner=""; runnerinit "all"
+		elif [[ "$select_ans" == "3" ]]; then runnerinit "all"
 		elif [[ "$select_ans" == "4" ]]; then execinit "$launcher_type"; launcher_exec_dir="$init_result_dir"; launcher_exec="$init_result"; fi
 	elif [[ "$launcher_type" == "linux" ]]; then
-		listoptions "Launcher Setup" "Change Launch Options|Change Executable" "" "" "" ""
-		if [[ "$select_ans" == "1" ]]; then launchersetup "$(echo "$launcher_name" | tr ' ' '_')" "$launcher_type"
+		listoptions "Launcher Setup" "Change Launch Options|Change Executable"
+		if [[ "$select_ans" == "1" ]]; then settingsinit
 		elif [[ "$select_ans" == "2" ]]; then execinit "$launcher_type"; launcher_exec_dir="$init_result_dir"; launcher_exec="$init_result"; fi; fi
-	launchercompleteinit "$launcher_type" "$launcher_name" "updated"
-}
-
-launchersetup() {
-	if [[ -f "/usr/bin/strangle" || -f "/usr/local/bin/strangle" ]]; then
-		settings_strangle="|Libstrangle Options"
-	else 
-		strangle_fps=""; strangle_fps_battery=""; strangle_vsync=""; strangle_glfinish=""; strangle_picmip=""; strangle_af=""; strangle_trilinear=""; strangle_retro=""
-		strangle_nodlsym=""; strangle_vkonly=""; strangle_enable_vklayer=""; strangle_disable_vklayer=""; strangle_status=""; fi
-	if [[ -f "/usr/bin/gamemoderun" ]]; then settings_gamemode="|Enable Gamemode"; settings_gamemode_init="|main_gamemode"; else main_gamemode=""; fi
-	if [[ -f "/usr/bin/mangohud" ]]; then settings_mangohud="|Enable MangoHud"; settings_mangohud_init="|main_mangohud"; else main_mangohud=""; fi
-	if [[ -f "/usr/bin/gamemoderun" ]]; then settings_vkbasalt="|Enable vkBasalt"; settings_vkbasalt_init="|main_vkbasalt"; else main_vkbasalt=""; fi
-	if [[ "$video_driver" == *"NVIDIA"* ]]; then launcher_video_driver="NVIDIA Options"
-	elif [[ "$video_driver" == *"AMD"* ]]; then launcher_video_driver="AMD Options"; fi
-	if [[ "$2" == "wine" ]]; then
-		listoptions "Launcher Setup" "Main Options${settings_strangle}|Wine Options|DxvkHUD Options|Dxvk Options|${launcher_video_driver}" "settings" "" "$1" ""
-	elif [[ "$2" == "linux" ]]; then
-		listoptions "Launcher Setup" "Main Options${settings_strangle}|${launcher_video_driver}" "settings" "" "$1" ""
-	elif [[ "$2" == "steam" ]]; then
-		listoptions "Launcher Setup" "Main Options${settings_strangle}|Proton Options|DxvkHUD Options|Dxvk Options|${launcher_video_driver}" "settings" "" "$1" ""; fi
-}
-
-launchersetupinit() {
-	launcher_main_init=" main_args=\"$main_args\"\n main_customoptions=\"$main_customoptions\"\n main_pulse=\"$main_pulse\"\n main_gamemode=\"$main_gamemode\"\n main_mangohud=\"$main_mangohud\"\n main_vkbasalt=\"$main_vkbasalt\"\n"
-	launcher_strangle_init=" strangle_status=\"$strangle_status\"\n strangle_fps=\"$strangle_fps\"\n strangle_fps_battery=\"$strangle_fps_battery\"\n strangle_vsync=\"$strangle_vsync\"\n strangle_glfinish=\"$strangle_glfinish\"\n strangle_picmip=\"$strangle_picmip\"\n strangle_af=\"$strangle_af\"\n strangle_trilinear=\"$strangle_trilinear\"\n strangle_retro=\"$strangle_retro\"\n strangle_nodlsym=\"$strangle_nodlsym\"\n strangle_vkonly=\"$strangle_vkonly\"\n strangle_enable_vklayer=\"$strangle_enable_vklayer\"\n strangle_disable_vklayer=\"$strangle_disable_vklayer\"\n"
-	if [[ "$1" != "linux" ]]; then launcher_dxvkhud_init=" dxvkhud_status=\"$dxvkhud_status\"\n dxvkhud_full=\"$dxvkhud_full\"\n dxvkhud_devinfo=\"$dxvkhud_devinfo\"\n dxvkhud_fps=\"$dxvkhud_fps\"\n dxvkhud_frametimes=\"$dxvkhud_frametimes\"\n dxvkhud_submission=\"$dxvkhud_submission\"\n dxvkhud_drawcall=\"$dxvkhud_drawcall\"\n dxvkhud_pipelines=\"$dxvkhud_pipelines\"\n dxvkhud_memory=\"$dxvkhud_memory\"\n dxvkhud_gpuload=\"$dxvkhud_gpuload\"\n dxvkhud_version=\"$dxvkhud_version\"\n dxvkhud_api=\"$dxvkhud_api\"\n dxvkhud_compiler=\"$dxvkhud_compiler\"\n dxvkhud_samplers=\"$dxvkhud_samplers\"\n dxvkhud_scale=\"$dxvkhud_scale\"\n"; fi
-	if [[ "$1" != "linux" ]]; then launcher_dxvk_init=" dxvk_async=\"$dxvk_async\"\n dxvk_cache=\"$dxvk_cache\"\n"; fi
-	if [[ "$video_driver" == *"NVIDIA"* ]]; then launcher_nvidia_init=" nvidia_to=\"$nvidia_to\"\n nvidia_osd=\"$nvidia_osd\"\n"; fi
-	if [[ "$video_driver" == *"AMD"* ]]; then launcher_amd_init=" amd_aco=\"$amd_aco\"\n amd_to=\"$amd_to\"\n"; fi
-	if [[ "$1" == "wine" ]]; then launcher_wine_init=" wine_esync=\"$wine_esync\"\n wine_fsync=\"$wine_fsync\"\n wine_fsr=\"$wine_fsr\"\n wine_fsr_strength=\"$wine_fsr_strength\"\n wine_vd=\"$wine_vd\"\n"; fi
-	launcher_settings="${launcher_main_init}${launcher_strangle_init}${launcher_dxvkhud_init}${launcher_dxvk_init}${launcher_nvidia_init}${launcher_amd_init}${launcher_wine_init}"
+	launchercompleteinit "updated"
 }
 
 launchercompleteinit() {
-	launchersetupinit "$1"
 	if [[ "$launcher_exec" == *".msi" ]]; then launcher_msi=" msiexec /i"; else launcher_msi=""; fi
-	launcher_main="\${main_pulse}\${main_gamemode}\${main_mangohud}\${main_vkbasalt}\${main_customoptions}"
-	launcher_strangle="\${strangle_status}\${strangle_fps}\${strangle_fps_battery}\${strangle_vsync}\${strangle_glfinish}\${strangle_picmip}\${strangle_af}\${strangle_trilinear}\${strangle_retro}\${strangle_nodlsym}\${strangle_vkonly}\${strangle_enable_vklayer}\${strangle_disable_vklayer}"
-	launcher_dxvkhud="\${dxvkhud_status}\${dxvkhud_full}\${dxvkhud_devinfo}\${dxvkhud_fps}\${dxvkhud_frametimes}\${dxvkhud_submission}\${dxvkhud_drawcall}\${dxvkhud_pipelines}\${dxvkhud_memory}\${dxvkhud_gpuload}\${dxvkhud_version}\${dxvkhud_api}\${dxvkhud_compiler}\${dxvkhud_samplers}\${dxvkhud_scale}"
-	launcher_dxvk="\${dxvk_async}\${dxvk_cache}"
-	if [[ "$video_driver" == *"NVIDIA"* ]]; then launcher_video="\${nvidia_to}\${nvidia_osd}"
-	elif [[ "$video_driver" == *"AMD"* ]]; then launcher_video="\${amd_aco}\${amd_to}"; fi
-	launcher_wine="\${wine_esync}\${wine_fsync}\${wine_fsr}\${wine_fsr_strength}"
-	launcher_command=''
-	if [[ "$1" == "wine" ]]; then
-		launcher_vars=" launcher_type=\"$1\"\n launcher_exec_dir=\"$launcher_exec_dir\"\n selected_runner=\"$selected_runner\"\n selected_prefix=\"$selected_prefix\"\n launcher_exec=\"$launcher_exec\"\n launcher_msi=\"$launcher_msi\"\n"
-	elif [[ "$1" == "linux" ]]; then
-		launcher_vars=" launcher_type=\"$1\"\n launcher_exec_dir=\"$launcher_exec_dir\"\n launcher_exec=\"'$launcher_exec'\"\n"; fi
-	if [[ "$1" == "wine" ]]; then 
-		launcher_command="${launcher_command}${launcher_dxvkhud} ${launcher_video}${launcher_dxvk}${launcher_strangle}${launcher_wine}${launcher_main}"
-		launcher_command="${launcher_command} WINEPREFIX=\\\"\${selected_prefix}\\\" \\\"\${selected_runner}\\\" \${wine_vd} \${launcher_msi} \\\"\${launcher_exec}\\\" \${main_args}"
-	elif [[ "$1" == "linux" ]]; then
-		launcher_command="${launcher_command}${launcher_video}${launcher_strangle}${launcher_main}"
-		launcher_command="${launcher_command} \${launcher_exec} \${main_args}"; fi
+	if [[ "$launcher_type" == "wine" ]]; then
+		launcher_vars=" launcher_type=\"$launcher_type\"\n launcher_exec_dir=\"$launcher_exec_dir\"\n selected_runner=\"$selected_runner\"\n selected_prefix=\"$selected_prefix\"\n launcher_exec=\"$launcher_exec\"\n launcher_msi=\"$launcher_msi\"\n"
+	elif [[ "$launcher_type" == "linux" ]]; then
+		launcher_vars=" launcher_type=\"$launcher_type\"\n launcher_exec_dir=\"$launcher_exec_dir\"\n launcher_exec=\"$launcher_exec\"\n"; fi
+	if [[ "$launcher_type" == "wine" ]]; then 
+		launcher_command="WINEPREFIX=\\\"\$selected_prefix\\\" \\\"\$selected_runner\\\" \$launcher_msi \\\"\${launcher_exec}\\\""
+	elif [[ "$launcher_type" == "linux" ]]; then
+		launcher_command="\${launcher_exec}"; fi
+	if [[ -n "${settings_overall_values:+x}" ]]; then
+		launcher_settings=" settings_overall_values=\"$settings_overall_values\"\n"
+		IFS='|'
+		for item in $settings_overall_values; do
+			launcher_settings="$launcher_settings $item=\"${!item}\"\n"
+			if [[ "$item" == "custom_args" ]]; then launcher_command="$launcher_command \${$item}"
+			else launcher_command="\${$item} $launcher_command"; fi; done
+		IFS="$Def_IFS"; fi
+	launcher_complete_command="#!/bin/bash\n${launcher_vars}\n${launcher_settings}\nif [[ \$1 != \"read_vars\" ]]; then cd \"\${launcher_exec_dir}\"; eval \"${launcher_command}\"; fi"
 	if [[ ! -w "$launcher_exec_dir" ]]; then
-		if [[ -f "$LAUNCHPATH/$2" || -L "$LAUNCHPATH/$2" ]]; then rm "$LAUNCHPATH/$2"; fi
-		echo -e '#!/bin/bash'"\n${launcher_vars}${launcher_settings}if [[ \$1 != \"read_vars\" ]]; then cd \"\${launcher_exec_dir}\"; eval \"${launcher_command}\"; fi" > "$LAUNCHPATH/$2"
-		chmod +x "$LAUNCHPATH/$2"
-		echo -e "\nLauncher ${grc}${launcher_name}${noc} successfully $3 in the ${grc}$LAUNCHPATH${noc} folder."
+		if [[ -f "$LAUNCHPATH/$launcher_name" || -L "$LAUNCHPATH/$launcher_name" ]]; then rm "$LAUNCHPATH/$launcher_name"; fi
+		echo -e "$launcher_complete_command" > "$LAUNCHPATH/$launcher_name"
+		chmod +x "$LAUNCHPATH/$launcher_name"
+		echo -e "\nLauncher ${grc}${launcher_name}${noc} successfully $1 in the ${grc}$LAUNCHPATH${noc} folder."
 	else
-		echo -e '#!/bin/bash'"\n${launcher_vars}${launcher_settings}if [[ \$1 != \"read_vars\" ]]; then cd \"\${launcher_exec_dir}\"; eval \"${launcher_command}\"; fi" > "$launcher_exec_dir/$2.hlu"
-		chmod +x "$launcher_exec_dir/$2.hlu"
-		if [[ -f "$LAUNCHPATH/$2" || -L "$LAUNCHPATH/$2" ]]; then rm "$LAUNCHPATH/$2"; fi
-		ln -s "$launcher_exec_dir/$2.hlu" "$LAUNCHPATH/$2"
-		echo -e "\nLauncher ${grc}${launcher_name}${noc} successfully $3 in the ${grc}$launcher_exec_dir${noc} folder. Shortcut located in the ${grc}$LAUNCHPATH${noc} folder."; fi
+		echo -e "$launcher_complete_command" > "$launcher_exec_dir/$launcher_name.hlu"
+		chmod +x "$launcher_exec_dir/$launcher_name.hlu"
+		if [[ -f "$LAUNCHPATH/$launcher_name" || -L "$LAUNCHPATH/$launcher_name" ]]; then rm "$LAUNCHPATH/$launcher_name"; fi
+		ln -s "$launcher_exec_dir/$launcher_name.hlu" "$LAUNCHPATH/$launcher_name"
+		echo -e "\nLauncher ${grc}${launcher_name}${noc} successfully $1 in the ${grc}$launcher_exec_dir${noc} folder. Shortcut located in the ${grc}$LAUNCHPATH${noc} folder."; fi
 }
 
-settingsselector() {
-	if [[ "$1" == "Main Options" ]]; then listoptions "$1" "Add Additional Arguments|Add Custom Options|Enable Pulse Audio Latency${settings_gamemode}${settings_mangohud}${settings_vkbasalt}|Reset Options" "main" "main_args|main_customoptions|main_pulse${settings_gamemode_init}${settings_mangohud_init}${settings_vkbasalt_init}" "" ""
-	elif [[ "$1" == "Libstrangle Options" ]]; then listoptions "$1" "Enable libstrangle|Max Framerate|Max Framerate for Battery Power|Vsync|Run glFinish after every frame (OpenGL only)|Mip-map LoD Bias|Anisotropic Filtering level (Vulkan Only)|Force Trilinear Filtering (Vulkan only)|Disables Linear Texture Filtering (Vulkan only)|Disables the Hooking of Dlsym|Stops Strangle's OpenGL libs from loading|Enables the Implicit Vulkan layer|Disables the Implicit Vulkan layer|Reset Options" "strangle" "strangle_status|strangle_fps|strangle_fps_battery|strangle_vsync|strangle_glfinish|strangle_picmip|strangle_af|strangle_trilinear|strangle_retro|strangle_nodlsym|strangle_vkonly|strangle_enable_vklayer|strangle_disable_vklayer" "" ""
-	elif [[ "$1" == "Wine Options" ]]; then listoptions "$1" "Enable ESYNC|Enable FSYNC|Enable FSR|Select FSR Strength|Enable Virtual Desktop|Reset Options" "wine" "wine_esync|wine_fsync|wine_fsr|wine_fsr_strength|wine_vd" "$2" ""
-	elif [[ "$1" == "Proton Options" ]]; then listoptions "$1" "Enable WineD3D|Enable Large Address Aware|Enable Old GL String|Enable Seccomp|Enable FSR|Select FSR Strength|Disable D3D12|Disable D3D11|Disable D3D10|Disable D3D9|Disable ESYNC|Disable FSYNC|Disable FUTEX2|Reset Options" "proton" "proton_wined3d|proton_large_address|proton_old_gl|proton_seccomp|wine_fsr|wine_fsr_strength|proton_d3d12|proton_d3d11|proton_d3d10|proton_d3d9|proton_esync|proton_fsync|proton_futex2" "" ""
-	elif [[ "$1" == "DxvkHUD Options" ]]; then listoptions "$1" "Enable DxvkHUD|Enable All Options|Displays the name of the GPU and the driver version|Shows the current frame rate|Shows a frame time graph|Shows the number of command buffers submitted per frame|Shows the number of draw calls and render passes per frame|Shows the total number of graphics and compute pipelines|Shows the amount of device memory allocated and used|Shows estimated GPU load. May be inaccurate|Shows DXVK version|Shows the D3D feature level used by the application|Shows shader compiler activity|Shows the current number of sampler pairs used [D3D9 Only]|Scales the HUD|Reset Options" "dxvkhud" "dxvkhud_status|dxvkhud_full|dxvkhud_devinfo|dxvkhud_fps|dxvkhud_frametimes|dxvkhud_submission|dxvkhud_drawcall|dxvkhud_pipelines|dxvkhud_memory|dxvkhud_gpuload|dxvkhud_version|dxvkhud_api|dxvkhud_compiler|dxvkhud_samplers|dxvkhud_scale" "" ""
-	elif [[ "$1" == "Dxvk Options" ]]; then listoptions "$1" "Enable Dxvk Async|Disable State Cache|Reset Options" "dxvk" "dxvk_async|dxvk_cache" "" ""
-	elif [[ "$1" == "NVIDIA Options" ]]; then listoptions "$1" "Enable NVIDIA Threaded Optimization|Enable NVIDIA Graphics API Visual Indicator|Reset Options" "nvidia" "nvidia_to|nvidia_osd" "" ""
-	elif [[ "$1" == "AMD Options" ]]; then listoptions "$1" "Enable AMD Radeon ACO Vulkan Compiler|Enable AMD Threaded Optimizations|Reset Options" "amd" "amd_aco|amd_to" "" ""; fi
+settingsinit() {
+	while read -r line; do
+		settings_menu="${settings_menu:=}|$(basename -s '.cfg' "$line" | cut -d'_' -f2) options"
+	done < <(find "$CONFPATH" -maxdepth 1 -mindepth 1 -type f | sort -n)
+	settings_menu=${settings_menu:1}
+	listoptions "Launcher setup" "$settings_menu"
+	while : ; do
+		if [[ "$list_result_name" != "none" ]]; then
+			settings_name="$(echo "$list_result_name" | cut -d' ' -f1)"
+			settings_file="$(find "$CONFPATH" -name "*${settings_name}.cfg")"
+			sa_count=0; sf_count=0
+			settings_items="";settings_items_values=""
+			while read -r line; do
+				((sf_count+=1))
+				if [[ "$line" == "#-->"* ]]; then settings_item_begin_string[$sa_count]="$sf_count"; ((sa_count+=1)); fi
+			done < "$settings_file"
+			for ((i=0; i<sa_count; i++)); do
+				settings_items="${settings_items}|$(sed -n "$((settings_item_begin_string[i]+1))p" "$settings_file")"
+				settings_items_values="${settings_items_values}|$(sed -n "$((settings_item_begin_string[i]+2))p" "$settings_file")"
+			done
+			settings_items=${settings_items:1}; settings_items_values=${settings_items_values:1}
+			while [[ "$list_result_name" != "none" ]]; do
+				listoptions "$settings_name|continue" "$settings_items ___ $settings_items_values"
+				if [[ "$list_result_name" != "none" ]]; then
+					settings_item_name="$(sed -n "$((settings_item_begin_string[list_result_number-1]+2))p" "$settings_file")"
+					settings_item_limit="$(sed -n "$((settings_item_begin_string[list_result_number-1]+3))p" "$settings_file")"
+					settings_item_limit_string="$(sed -n "$((settings_item_begin_string[list_result_number-1]+4))p" "$settings_file")"
+					settings_item_input_text="$(sed -n "$((settings_item_begin_string[list_result_number-1]+5))p" "$settings_file")"
+					settings_item_value="$(sed -n "$((settings_item_begin_string[list_result_number-1]+6))p" "$settings_file")"
+					settings_item_default="$(sed -n "$((settings_item_begin_string[list_result_number-1]+7))p" "$settings_file")"
+					settings_item_input_limit="$(sed -n "$((settings_item_begin_string[list_result_number-1]+8))p" "$settings_file")"
+					if [[ "$settings_item_limit" == "none" ]]; then settings_item_limit='[[ "none" == "none" ]]'; fi
+					if eval "$settings_item_limit"; then
+						if [[ "$settings_item_input_text" != "none" ]]; then
+							settings_item_input_value=""
+							for ((i=1; i<=$(grep -o ' <|> ' <<< "$settings_item_input_text" | grep -c .)+1; i++)); do
+							settings_item_input_text_temp="$(echo -e "${settings_item_input_text// <|> /\\n}" | sed -n "${i}p")"
+							settings_item_value_temp="$(echo -e "${settings_item_value// <|> /\\n}" | sed -n "${i}p")"
+							settings_item_default_temp="$(echo -e "${settings_item_default// <|> /\\n}" | sed -n "${i}p")"
+							settings_item_input_limit_temp="$(echo -e "${settings_item_input_limit// <|> /\\n}" | sed -n "${i}p")"
+							while : ; do
+								generalinput "$settings_item_name-$i ___ $settings_item_default_temp|continue" "$settings_item_input_text_temp"
+								if [[ "$settings_item_input_limit_temp" == "none" ]] || [[ "$input_ans" == "none" ]] || eval "$settings_item_input_limit_temp"; then
+									break; fi
+							done
+							if [[ "$input_ans" != "none" ]]; then settings_item_input_value="$settings_item_input_value${settings_item_value_temp//gi_value/$input_ans}"
+							else settings_item_input_value="none"; fi
+							done
+						else settings_item_input_value="none"; fi
+						if [[ "$settings_item_input_value" != "none" ]];  then
+							eval "$settings_item_name=\"$settings_item_input_value\""
+						elif [[ "$settings_item_value" != "none" && "$settings_item_input_text" == "none" ]];  then
+							if [[ -n "${!settings_item_name:+nex}" ]]; then eval "$settings_item_name=\"\""
+							else eval "$settings_item_name=\"$settings_item_value\""; fi
+						elif [[ "$settings_item_input_text" != "none" && "$settings_item_input_value" == "none" ]]; then
+							eval "$settings_item_name=\"\""; fi
+					else echo -e "\n $settings_item_limit_string\n"; fi; fi
+			done
+			listoptions "Launcher setup|continue" "$settings_menu"
+			IFS='|'
+			for item in $settings_items_values; do
+				if [[ -n ${!item:+x} && ${!item:+x} != "" && "${settings_overall_values:-x}" != *"$item"* ]]; then settings_overall_values="${settings_overall_values:=}|$item"; fi; done; fi
+			if [[ "${settings_overall_values:-x}" == "|"* ]]; then settings_overall_values="${settings_overall_values:1}"; fi
+			for item in $settings_overall_values; do
+				if [[ ${!item:+x} == "" ]]; then
+					settings_overall_values=${settings_overall_values//$item/}; settings_overall_values=${settings_overall_values//||/|}; fi; done
+			if [[ "${settings_overall_values:-x}" == "|"* ]]; then settings_overall_values="${settings_overall_values:1}"; fi
+			if [[ "${settings_overall_values:-x}" == *"|" ]]; then settings_overall_values="${settings_overall_values::-1}"; fi
+			IFS="$Def_IFS"
+		if [[ "$list_result_name" == "none" ]]; then break; fi
+	done
 }
 
-mainselector() {
-	if [[ "$1" == "Add Additional Arguments" ]]; then
-		generalinput "argshistory|none" "${cyc}Additional Arguments${noc}"
-		if [[ "$input_ans" != "" ]]; then main_args="$input_ans"; fi
-	elif [[ "$1" == "Add Custom Options" ]]; then
-		generalinput "options|none" "${cyc}Custom Options${noc}"
-		if [[ "$input_ans" != "" ]]; then main_customoptions="$input_ans "; fi
-	elif [[ "$1" == "Enable Pulse Audio Latency" ]]; then
-		generalinput "pulsehistory|60" "${cyc}value(ms)${noc} of ${grc}Pulse Audio Latency${noc}"
-		if [[ "$input_ans" != "" ]]; then main_pulse="PULSE_LATENCY_MSEC=$input_ans "; fi
-	elif [[ "$1" == "Enable Gamemode" ]]; then main_gamemode="gamemoderun "
-	elif [[ "$1" == "Enable MangoHud" ]]; then main_mangohud="mangohud "
-	elif [[ "$1" == "Enable vkBasalt" ]]; then main_vkbasalt="ENABLE_VKBASALT=1 "; fi
-	if [[ "$1" == "Reset Options" ]]; then 
-		main_args=""; main_customoptions=""; main_pulse=""; main_gamemode=""; main_mangohud=""; main_vkbasalt=""; fi
-}
-
-strangleselector() {
-	if [[ "$1" == "Enable libstrangle" ]]; then strangle_status="strangle "
-	elif [[ "$1" == "Max Framerate" ]]; then
-		generalinput "framerate|60" "maximum ${cyc}framerate${noc}. ${cyc}0${noc} to disable. Any ${cyc}positive value${noc} to enable"
-		if [[ "$input_ans" != "" ]]; then strangle_fps="STRANGLE_FPS=${input_ans} "; fi
-	elif [[ "$1" == "Max Framerate for Battery Power" ]]; then
-		generalinput "frameratebattery|60" "maximum ${cyc}framerate${noc} when running on battery power. ${cyc}0${noc} to disable. Any ${cyc}positive value${noc} to enable"
-		if [[ "$input_ans" != "" ]]; then strangle_fps_battery="STRANGLE_FPS_BATTERY=${input_ans} "; fi
-	elif [[ "$1" == "Vsync" ]]; then
-		echo -e "\n	${mac}OpenGL${noc}\n ${cyc}-1${noc} - ${grc}Adaptive sync (unconfirmed if this actually works)${noc}\n ${cyc}0${noc} - ${grc}Force off${noc}\n ${cyc}1${noc} - ${grc}Force on${noc}\n ${cyc}n${noc} - ${grc}Sync to refresh rate / n${noc}\n	${mac}Vulkan${noc}\n ${cyc}0${noc} - ${grc}Force off${noc}\n ${cyc}1${noc} - ${grc}Mailbox mode. Vsync with uncapped framerate${noc}\n ${cyc}2${noc} - ${grc}Traditional vsync with framerate capped to refresh rate${noc}\n ${cyc}3${noc} - ${grc}Adaptive vsync with tearing at low framerates${noc}"
-		generalinput "vsyncstrangle|2" "${cyc}value${noc} from the list above"
-		if [[ "$input_ans" != "" ]]; then strangle_vsync="STRANGLE_VSYNC=${input_ans} "; fi
-	elif [[ "$1" == "Run glFinish after every frame (OpenGL only)" ]]; then strangle_glfinish="STRANGLE_GLFINISH=1 "
-	elif [[ "$1" == "Mip-map LoD Bias" ]]; then
-		generalinput "vsyncstrangle|none" "${cyc}value${noc} between ${cyc}-16${noc} and ${cyc}16${noc}. Negative ${cyc}values${noc} will increase texture sharpness (and aliasing). Positive ${cyc}values${noc} will increase texture blurriness"
-		if [[ "$input_ans" != "" ]]; then if (( input_ans >= -16 && input_ans <= 16 )); then strangle_picmip="STRANGLE_PICMIP=${input_ans} "; fi; fi
-	elif [[ "$1" == "Anisotropic Filtering level (Vulkan Only)" ]]; then
-		generalinput "vsyncstrangle|none" "${cyc}value${noc} between ${cyc}1${noc} and ${cyc}16${noc}. Improves sharpness of textures viewed at an angle"
-		if [[ "$input_ans" != "" ]]; then if (( input_ans >= 1 && input_ans <= 16 )); then strangle_af="STRANGLE_AF=${input_ans} "; fi; fi
-	elif [[ "$1" == "Force Trilinear Filtering (Vulkan only)" ]]; then strangle_trilinear="STRANGLE_TRILINEAR=1 "
-	elif [[ "$1" == "Disables Linear Texture Filtering (Vulkan only)" ]]; then strangle_retro="STRANGLE_RETRO=1 "
-	elif [[ "$1" == "Disables the Hooking of Dlsym" ]]; then strangle_nodlsym="STRANGLE_NODLSYM=1 "
-	elif [[ "$1" == "Stops Strangle's OpenGL libs from loading" ]]; then strangle_vkonly="STRANGLE_VKONLY=1 "
-	elif [[ "$1" == "Enables the Implicit Vulkan layer" ]]; then strangle_enable_vklayer="ENABLE_VK_LAYER_TORKEL104_libstrangle=1 "
-	elif [[ "$1" == "Disables the Implicit Vulkan layer" ]]; then strangle_disable_vklayer="DISABLE_VK_LAYER_TORKEL104_libstrangle=1 "; fi
-	if [[ "$1" == "Reset Options" ]]; then 
-		strangle_fps=""; strangle_fps_battery=""; strangle_vsync=""; strangle_glfinish=""; strangle_picmip=""; strangle_af=""; strangle_trilinear=""; strangle_retro=""
-		strangle_nodlsym=""; strangle_vkonly=""; strangle_enable_vklayer=""; strangle_disable_vklayer=""; strangle_status=""; fi
-}
-
-dxvkhudselector() {
-	if [[ "$1" == "Enable DxvkHUD" ]]; then dxvkhud_status="DXVK_HUD="
-	elif [[ "$1" == "Enable All Options" ]]; then dxvkhud_full="full "; dxvkhud_devinfo=""; dxvkhud_fps=""; dxvkhud_frametimes=""; dxvkhud_submission=""; dxvkhud_drawcall=""
-		dxvkhud_pipelines=""; dxvkhud_memory=""; dxvkhud_gpuload=""; dxvkhud_version=""; dxvkhud_api=""; dxvkhud_compiler=""; dxvkhud_samplers=""; dxvkhud_scale=""
-	elif [[ "$1" == "Displays the name of the GPU and the driver version" ]]; then dxvkhud_devinfo="devinfo,"; dxvkhud_full=""
-	elif [[ "$1" == "Shows the current frame rate" ]]; then dxvkhud_fps="fps,"; dxvkhud_full=""
-	elif [[ "$1" == "Shows a frame time graph" ]]; then dxvkhud_frametimes="frametimes,"; dxvkhud_full=""
-	elif [[ "$1" == "Shows the number of command buffers submitted per frame" ]]; then dxvkhud_submission="submission,"; dxvkhud_full=""
-	elif [[ "$1" == "Shows the number of draw calls and render passes per frame" ]]; then dxvkhud_drawcall="drawcall,"; dxvkhud_full=""
-	elif [[ "$1" == "Shows the total number of graphics and compute pipelines" ]]; then dxvkhud_pipelines="pipelines,"; dxvkhud_full=""
-	elif [[ "$1" == "Shows the amount of device memory allocated and used" ]]; then dxvkhud_memory="memory,"; dxvkhud_full=""
-	elif [[ "$1" == "Shows estimated GPU load. May be inaccurate" ]]; then dxvkhud_gpuload="gpuload,"; dxvkhud_full=""
-	elif [[ "$1" == "Shows DXVK version" ]]; then dxvkhud_version="version,"; dxvkhud_full=""
-	elif [[ "$1" == "Shows the D3D feature level used by the application" ]]; then dxvkhud_api="api,"; dxvkhud_full=""
-	elif [[ "$1" == "Shows shader compiler activity" ]]; then dxvkhud_compiler="compiler,"; dxvkhud_full=""
-	elif [[ "$1" == "Shows the current number of sampler pairs used [D3D9 Only]" ]]; then dxvkhud_samplers="samplers,"; dxvkhud_full=""
-	elif [[ "$1" == "Scales the HUD" ]]; then
-		generalinput "scaledxvkhud|none" "${cyc}scale factor${noc} (Example: ${cyc}1.5${noc})"
-		if [[ "$input_ans" != "" ]]; then dxvkhud_scale="scale=$input_ans,"; dxvkhud_full=""; fi; fi
-	if [[ "$1" == "Reset Options" ]]; then
-		dxvkhud_full=""; dxvkhud_devinfo=""; dxvkhud_fps=""; dxvkhud_frametimes=""; dxvkhud_submission=""; dxvkhud_drawcall=""; dxvkhud_pipelines=""; dxvkhud_memory=""; dxvkhud_gpuload=""
-		dxvkhud_version=""; dxvkhud_api=""; dxvkhud_compiler=""; dxvkhud_samplers=""; dxvkhud_scale=""; dxvkhud_status=""; fi
-}
-
-dxvkselector() {
-	if [[ "$1" == "Enable Dxvk Async" ]]; then dxvk_async="DXVK_ASYNC=1 "
-	elif [[ "$1" == "Disable State Cache" ]]; then dxvk_cache="DXVK_STATE_CACHE=0 "; fi
-	if [[ "$1" == "Reset Options" ]]; then dxvk_async=""; dxvk_cache=""; fi
-}
-
-nvidiaselector() {
-	if [[ "$1" == "Enable NVIDIA Threaded Optimization" ]]; then nvidia_to="__GL_THREADED_OPTIMIZATIONS=1 "
-	elif [[ "$1" == "Enable NVIDIA Graphics API Visual Indicator" ]]; then nvidia_osd="__GL_SHOW_GRAPHICS_OSD=1 "; fi
-	if [[ "$1" == "Reset Options" ]]; then nvidia_to=""; nvidia_osd=""; fi
-}
-
-amdselector() {
-	if [[ "$1" == "Enable AMD Radeon ACO Vulkan Compiler" ]]; then amd_aco="RADV_PERFTEST=aco "
-	elif [[ "$1" == "Enable AMD Threaded Optimizations" ]]; then amd_to="mesa_glthread=true "; fi
-	if [[ "$1" == "Reset Options" ]]; then amd_aco=""; amd_to=""; fi
-}
-
-wineselector() {
-	if [[ "$1" == "Enable ESYNC" ]]; then wine_esync="WINEESYNC=1 "
-	elif [[ "$1" == "Enable FSYNC" ]]; then wine_fsync="WINEFSYNC=1 "
-	elif [[ "$1" == "Enable FSR" ]]; then wine_fsr="WINE_FULLSCREEN_FSR=1 "
-	elif [[ "$1" == "Select FSR Strength" ]]; then
-		listoptions "FSR Strength" "0|1|2|3|4|5" "" "" "" ""; wine_fsr_strength="WINE_FULLSCREEN_FSR_STRENGTH=${list_array[select_ans-1]} "
-	elif [[ "$1" == "Enable Virtual Desktop" ]]; then
-		generalinput "widthhistory|1920" "${cyc}width${noc} of ${grc}Virtual Desktop${noc}"
-		if [[ "$input_ans" != "" ]]; then wine_vd="explorer /desktop='$2',${input_ans}x"; fi
-		generalinput "heighthistory|1080" "${cyc}height${noc} of ${grc}Virtual Desktop${noc}"
-		if [[ "$input_ans" != "" ]]; then wine_vd="${wine_vd}${input_ans}"; fi; fi
-	if [[ "$1" == "Reset Options" ]]; then wine_esync=""; wine_fsync=""; wine_vd=""; wine_fsr=""; wine_fsr_strength=""; fi
-}
-
-protonselector() {
-	if [[ "$1" == "Enable WineD3D" ]]; then proton_wined3d="PROTON_USE_WINED3D=1 "
-	elif [[ "$1" == "Enable Large Address Aware" ]]; then proton_large_address="PROTON_FORCE_LARGE_ADDRESS_AWARE=1 "
-	elif [[ "$1" == "Enable Old GL String" ]]; then proton_old_gl="PROTON_OLD_GL_STRING=1 "
-	elif [[ "$1" == "Enable Seccomp" ]]; then proton_seccomp="PROTON_USE_SECCOMP=1 "
-	elif [[ "$1" == "Enable FSR" ]]; then wine_fsr="WINE_FULLSCREEN_FSR=1 "
-	elif [[ "$1" == "Select FSR Strength" ]]; then
-		listoptions "FSR Strength" "0|1|2|3|4|5" "" "" "" ""; wine_fsr_strength="WINE_FULLSCREEN_FSR_STRENGTH=${list_array[select_ans-1]} "
-	elif [[ "$1" == "Disable D3D12" ]]; then proton_d3d12="PROTON_NO_D3D12=1 "
-	elif [[ "$1" == "Disable D3D11" ]]; then proton_d3d11="PROTON_NO_D3D11=1 "
-	elif [[ "$1" == "Disable D3D10" ]]; then proton_d3d10="PROTON_NO_D3D10=1 "
-	elif [[ "$1" == "Disable D3D9" ]]; then proton_d3d9="PROTON_NO_D3D9=1 "
-	elif [[ "$1" == "Disable ESYNC" ]]; then proton_esync="PROTON_NO_ESYNC=1 "
-	elif [[ "$1" == "Disable FSYNC" ]]; then proton_fsync="PROTON_NO_FSYNC=1 "
-	elif [[ "$1" == "Disable FUTEX2" ]]; then proton_futex2="PROTON_NO_FUTEX2=0 "; fi
-	if [[ "$1" == "Reset Options" ]]; then 
-		proton_wined3d=""; proton_large_address=""; proton_old_gl=""; proton_seccomp=""; proton_d3d12=""; proton_d3d11=""; proton_d3d10=""; proton_d3d9=""
-		proton_esync=""; proton_fsync=""; proton_futex2=""; wine_fsr=""; wine_fsr_strength=""; fi
-}
-
-trap hi_exit EXIT
-Def_IFS=$'\n'
-IFS=$Def_IFS
+trap hi_exit EXIT; exit_flag="0"
+Def_IFS=$'\n'; IFS=$Def_IFS
 HIPATH="$HOME/Hist"; if [[ ! -d "$HIPATH"  ]]; then mkdir -p "$HIPATH"; fi 
 HISTORYPATH="$HIPATH/.historyfiles"; if [[ ! -d "$HISTORYPATH" ]]; then mkdir -p "$HISTORYPATH"; fi
 LAUNCHPATH="$HIPATH/Launchers"; if [[ ! -d "$LAUNCHPATH" ]]; then mkdir -p "$LAUNCHPATH"; fi
 TEMPPATH="$HIPATH/.temp"; if [[ ! -d "$TEMPPATH" ]]; then mkdir -p "$TEMPPATH"; else rm -rf "$TEMPPATH"; mkdir -p "$TEMPPATH"; fi
 INSTPATH="$HIPATH/Installers"; if [[ ! -d "$INSTPATH" ]]; then mkdir -p "$INSTPATH"; fi
 PACKPATH="$HIPATH/Packages"; if [[ ! -d "$PACKPATH" ]]; then mkdir -p "$PACKPATH"; fi
+CONFPATH="$HIPATH/Configs"; if [[ ! -d "$CONFPATH" ]]; then mkdir -p "$CONFPATH"; fi
 noc="\e[0m"; rec="\e[31m"; grc="\e[32m"; blc="\e[34m"; cyc="\e[36m"; mac="\e[91m"
 eval "hostnamectl > \"$TEMPPATH/.osinfo\""
 osversion="$(grep "Operating System" "$TEMPPATH/.osinfo" | cut -d: -f2)"; osversion=${osversion// /} 
-video_driver=$(lspci | grep -i --color 'vga\|3d\|2d')
 if [[ -d "$HOME/.steam" ]]; then steamfinder; fi
-if [[ -f "/usr/bin/yay" && -f "/usr/bin/checkupdates" ]]; then hi_archupdater="|Arch Updater"; else hi_archupdater=""; fi
-exit_flag="1"; listoptions "Hist Linux Utilities" "Launchers Creator|Wine Helper|Steam Helper|Packages Installer$hi_archupdater" "" "" "" ""; exit_flag="0"
+listoptions "Hist Linux Utilities|exit" "Launcher Controller|Wine Helper|Steam Helper|Package Installer|Arch Updater"
 case "$select_ans" in
-"1") #Launcher Creator
+"1") #Launcher Controller
 	find "$LAUNCHPATH" -maxdepth 1 -mindepth 1 -type f,l | while read -r line; do
 		if [[ -f "$line" ]]; then basename "$line" >> "$TEMPPATH/.launcherslist"; fi; done
-	listoptions "Launchers Creator" "Create launcher|Edit launcher|Delete launcher|Open launcher in text editor|Run launcher" "" "" "" ""
+	listoptions "Launcher Controller" "Create launcher|Edit launcher|Delete launcher|Open launcher in text editor|Run launcher"
 		if [[ "$select_ans" == "1" ]]; then
-			listoptions "Launcher Creator" "Wine App|Linux App" "" "" "" ""
+			listoptions "Launcher Creator" "Wine App|Linux App"
 			if [[ "$select_ans" == "1" ]]; then
 				launchercreator "wine"
 			elif [[ "$select_ans" == "2" ]]; then
 				launchercreator "linux"; fi
 		elif [[ "$select_ans" == "2" ]]; then
-			readfiles "Launchers" "$TEMPPATH/.launcherslist"; launchereditor "$read_result_dir"
+			readfiles "Launchers|sort" "$TEMPPATH/.launcherslist"; launchereditor "$read_result_dir"
 		elif [[ "$select_ans" == "3" ]]; then
-			readfiles "Launchers" "$TEMPPATH/.launcherslist"
+			readfiles "Launchers|sort" "$TEMPPATH/.launcherslist"
 			if [[ -L "$LAUNCHPATH/$read_result_dir}" && $(readlink -f "$LAUNCHPATH/$read_result_dir") ]]; then
 				rm "$(readlink -f "$LAUNCHPATH/$read_result_dir")"; fi
 			rm "$LAUNCHPATH/$read_result_dir"
 		elif [[ "$select_ans" == "4" ]]; then
-			readfiles "Launchers" "$TEMPPATH/.launcherslist"; xdg-open "$LAUNCHPATH/$read_result_dir"
+			readfiles "Launchers|sort" "$TEMPPATH/.launcherslist"; xdg-open "$LAUNCHPATH/$read_result_dir"
 		elif [[ "$select_ans" == "5" ]]; then
-			readfiles "Launchers" "$TEMPPATH/.launcherslist"; eval "\"$LAUNCHPATH/$read_result_dir\""; fi
+			readfiles "Launchers|sort" "$TEMPPATH/.launcherslist"; eval "\"$LAUNCHPATH/$read_result_dir\""; fi
 ;;
 "2") #Wine Helper
-	listoptions "Wine Utilities" "Prefix commands|Winetricks|Dxvk|Vkd3d|Install MF|Install MF-Cab|Install mfplat.dll|Prefixes manager|Runners manager|Reset default prefix" "" "" "" ""
+	listoptions "Wine Utilities" "Prefix commands|Winetricks|Dxvk|Vkd3d|Install MF|Install MF-Cab|Install mfplat.dll|Prefixes manager|Runners manager|Reset default prefix"
 	if [[ "$select_ans" == "1" ]]; then
 		prefixinit; prefixcommands	"all"	
 	elif [[ "$select_ans" == "2" ]]; then
 		prefixinit; runnerinit "all"
-		generalinput "winetricks|--gui|exit" "${cyc}winetricks arguments${noc}"
+		generalinput "winetricks ___ --gui" "${cyc}winetricks arguments${noc} (Example: ${cyc}vcrun2019${noc})"
 		eval "WINEPREFIX=\"$selected_prefix\" WINE=\"$selected_runner\" winetricks $input_ans"
 	elif [[ "$select_ans" == "3" ]]; then
 		if [[ -d "$PACKPATH/dxvk" ]]; then
-			listoptions "Options List" "Install|Uninstall" "" "" "" "" 
+			listoptions "Options List" "Install|Uninstall"
 			if [[ "$select_ans" == "1" ]]; then update_option="install"
 			elif [[ "$select_ans" == "2" ]]; then update_option="uninstall"; fi
 			prefixinit; runnerinit "all"
@@ -710,7 +534,7 @@ case "$select_ans" in
 		else echo -e "\nInstall ${grc}Dxvk${noc} from ${grc}Packages Installer${noc}!"; fi
 	elif [[ "$select_ans" == "4" ]]; then
 		if [[ -d "$PACKPATH/vkd3d-proton" ]]; then
-			listoptions "Options List" "Install|Uninstall" "" "" "" "" 
+			listoptions "Options List" "Install|Uninstall"
 			if [[ "$select_ans" == "1" ]]; then update_option="install"
 			elif [[ "$select_ans" == "2" ]]; then update_option="uninstall"; fi
 			prefixinit; runnerinit "all"
@@ -732,45 +556,45 @@ case "$select_ans" in
 		if [[ -d "$PACKPATH/mf-installcab" ]]; then execinit "wine"; cp "$PACKPATH/mf-installcab/mfplat.dll" "$init_result_dir"
 		else echo -e "\nInstall ${grc}MF-Cab${noc} from ${grc}Packages Installer${noc}!"; fi
 	elif [[ $select_ans == "8"  ]]; then
-		listoptions "Lists Manager" "Add prefix|Create prefix|Delete prefix" "" "" "" ""
+		listoptions "Lists Manager" "Add prefix|Create prefix|Delete prefix"
 		if [[ "$select_ans" == "1" ]]; then addlines "prefix" "$HIPATH/addpfx.cfg"
 		elif [[ "$select_ans" == "2" ]]; then prefixcreator
 		elif [[ "$select_ans" == "3" ]]; then deletelines "Prefixes" "$HIPATH/addpfx.cfg"; fi
 	elif [[ $select_ans == "9"  ]]; then
-		listoptions "Lists Manager" "Add runner|Delete runner" "" "" "" ""
+		listoptions "Lists Manager" "Add runner|Delete runner"
 		if [[ "$select_ans" == "1" ]]; then addlines "runner" "$HIPATH/addrun.cfg"
-		elif [[ "$select_ans" == "2" ]]; then deletelines "Runners" "$HIPATH/addrun.cfg" "line" "" ""; fi
+		elif [[ "$select_ans" == "2" ]]; then deletelines "Runners" "$HIPATH/addrun.cfg"; fi
 	elif [[ $select_ans == "10"  ]]; then
-		listoptions "Are you sure?" "Yes|No" "" "" "" ""
+		listoptions "Are you sure?" "Yes|No"
 		if [[ "$select_ans" == "1" ]]; then
 			rm -rf "$HOME/.wine"; mkdir "$HOME/.wine"
 			eval "WINEPREFIX=\"$HOME/.wine" wine wineboot -u\"; fi; fi
 ;;
 "3") #Steam Helper
-	listoptions "Steam Helper" "Set game launch options|Game prefix commands|Winetricks|Reset game prefix|Install MF|Install MFCab|Install mfplat.dll" "" "" "" ""
+	listoptions "Steam Helper" "Set game launch options|Game prefix commands|Winetricks|Reset game prefix|Install MF|Install MFCab|Install mfplat.dll"
 	if [[ $select_ans == "1" ]]; then steamlauchoptions
 	elif [[ $select_ans == "2" ]]; then
-		readfiles "Steam game prefixes" "$TEMPPATH/.steampfx"; selected_prefix="$read_result_dir"; prefixcommands "proton"
+		readfiles "Steam game prefixes|sort" "$TEMPPATH/.steampfx"; selected_prefix="$read_result_dir"; prefixcommands "proton"
 	elif [[ $select_ans == "3" ]]; then
-		readfiles "Steam game prefixes" "$TEMPPATH/.steampfx"; selected_prefix="$read_result_dir"; runnerinit "proton"
-		generalinput "winetricks|--gui|exit" "${cyc}winetricks arguments${noc}"
+		readfiles "Steam game prefixes|sort" "$TEMPPATH/.steampfx"; selected_prefix="$read_result_dir"; runnerinit "proton"
+		generalinput "winetricks ___ --gui" "${cyc}winetricks arguments${noc}"
 		eval "WINEPREFIX=\"$selected_prefix\" WINE=\"$selected_runner\" winetricks $input_ans"
 	elif [[ $select_ans == "4" ]]; then deletelines "Steam game prefixes" "$TEMPPATH/.steamgamecompat"
 	elif [[ $select_ans == "5" ]]; then
 		if [[ -d "$PACKPATH/mf-install" ]]; then
-			readfiles "Steam game prefixes" "$TEMPPATH/.steampfx"; selected_prefix="$read_result_dir"; runnerinit "proton"
+			readfiles "Steam game prefixes|sort" "$TEMPPATH/.steampfx"; selected_prefix="$read_result_dir"; runnerinit "proton"
 			eval "WINEPREFIX=\"$selected_prefix\" PATH=\"$selected_runner_path:\$PATH\" WINELOADER=\"$selected_runner\" \"$PACKPATH/mf-install/mf-install.sh\""
 		else echo -e "\nInstall ${grc}MF${noc} from ${grc}Packages Installer${noc}!"; fi
 	elif [[ $select_ans == "6" ]]; then
 		if [[ -d "$PACKPATH/mf-installcab" ]]; then
-			readfiles "Steam game prefixes" "$TEMPPATH/.steampfx"; selected_prefix="$read_result_dir"; runnerinit "proton"
+			readfiles "Steam game prefixes|sort" "$TEMPPATH/.steampfx"; selected_prefix="$read_result_dir"; runnerinit "proton"
 			eval "WINEPREFIX=\"$selected_prefix\" PATH=\"$selected_runner_path:\$PATH\" WINELOADER=\"$selected_runner\" \"$PACKPATH/mf-installcab/install-mf-64.sh\""
 		else echo -e "\nInstall ${grc}MF-Cab${noc} from ${grc}Packages Installer${noc}!"; fi
 	elif [[ "$select_ans" == "7" ]]; then
 		if [[ -d "$PACKPATH/mf-installcab" ]]; then
-			readfiles "Steam games" "$TEMPPATH/.steamdirs"
+			readfiles "Steam games|sort" "$TEMPPATH/.steamdirs"
 			find "$read_result_dir" -name "*.exe" | while read -r line; do echo -e "$(basename -s .exe "$line") | $line" >> "$TEMPPATH/.steamexes"; done
-			readfiles "Exe files" "$TEMPPATH/.steamexes"
+			readfiles "Exe files|sort" "$TEMPPATH/.steamexes"
 			cp "$PACKPATH/mf-installcab/mfplat.dll" "$(dirname "$read_result_dir")"
 		else echo -e "\nInstall ${grc}MF-Cab${noc} from ${grc}Packages Installer${noc}!"; fi; fi
 		
@@ -780,9 +604,13 @@ case "$select_ans" in
 	else echo -e "\n ${grc}Git ${mac}must be installed!${noc}"; fi
 ;;
 "5") #Arch Updater
-	if [[ $(checkupdates; yay -Qua --devel) ]]; then
-		echo -e "\n ${mac}Updates:${noc}\n\n$(checkupdates; yay -Qua --devel)"
-		listoptions "Update?" "Yes|No" "" "" "" ""
-		if [[ "$select_ans" == "1" ]]; then eval "sudo pacman -Syu; yay -Syua --devel"; fi
-	else echo -e "\n ${mac}No updates found${noc}"; fi
+	if [[ "$osversion" == "ArchLinux" ]]; then
+		if [[ -f "/usr/bin/yay" && -f "/usr/bin/checkupdates" ]]; then
+			if [[ $(checkupdates; yay -Qua --devel) ]]; then
+				echo -e "\n ${mac}Updates:${noc}\n\n$(checkupdates; yay -Qua --devel)"
+				listoptions "Update?" "Yes|No"
+				if [[ "$select_ans" == "1" ]]; then eval "sudo pacman -Syu; yay -Syua --devel"; fi
+			else echo -e "\n ${mac}No updates found${noc}"; fi
+		else echo -e "\n ${grc}Yay${noc} or ${grc}checkupdates${noc} ${mac}not installed!${noc}\n"; fi
+	else echo -e "\n ${mac}Wrong ${grc}OS${mac}!${noc}\n"; fi
 esac

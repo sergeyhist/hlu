@@ -11,7 +11,7 @@ if [[ -f "$Bin_folder/histutilities" ]]; then
 else installer_ans="1"; fi
 if [[ "$installer_ans" == "1" ]]; then
 	sudo cp "$Exec_folder/histutilities" "$Bin_folder/histutilities"
-	cp -r "$Exec_folder/Installers" "$Hist_folder/"
+	cp -r "$Exec_folder/"* "$Hist_folder/"
 	sudo chmod 755 "$Bin_folder/histutilities"
 	if [[ -f "$Bin_folder/histutilities" ]]; then echo -e "\n${grc}Successful${noc}\n"
 	else echo -e "\n${rec}Failed${noc}\n"; fi
