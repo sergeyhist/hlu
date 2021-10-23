@@ -5,3 +5,6 @@ packageinstall() {
     makepkg -si
     sudo mkinitcpio -P
 }
+export packagetype
+export packageurl
+export -f packageinstall

@@ -4,3 +4,6 @@ packageurl="https://github.com/luxtorpeda-dev/luxtorpeda.git"
 packageinstall() {
     make user-install
 }
+export packagetype
+export packageurl
+export -f packageinstall

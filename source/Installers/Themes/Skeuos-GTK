@@ -3,9 +3,11 @@ packagetype="branch"
 packageurl="https://github.com/daniruiz/skeuos-gtk"
 packageinstall() {
 	sudo cp -r themes /usr/share
-	echo -e "\n${grc}Complete${noc}\n"
 }
 packageuninstall() {
 	sudo rm -rf "/usr/share/themes/Skeuos"*
-	echo -e "\n${grc}Complete${noc}\n"
 }
+export packagetype
+export packageurl
+export -f packageinstall
+export -f packageuninstall

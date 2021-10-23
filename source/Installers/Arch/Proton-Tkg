@@ -2,6 +2,9 @@
 packagetype="branch"
 packageurl="https://github.com/Frogging-Family/wine-tkg-git"
 packageinstall() {
-    cd proton-tkg
+    cd proton-tkg || exit
     makepkg -si
 }
+export packagetype
+export packageurl
+export -f packageinstall

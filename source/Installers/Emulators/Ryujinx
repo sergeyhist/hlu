@@ -4,3 +4,6 @@ packageurl="https://github.com/Ryujinx/Ryujinx"
 packageinstall() {
     dotnet publish -c Release
 }
+export packagetype
+export packageurl
+export -f packageinstall

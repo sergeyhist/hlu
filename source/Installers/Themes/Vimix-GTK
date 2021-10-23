@@ -6,5 +6,8 @@ packageinstall() {
 }
 packageuninstall() {
 	sudo rm -rf "/usr/share/themes/vimix"*
-	echo -e "\n${grc}Complete${noc}\n"
 }
+export packagetype
+export packageurl
+export -f packageinstall
+export -f packageuninstall

@@ -1,3 +1,5 @@
 #!/bin/bash
 packagetype="branch"
 packageurl="https://github.com/z0z0z/mf-installcab"
+export packagetype
+export packageurl

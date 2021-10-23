@@ -9,3 +9,7 @@ packageinstall() {
 packageuninstall() {
     sudo ninja -C builddir uninstall
 }
+export packagetype
+export packageurl
+export -f packageinstall
+export -f packageuninstall

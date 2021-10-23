@@ -2,6 +2,9 @@
 packagetype="branch"
 packageurl="https://github.com/Frogging-Family/wine-tkg-git"
 packageinstall() {
-    cd wine-tkg-git
+    cd wine-tkg-git || exit
     makepkg -si
 }
+export packagetype
+export packageurl
+export -f packageinstall

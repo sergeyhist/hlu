@@ -10,3 +10,7 @@ packageuninstall() {
     systemctl --user stop gamemoded.service
     sudo ninja uninstall -C builddir
 }
+export packagetype
+export packageurl
+export -f packageinstall
+export -f packageuninstall

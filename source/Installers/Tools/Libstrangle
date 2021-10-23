@@ -9,3 +9,7 @@ packageinstall() {
 packageuninstall() {
     sudo make uninstall
 }
+export packagetype
+export packageurl
+export -f packageinstall
+export -f packageuninstall

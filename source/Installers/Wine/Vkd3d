@@ -6,3 +6,7 @@ packageinstall() {
     if [[ -d "dlls" ]]; then rm -rf dlls; fi
     ./package-release.sh master dlls --no-package
 }
+export packagetype
+export packageurl
+export packagearg
+export -f packageinstall

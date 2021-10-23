@@ -1,5 +1,5 @@
 #!/bin/bash
-# Version: 1.0
+# Version: 1.1
 set -euo pipefail
 
 hi_exit() {
@@ -33,7 +33,7 @@ generalinput() {
 	else
 		sed -i "\|${input_ans}|d" "$gi_file"
 		echo "$input_ans" >> "$gi_file"; fi
-	history -c 
+	history -c
 }
 
 readfiles() {
@@ -48,14 +48,14 @@ readfiles() {
 			if echo "$line" | grep -qo " | "; then
 				file_names[$rf_count]="$(echo "$line" | awk -F" [|] " '{print $1}')"
 				file_dirs[$rf_count]="$(echo "$line" | awk -F" [|] " '{print $2}')"
-				echo -e " ${cyc}$((rf_count+=1))${noc} - ${grc}${file_names[rf_count-1]}${noc} - ${blc}${file_dirs[rf_count-1]}${noc}"	
+				echo -e " ${cyc}$((rf_count+=1))${noc} - ${grc}${file_names[rf_count-1]}${noc} - ${blc}${file_dirs[rf_count-1]}${noc}"
 			else
 				file_dirs[$rf_count]="$line"
 				echo -e " ${cyc}$((rf_count+=1))${noc} - ${grc}${line}${noc}"; fi; done < <($file_sort "$2")
 		echo -e "\nChoose ${cyc}item${noc} from the ${grc}list${noc} above (${cyc}q|Q${noc} for ${grc}exit${noc}):"; read -r -e "select_ans"
 		if [[ "$select_ans" == [qQйЙ] ]]; then exit
 		elif [[ "$select_ans" == *[!0-9]* ]] || [[ "$select_ans" -gt "$((rf_count))" || "$select_ans" -lt "1" ]]; then readfiles "$1" "$2"
-		else 
+		else
 			if [[ -n "${file_names[select_ans]:+x}" ]]; then read_result_name="${file_names[select_ans-1]}"; fi
 			read_result_dir="${file_dirs[select_ans-1]}"; fi
 	else echo -e "\n${grc}File${noc} is ${rec}empty${noc}"; exit; fi
@@ -90,7 +90,7 @@ listoptions() {
 		echo -e "\n ${mac}$list_title${noc}\n"
 		for item in $list_values; do
 			status_array[$sa_count]="$item"; ((sa_count+=1)); done
-		for option in $list_items; do 
+		for option in $list_items; do
 			if [[ "$list_values" != "none" && -n "${!status_array[lo_count]:+nex}" ]]; then
 				status_check=" - ${grc}ON${noc}${cyc} (${!status_array[lo_count]})${noc}"
 			elif [[ "$list_values" != "none" ]]; then
@@ -107,7 +107,7 @@ listoptions() {
 			else exit; fi
 		elif [[ "$select_ans" == *[!0-9]* ]] || [[ "$select_ans" -gt "$lo_count" || "$select_ans" -lt "1" ]]; then listoptions "$1" "$2"
 		else list_result_name="${list_array[select_ans-1]}"; list_result_number="$select_ans"; fi
-	else echo -e "\n${grc}List${noc} is ${mac}empty${noc}\n"; exit; fi  
+	else echo -e "\n${grc}List${noc} is ${mac}empty${noc}\n"; exit; fi
 }
 
 git-latest() {
@@ -122,7 +122,7 @@ runnerfinder() {
 					if [[ -d "$line" || -f "$line" ]]; then
 						if [[ $(find "$line" -type f -name 'proton_dist*') ]]; then
 							proton_tar=$(find "$line" -type f -name 'proton_dist*'); proton_tar_dir=$(dirname "$proton_tar")
-							if [[ -d "$proton_tar_dir/dist" ]]; then 
+							if [[ -d "$proton_tar_dir/dist" ]]; then
 								if ! cmp -s "$proton_tar_dir/version" "$proton_tar_dir/dist/version"; then
 									rm -rf "$proton_tar_dir/dist"; mkdir "$proton_tar_dir/dist"
 									tar -xf "$proton_tar" -C "$proton_tar_dir/dist/"
@@ -219,7 +219,7 @@ prefixcommands() {
 	generalinput "prefixcommand" "${cyc}custom command${noc} (Example: ${cyc}notepad.exe${noc})"; command_func="$input_ans"
 	esac
 	if [[ "$command_func" == "wineserver -k" || "$command_func" == "wineserver -k9" ]]; then eval "WINEPREFIX=\"$selected_prefix\" $command_func"
-	else 
+	else
 		if [[ "$1" == "proton" ]]; then runnerinit "proton"; else runnerinit "all"; fi
 		eval "WINEPREFIX=\"$selected_prefix\" \"$selected_runner\" $command_func"; fi
 }
@@ -247,7 +247,7 @@ packsinstaller() {
 				else eval "git clone $packageurl"; fi
 				cd "$name"
 				if grep -oq "packageinstall" "$selected_package"; then packageinstall; fi
-			elif [[ "$select_ans" == "2" ]]; then 
+			elif [[ "$select_ans" == "2" ]]; then
 				if [[ -d "$name" ]]; then
 					cd "$name"; git reset --hard; git pull "$packageurl"
 					if grep -oq "packageinstall" "$selected_package"; then
@@ -290,11 +290,11 @@ steamlauchoptions() {
 				else steam_command="${!item} $steam_command"; fi; done
 		IFS="$Def_IFS"
 		while pkill steam; do sleep 1s; done
-		while read -r line; do 
+		while read -r line; do
 			((line_number+=1))
-			if [[ $line == *'"Software"'* ]]; then flag=1; fi 
+			if [[ $line == *'"Software"'* ]]; then flag=1; fi
 			if [[ $flag == 1 && $line == *"Apps"* ]]; then flag=0; ((line_number+=2)); break; fi; done < "$launcher_lc"; fi
-		sed -i "${line_number}i\ \t\t\t\t\t\"$launcher_steam_appid\"\n\t\t\t\t\t{\n\t\t\t\t\t\t\"LaunchOptions\" \t\"$steam_command\"\n\t\t\t\t\t}" "$launcher_lc" 	
+		sed -i "${line_number}i\ \t\t\t\t\t\"$launcher_steam_appid\"\n\t\t\t\t\t{\n\t\t\t\t\t\t\"LaunchOptions\" \t\"$steam_command\"\n\t\t\t\t\t}" "$launcher_lc"
 }
 
 steamfinder() {
@@ -302,7 +302,7 @@ steamfinder() {
 		numbers=$(grep -no "path" "$HOME/.steam/root/steamapps/libraryfolders.vdf" | cut -d: -f1)
 		for item in $numbers; do
 			steam_folder=$(sed -n "${item}p" "$HOME/.steam/root/steamapps/libraryfolders.vdf" | cut -d\" -f4)
-			for item2 in "${steam_folder}/steamapps/appmanifest_"*'.acf'; do 
+			for item2 in "${steam_folder}/steamapps/appmanifest_"*'.acf'; do
 				if [[ -f "$item2" ]]; then
 					steam_name=$(grep '"name"' "$item2" | cut -d\" -f4)
 					steam_appid=$(grep '"appid"' "$item2" | cut -d\" -f4)
@@ -377,22 +377,31 @@ launchereditor () {
 launchercompleteinit() {
 	if [[ "$launcher_exec" == *".msi" ]]; then launcher_msi=" msiexec /i"; else launcher_msi=""; fi
 	if [[ "$launcher_type" == "wine" ]]; then
-		launcher_vars=" launcher_type=\"$launcher_type\"\n launcher_exec_dir=\"$launcher_exec_dir\"\n selected_runner=\"$selected_runner\"\n selected_prefix=\"$selected_prefix\"\n launcher_exec=\"$launcher_exec\"\n launcher_msi=\"$launcher_msi\"\n"
+		launcher_vars=" launcher_type=\"$launcher_type\"\n launcher_exec_dir=\"$launcher_exec_dir\"\n selected_runner=\"$selected_runner\"\n selected_prefix=\"$selected_prefix\"\n launcher_exec=\"$launcher_exec\"\n"
 	elif [[ "$launcher_type" == "linux" ]]; then
 		launcher_vars=" launcher_type=\"$launcher_type\"\n launcher_exec_dir=\"$launcher_exec_dir\"\n launcher_exec=\"$launcher_exec\"\n"; fi
-	if [[ "$launcher_type" == "wine" ]]; then 
-		launcher_command="WINEPREFIX=\\\"\$selected_prefix\\\" \\\"\$selected_runner\\\" \$launcher_msi \\\"\${launcher_exec}\\\""
+	if [[ "$launcher_type" == "wine" ]]; then
+		launcher_command="WINEPREFIX=\\\"\$selected_prefix\\\" \\\"\$selected_runner\\\"${launcher_msi}wine_vd \\\"\${launcher_exec}\\\""
 	elif [[ "$launcher_type" == "linux" ]]; then
 		launcher_command="\${launcher_exec}"; fi
 	if [[ -n "${settings_overall_values:+x}" ]]; then
+		if [[ "$settings_overall_values" != *"wine_vd"* ]]; then launcher_command=${launcher_command//wine_vd/}; fi
 		launcher_settings=" settings_overall_values=\"$settings_overall_values\"\n"
 		IFS='|'
 		for item in $settings_overall_values; do
-			launcher_settings="$launcher_settings $item=\"${!item}\"\n"
+			settings_item="$item"
 			if [[ "$item" == "custom_args" ]]; then launcher_command="$launcher_command \${$item}"
-			else launcher_command="\${$item} $launcher_command"; fi; done
-		IFS="$Def_IFS"; fi
-	launcher_complete_command="#!/bin/bash\n${launcher_vars}\n${launcher_settings}\nif [[ \$1 != \"read_vars\" ]]; then cd \"\${launcher_exec_dir}\"; eval \"${launcher_command}\"; fi"
+			elif [[ "$item" == "wine_vd" ]];  then
+				wine_vd_full="${!settings_item}"
+				wine_vd_part_before="$(echo "$wine_vd_full" | cut -d"'" -f2)"
+				wine_vd_part_after="${wine_vd_part_before// /_}"
+				wine_vd_full="${wine_vd_full//$wine_vd_part_before/$wine_vd_part_after}"
+				settings_item="wine_vd_full"
+				launcher_command="${launcher_command//wine_vd/ \$$item}"
+			else launcher_command="\${$item} $launcher_command"; fi
+			launcher_settings="$launcher_settings $item=\"${!settings_item}\"\n"
+		done; IFS="$Def_IFS"; fi
+	launcher_complete_command="#!/bin/bash\n${launcher_vars}\n${launcher_settings}\nif [[ \$1 != \"read_vars\" ]]; then\n\tcd \"\${launcher_exec_dir}\"\n\teval \"${launcher_command}\"\nfi"
 	if [[ ! -w "$launcher_exec_dir" ]]; then
 		if [[ -f "$LAUNCHPATH/$launcher_name" || -L "$LAUNCHPATH/$launcher_name" ]]; then rm "$LAUNCHPATH/$launcher_name"; fi
 		echo -e "$launcher_complete_command" > "$LAUNCHPATH/$launcher_name"
@@ -481,7 +490,7 @@ settingsinit() {
 
 trap hi_exit EXIT; exit_flag="0"
 Def_IFS=$'\n'; IFS=$Def_IFS
-HIPATH="$HOME/Hist"; if [[ ! -d "$HIPATH"  ]]; then mkdir -p "$HIPATH"; fi 
+HIPATH="$HOME/Hist"; if [[ ! -d "$HIPATH"  ]]; then mkdir -p "$HIPATH"; fi
 HISTORYPATH="$HIPATH/.historyfiles"; if [[ ! -d "$HISTORYPATH" ]]; then mkdir -p "$HISTORYPATH"; fi
 LAUNCHPATH="$HIPATH/Launchers"; if [[ ! -d "$LAUNCHPATH" ]]; then mkdir -p "$LAUNCHPATH"; fi
 TEMPPATH="$HIPATH/.temp"; if [[ ! -d "$TEMPPATH" ]]; then mkdir -p "$TEMPPATH"; else rm -rf "$TEMPPATH"; mkdir -p "$TEMPPATH"; fi
@@ -490,7 +499,7 @@ PACKPATH="$HIPATH/Packages"; if [[ ! -d "$PACKPATH" ]]; then mkdir -p "$PACKPATH
 CONFPATH="$HIPATH/Configs"; if [[ ! -d "$CONFPATH" ]]; then mkdir -p "$CONFPATH"; fi
 noc="\e[0m"; rec="\e[31m"; grc="\e[32m"; blc="\e[34m"; cyc="\e[36m"; mac="\e[91m"
 eval "hostnamectl > \"$TEMPPATH/.osinfo\""
-osversion="$(grep "Operating System" "$TEMPPATH/.osinfo" | cut -d: -f2)"; osversion=${osversion// /} 
+osversion="$(grep "Operating System" "$TEMPPATH/.osinfo" | cut -d: -f2)"; osversion=${osversion// /}
 if [[ -d "$HOME/.steam" ]]; then steamfinder; fi
 listoptions "Hist Linux Utilities|exit" "Launcher Controller|Wine Helper|Steam Helper|Package Installer|Arch Updater"
 case "$select_ans" in
@@ -519,7 +528,7 @@ case "$select_ans" in
 "2") #Wine Helper
 	listoptions "Wine Utilities" "Prefix commands|Winetricks|Dxvk|Vkd3d|Install MF|Install MF-Cab|Install mfplat.dll|Prefixes manager|Runners manager|Reset default prefix"
 	if [[ "$select_ans" == "1" ]]; then
-		prefixinit; prefixcommands	"all"	
+		prefixinit; prefixcommands	"all"
 	elif [[ "$select_ans" == "2" ]]; then
 		prefixinit; runnerinit "all"
 		generalinput "winetricks ___ --gui" "${cyc}winetricks arguments${noc} (Example: ${cyc}vcrun2019${noc})"
@@ -568,7 +577,7 @@ case "$select_ans" in
 		listoptions "Are you sure?" "Yes|No"
 		if [[ "$select_ans" == "1" ]]; then
 			rm -rf "$HOME/.wine"; mkdir "$HOME/.wine"
-			eval "WINEPREFIX=\"$HOME/.wine" wine wineboot -u\"; fi; fi
+			eval "WINEPREFIX=\"$HOME/.wine\" wine wineboot -u"; fi; fi
 ;;
 "3") #Steam Helper
 	listoptions "Steam Helper" "Set game launch options|Game prefix commands|Winetricks|Reset game prefix|Install MF|Install MFCab|Install mfplat.dll"
@@ -597,7 +606,7 @@ case "$select_ans" in
 			readfiles "Exe files|sort" "$TEMPPATH/.steamexes"
 			cp "$PACKPATH/mf-installcab/mfplat.dll" "$(dirname "$read_result_dir")"
 		else echo -e "\nInstall ${grc}MF-Cab${noc} from ${grc}Packages Installer${noc}!"; fi; fi
-		
+
 ;;
 "4") #Packages Installer
 	if [[ -f "/usr/bin/git" ]]; then packsinstaller

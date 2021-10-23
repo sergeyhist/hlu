@@ -4,3 +4,6 @@ packageurl="https://github.com/Frogging-Family/linux-tkg"
 packageinstall() {
     makepkg -si
 }
+export packagetype
+export packageurl
+export -f packageinstall

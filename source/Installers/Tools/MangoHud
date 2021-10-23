@@ -10,3 +10,7 @@ packageinstall() {
 packageuninstall() {
     ./build.sh uninstall
 }
+export packagetype
+export packageurl
+export -f packageinstall
+export -f packageuninstall

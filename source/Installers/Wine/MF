@@ -1,3 +1,5 @@
 #!/bin/bash
 packagetype="branch"
 packageurl="https://github.com/z0z0z/mf-install"
+export packagetype
+export packageurl
