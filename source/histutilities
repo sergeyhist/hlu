@@ -401,7 +401,7 @@ launchercompleteinit() {
 			else launcher_command="\${$item} $launcher_command"; fi
 			launcher_settings="$launcher_settings $item=\"${!settings_item}\"\n"
 		done; IFS="$Def_IFS"; fi
-	launcher_complete_command="#!/bin/bash\n${launcher_vars}\n${launcher_settings}\nif [[ \$1 != \"read_vars\" ]]; then\n\tcd \"\${launcher_exec_dir}\"\n\teval \"${launcher_command}\"\nfi"
+	launcher_complete_command="#!/bin/bash\n${launcher_vars:=}\n${launcher_settings:=}\nif [[ \$1 != \"read_vars\" ]]; then\n\tcd \"\${launcher_exec_dir}\"\n\teval \"${launcher_command:=}\"\nfi"
 	if [[ ! -w "$launcher_exec_dir" ]]; then
 		if [[ -f "$LAUNCHPATH/$launcher_name" || -L "$LAUNCHPATH/$launcher_name" ]]; then rm "$LAUNCHPATH/$launcher_name"; fi
 		echo -e "$launcher_complete_command" > "$LAUNCHPATH/$launcher_name"
@@ -478,9 +478,10 @@ settingsinit() {
 			for item in $settings_items_values; do
 				if [[ -n ${!item:+x} && ${!item:+x} != "" && "${settings_overall_values:-x}" != *"$item"* ]]; then settings_overall_values="${settings_overall_values:=}|$item"; fi; done; fi
 			if [[ "${settings_overall_values:-x}" == "|"* ]]; then settings_overall_values="${settings_overall_values:1}"; fi
-			for item in $settings_overall_values; do
-				if [[ ${!item:+x} == "" ]]; then
-					settings_overall_values=${settings_overall_values//$item/}; settings_overall_values=${settings_overall_values//||/|}; fi; done
+			if [[ -n "${settings_overall_values:+x}" ]]; then
+				for item in $settings_overall_values; do
+					if [[ ${!item:+x} == "" ]]; then
+						settings_overall_values=${settings_overall_values//$item/}; settings_overall_values=${settings_overall_values//||/|}; fi; done; fi
 			if [[ "${settings_overall_values:-x}" == "|"* ]]; then settings_overall_values="${settings_overall_values:1}"; fi
 			if [[ "${settings_overall_values:-x}" == *"|" ]]; then settings_overall_values="${settings_overall_values::-1}"; fi
 			IFS="$Def_IFS"
