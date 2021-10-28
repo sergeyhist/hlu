@@ -56,7 +56,7 @@ readfiles() {
 		if [[ "$select_ans" == [qQйЙ] ]]; then exit
 		elif [[ "$select_ans" == *[!0-9]* ]] || [[ "$select_ans" -gt "$((rf_count))" || "$select_ans" -lt "1" ]]; then readfiles "$1" "$2"
 		else
-			if [[ -n "${file_names[select_ans]:+x}" ]]; then read_result_name="${file_names[select_ans-1]}"; fi
+			if [[ -n "${file_names[select_ans-1]:+x}" ]]; then read_result_name="${file_names[select_ans-1]}"; fi
 			read_result_dir="${file_dirs[select_ans-1]}"; fi
 	else echo -e "\n${grc}File${noc} is ${rec}empty${noc}"; exit; fi
 }
