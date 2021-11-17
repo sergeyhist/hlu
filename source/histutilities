@@ -1,5 +1,5 @@
 #!/bin/bash
-# Version: 1.1
+# Version: 1.2
 set -euo pipefail
 
 hi_exit() {
@@ -402,17 +402,13 @@ launchercompleteinit() {
 			launcher_settings="$launcher_settings $item=\"${!settings_item}\"\n"
 		done; IFS="$Def_IFS"; fi
 	launcher_complete_command="#!/bin/bash\n${launcher_vars:=}\n${launcher_settings:=}\nif [[ \$1 != \"read_vars\" ]]; then\n\tcd \"\${launcher_exec_dir}\"\n\teval \"${launcher_command:=}\"\nfi"
-	if [[ ! -w "$launcher_exec_dir" ]]; then
 		if [[ -f "$LAUNCHPATH/$launcher_name" || -L "$LAUNCHPATH/$launcher_name" ]]; then rm "$LAUNCHPATH/$launcher_name"; fi
 		echo -e "$launcher_complete_command" > "$LAUNCHPATH/$launcher_name"
 		chmod +x "$LAUNCHPATH/$launcher_name"
-		echo -e "\nLauncher ${grc}${launcher_name}${noc} successfully $1 in the ${grc}$LAUNCHPATH${noc} folder."
-	else
-		echo -e "$launcher_complete_command" > "$launcher_exec_dir/$launcher_name.hlu"
-		chmod +x "$launcher_exec_dir/$launcher_name.hlu"
-		if [[ -f "$LAUNCHPATH/$launcher_name" || -L "$LAUNCHPATH/$launcher_name" ]]; then rm "$LAUNCHPATH/$launcher_name"; fi
-		ln -s "$launcher_exec_dir/$launcher_name.hlu" "$LAUNCHPATH/$launcher_name"
-		echo -e "\nLauncher ${grc}${launcher_name}${noc} successfully $1 in the ${grc}$launcher_exec_dir${noc} folder. Shortcut located in the ${grc}$LAUNCHPATH${noc} folder."; fi
+		if [[ ! -w "$launcher_exec_dir" ]]; then echo -e "\nLauncher ${grc}${launcher_name}${noc} successfully $1 in the ${grc}$LAUNCHPATH${noc} folder."
+		else
+			cp "$LAUNCHPATH/$launcher_name" "$launcher_exec_dir/$launcher_name.hlu"
+			echo -e "\nLauncher ${grc}${launcher_name}${noc} successfully $1 in the ${grc}$LAUNCHPATH${noc} and ${grc}$launcher_exec_dir${noc} folders."; fi
 }
 
 settingsinit() {

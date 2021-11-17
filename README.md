@@ -46,7 +46,9 @@ Input this command in terminal:
      - Proton-Tkg
      - Wine-Tkg
    - Emulators
+     - Rpcs3
      - Ryujinx
+     - Xemu
      - Yuzu
    - Runners
      - Luxtorpeda-dev

@@ -10,6 +10,7 @@ if [[ -f "$Bin_folder/histutilities" ]]; then
 	echo -e "\nChoose ${cyc}option${noc} from the ${grc}list${noc} above:"; read -r -e "installer_ans"
 else installer_ans="1"; fi
 if [[ "$installer_ans" == "1" ]]; then
+	cd "$0" || exit; git reset --hard; git pull "https://github.com/sergeyhist/hist-linux-utilities"
 	sudo cp "$Exec_folder/histutilities" "$Bin_folder/histutilities"
 	cp -r "$Exec_folder/"* "$Hist_folder/"
 	sudo chmod 755 "$Bin_folder/histutilities"
