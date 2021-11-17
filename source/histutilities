@@ -416,7 +416,7 @@ settingsinit() {
 		settings_menu="${settings_menu:=}|$(basename -s '.cfg' "$line" | cut -d'_' -f2) options"
 	done < <(find "$CONFPATH" -maxdepth 1 -mindepth 1 -type f | sort -n)
 	settings_menu=${settings_menu:1}
-	listoptions "Launcher setup" "$settings_menu"
+	listoptions "Launcher setup|continue" "$settings_menu"
 	while : ; do
 		if [[ "$list_result_name" != "none" ]]; then
 			settings_name="$(echo "$list_result_name" | cut -d' ' -f1)"
