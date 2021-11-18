@@ -384,8 +384,8 @@ launchercompleteinit() {
 		launcher_command="WINEPREFIX=\\\"\$selected_prefix\\\" \\\"\$selected_runner\\\"${launcher_msi}wine_vd \\\"\${launcher_exec}\\\""
 	elif [[ "$launcher_type" == "linux" ]]; then
 		launcher_command="\${launcher_exec}"; fi
+	if [[ "${settings_overall_values:+x}" != *"wine_vd"* ]]; then launcher_command=${launcher_command//wine_vd/}; fi
 	if [[ -n "${settings_overall_values:+x}" ]]; then
-		if [[ "$settings_overall_values" != *"wine_vd"* ]]; then launcher_command=${launcher_command//wine_vd/}; fi
 		launcher_settings=" settings_overall_values=\"$settings_overall_values\"\n"
 		IFS='|'
 		for item in $settings_overall_values; do
