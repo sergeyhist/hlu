@@ -1,5 +1,5 @@
 #!/bin/bash
-# Version: 1.2
+# Version: 1.3
 set -euo pipefail
 
 hi_exit() {
@@ -92,7 +92,8 @@ listoptions() {
 			status_array[$sa_count]="$item"; ((sa_count+=1)); done
 		for option in $list_items; do
 			if [[ "$list_values" != "none" && -n "${!status_array[lo_count]:+nex}" ]]; then
-				status_check=" - ${grc}ON${noc}${cyc} (${!status_array[lo_count]})${noc}"
+				if [[ "${!status_array[lo_count]}" != "on" ]]; then status_check=" - ${grc}ON${noc}${cyc} (${!status_array[lo_count]})${noc}"
+				else status_check=" - ${cyc}ON${noc}"; fi
 			elif [[ "$list_values" != "none" ]]; then
 				status_check=" - ${rec}OFF${noc}"; else status_check=""; fi
 			if [[ "$option" == "Reset Options" ]]; then status_check=""; fi
@@ -381,27 +382,28 @@ launchercompleteinit() {
 	elif [[ "$launcher_type" == "linux" ]]; then
 		launcher_vars=" launcher_type=\"$launcher_type\"\n launcher_exec_dir=\"$launcher_exec_dir\"\n launcher_exec=\"$launcher_exec\"\n"; fi
 	if [[ "$launcher_type" == "wine" ]]; then
-		launcher_command="WINEPREFIX=\\\"\$selected_prefix\\\" \\\"\$selected_runner\\\"${launcher_msi}wine_vd \\\"\${launcher_exec}\\\""
+		launcher_command="WINEPREFIX=\"\$selected_prefix\" \"\$selected_runner\"${launcher_msi}wine_vd \"\${launcher_exec}\""
 	elif [[ "$launcher_type" == "linux" ]]; then
 		launcher_command="\${launcher_exec}"; fi
-	if [[ "${settings_overall_values:+x}" != *"wine_vd"* ]]; then launcher_command=${launcher_command//wine_vd/}; fi
+	if [[ "${settings_overall_values:-x}" != *"wine_vd"* ]]; then launcher_command=${launcher_command//wine_vd/}; fi
 	if [[ -n "${settings_overall_values:+x}" ]]; then
 		launcher_settings=" settings_overall_values=\"$settings_overall_values\"\n"
 		IFS='|'
-		for item in $settings_overall_values; do
+		for item in ${settings_overall_values}; do
 			settings_item="$item"
 			if [[ "$item" == "custom_args" ]]; then launcher_command="$launcher_command \${$item}"
-			elif [[ "$item" == "wine_vd" ]];  then
+			elif [[ "$item" == "wine_vd" ]]; then
 				wine_vd_full="${!settings_item}"
 				wine_vd_part_before="$(echo "$wine_vd_full" | cut -d"'" -f2)"
 				wine_vd_part_after="${wine_vd_part_before// /_}"
 				wine_vd_full="${wine_vd_full//$wine_vd_part_before/$wine_vd_part_after}"
 				settings_item="wine_vd_full"
 				launcher_command="${launcher_command//wine_vd/ \$$item}"
-			else launcher_command="\${$item} $launcher_command"; fi
-			launcher_settings="$launcher_settings $item=\"${!settings_item}\"\n"
-		done; IFS="$Def_IFS"; fi
-	launcher_complete_command="#!/bin/bash\n${launcher_vars:=}\n${launcher_settings:=}\nif [[ \$1 != \"read_vars\" ]]; then\n\tcd \"\${launcher_exec_dir}\"\n\teval \"${launcher_command:=}\"\nfi"
+			elif [[ "${!item}" != "on" ]]; then launcher_command="\${$item} $launcher_command"; fi
+			launcher_settings="$launcher_settings $item=\"${!settings_item}\"\n"; done; IFS="$Def_IFS"; fi
+	if [[ "${settings_overall_values:-x}" != *"debug_switch"* ]]; then launcher_command="$launcher_command &> /dev/null"
+	else launcher_command="$launcher_command &> \"$LOGPATH/${launcher_name// /_}.log\""; fi
+	launcher_complete_command="#!/bin/bash\n${launcher_vars:=}\n${launcher_settings:=}\nif [[ \$1 != \"read_vars\" ]]; then\n\tcd \"\${launcher_exec_dir}\"\n\t${launcher_command:=}\nfi"
 		if [[ -f "$LAUNCHPATH/$launcher_name" || -L "$LAUNCHPATH/$launcher_name" ]]; then rm "$LAUNCHPATH/$launcher_name"; fi
 		echo -e "$launcher_complete_command" > "$LAUNCHPATH/$launcher_name"
 		chmod +x "$LAUNCHPATH/$launcher_name"
@@ -457,7 +459,7 @@ settingsinit() {
 									break; fi
 							done
 							if [[ "$input_ans" != "none" ]]; then settings_item_input_value="$settings_item_input_value${settings_item_value_temp//gi_value/$input_ans}"
-							else settings_item_input_value="none"; fi
+							else settings_item_input_value="none"; break; fi
 							done
 						else settings_item_input_value="none"; fi
 						if [[ "$settings_item_input_value" != "none" ]];  then
@@ -494,6 +496,7 @@ TEMPPATH="$HIPATH/.temp"; if [[ ! -d "$TEMPPATH" ]]; then mkdir -p "$TEMPPATH"; 
 INSTPATH="$HIPATH/Installers"; if [[ ! -d "$INSTPATH" ]]; then mkdir -p "$INSTPATH"; fi
 PACKPATH="$HIPATH/Packages"; if [[ ! -d "$PACKPATH" ]]; then mkdir -p "$PACKPATH"; fi
 CONFPATH="$HIPATH/Configs"; if [[ ! -d "$CONFPATH" ]]; then mkdir -p "$CONFPATH"; fi
+LOGPATH="$HIPATH/.logs"; if [[ ! -d "$LOGPATH" ]]; then mkdir -p "$LOGPATH"; fi
 noc="\e[0m"; rec="\e[31m"; grc="\e[32m"; blc="\e[34m"; cyc="\e[36m"; mac="\e[91m"
 eval "hostnamectl > \"$TEMPPATH/.osinfo\""
 osversion="$(grep "Operating System" "$TEMPPATH/.osinfo" | cut -d: -f2)"; osversion=${osversion// /}
