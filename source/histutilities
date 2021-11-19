@@ -342,7 +342,7 @@ execinit() {
 			find "$input_ans" -name "*.exe" -o -name "*.msi" | while read -r line; do echo -e "$(basename -s .exe "$line") | $line" >> "$TEMPPATH/.${1}files"; done
 		;;
 		"linux")
-			find "$input_ans" -executable | while read -r line; do echo -e "$(basename "$line") | $line" >> "$TEMPPATH/.${1}files"; done
+			find "$input_ans" -perm /111 -type f ! -name "*.dll" ! -name "*.so" | while read -r line; do echo -e "$(basename "$line") | $line" >> "$TEMPPATH/.${1}files"; done
 		esac
 		if [[ -s "$TEMPPATH/.${1}files" ]]; then
 			readfiles "${1^} Executables|sort" "$TEMPPATH/.${1}files"
