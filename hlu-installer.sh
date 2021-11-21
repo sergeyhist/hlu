@@ -12,7 +12,7 @@ else installer_ans="1"; fi
 if [[ "$installer_ans" == "1" ]]; then
 	cd "$(dirname "$0")" || exit; git reset --hard; git pull "https://github.com/sergeyhist/hist-linux-utilities"
 	sudo cp "$Exec_folder/histutilities" "$Bin_folder/histutilities"
-	cp -r "$Exec_folder/"* "$Hist_folder/"
+	cp -r "$Exec_folder/Configs" "$Hist_folder/";cp -r "$Exec_folder/Installers" "$Hist_folder/"
 	sudo chmod 755 "$Bin_folder/histutilities"
 	if [[ -f "$Bin_folder/histutilities" ]]; then echo -e "\n${grc}Successful${noc}\n"
 	else echo -e "\n${rec}Failed${noc}\n"; fi

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Version: 1.3
+# Version: 1.4
 set -euo pipefail
 
 hi_exit() {
@@ -245,7 +245,7 @@ packsinstaller() {
 			if [[ "$select_ans" == "1" ]]; then
 				if [[ -d "$name" ]]; then rm -rf "$name"; fi
 				if grep -oq "packagearg" "$selected_package"; then eval "git clone $packagearg $packageurl"
-				else eval "git clone $packageurl"; fi
+				else eval "git clone $packagearg $packageurl"; fi
 				cd "$name"
 				if grep -oq "packageinstall" "$selected_package"; then packageinstall; fi
 			elif [[ "$select_ans" == "2" ]]; then
