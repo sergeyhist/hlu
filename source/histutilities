@@ -308,16 +308,16 @@ steamfinder() {
 					steam_name=$(grep '"name"' "$item2" | cut -d\" -f4)
 					steam_appid=$(grep '"appid"' "$item2" | cut -d\" -f4)
 					steam_dirname=$(grep '"installdir"' "$item2" | cut -d\" -f4)
-					if [[ -d "$steam_folder/steamapps/compatdata/$steam_appid/pfx" ]]; then
-						echo -e "$steam_name | $steam_folder/steamapps/compatdata/$steam_appid/pfx" >> "$TEMPPATH/.steampfx"
-						echo -e "$steam_name | $steam_folder/steamapps/compatdata/$steam_appid" >> "$TEMPPATH/.steamgamecompat"; fi
-					if [[ "$steam_dirname" == *"Proton"* ]]; then echo -e "$steam_folder/steamapps/common/$steam_dirname" >> "$TEMPPATH/.steamrun"
-					else echo -e "$steam_name | $steam_folder/steamapps/common/$steam_dirname" >> "$TEMPPATH/.steamdirs"; fi
 					case $steam_name in
 					*"Proton"* | *"Runtime"* | *"Steamworks"*)
+					if [[ "$steam_dirname" == *"Proton"* ]]; then echo -e "$steam_folder/steamapps/common/$steam_dirname" >> "$TEMPPATH/.steamrun"; fi
 					;;
 					*)
 					echo -e "$steam_name | $steam_appid" >> "$TEMPPATH/.steamapps"
+					echo -e "$steam_name | $steam_folder/steamapps/common/$steam_dirname" >> "$TEMPPATH/.steamdirs"
+					if [[ -d "$steam_folder/steamapps/compatdata/$steam_appid/pfx" ]]; then
+						echo -e "$steam_name | $steam_folder/steamapps/compatdata/$steam_appid/pfx" >> "$TEMPPATH/.steampfx"
+						echo -e "$steam_name | $steam_folder/steamapps/compatdata/$steam_appid" >> "$TEMPPATH/.steamgamecompat"; fi
 					esac; fi
 			done; done; fi
 	if [[ -d "/usr/share/steam/compatibilitytools.d/" ]]; then
