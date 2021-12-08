@@ -1,8 +1,10 @@
 #!/bin/bash
 packagetype="branch"
-packageurl="https://github.com/daniruiz/Flat-Remix-GTK"
+packageurl="https://github.com/daniruiz/flat-remix-gtk"
 packageinstall() {
 	if [[ ! -f "$HOME/.local/share/themes" ]]; then mkdir -p "$HOME/.local/share/themes"; fi
+	sudo cp -r "themes/Flat-Remix"* "/usr/share/themes"
+	git clone "https://github.com/daniruiz/flat-remix-gnome"; cd "flat-remix-gnome" || exit
 	sudo cp -r "themes/Flat-Remix"* "/usr/share/themes"
 }
 packageuninstall() {
