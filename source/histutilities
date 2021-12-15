@@ -1,5 +1,5 @@
 #!/bin/bash
-# Version: 1.5
+# Version: 1.4
 set -euo pipefail
 
 hi_exit() {
@@ -181,12 +181,13 @@ prefixinit() {
 
 prefixcreator() {
 	if [[ "$1" == "none" ]]; then addlines "prefix" "$HIPATH/addpfx.cfg"; pfx_path="$line_path"
-	elif [[ "$1" == "proton" ]]; then pfx_path="${line_path}/pfx"; if [[ ! -d "$pfx_path" ]]; then mkdir -p "$pfx_path"; fi; fi
+	elif [[ "$1" == "proton" ]]; then pfx_path="${line_path}"; if [[ ! -d "$pfx_path" ]]; then mkdir -p "$pfx_path"; fi; fi
 	if [[ ! -d "${pfx_path}/drive_c" ]]; then
 		if [[ -z "${selected_runner:+x}" ]]; then runnerinit "$1"; fi
-		listoptions "Prefix Version" "32bit|64bit"
+		if [[ "$1" == "proton" ]]; then select_ans="2"
+		else listoptions "Prefix Version" "32bit|64bit"; fi
 		if [[ "$select_ans" == "1" ]]; then
-			WINEARCH=win32 WINEPREFIX="$pfx_path" "$selected_runner" wineboot -u;
+			WINEARCH=win32 WINEPREFIX="$pfx_path" "$selected_runner" wineboot -u
 		elif [[ "$select_ans" == "2" ]]; then
 			WINEPREFIX="$pfx_path" "$selected_runner" wineboot -u; fi
 	else echo -e "\n ${grc}Prefix${noc} already ${mac}exist${noc}\n"; fi
@@ -582,7 +583,7 @@ case "$select_ans" in
 			eval "WINEPREFIX=\"$HOME/.wine\" wine wineboot -u"; fi; fi
 ;;
 "3") #Steam Helper
-	listoptions "Steam Helper" "Set game launch options|Game prefix commands|Winetricks|Reset game prefix|Reinstall game prefix|Install MF|Install MFCab|Install mfplat.dll"
+	listoptions "Steam Helper" "Set game launch options|Game prefix commands|Winetricks|Reset game prefix|Install MF|Install MFCab|Install mfplat.dll"
 	if [[ $select_ans == "1" ]]; then steamlauchoptions
 	elif [[ $select_ans == "2" ]]; then
 		readfiles "Steam game prefixes|sort" "$TEMPPATH/.steampfx"; selected_prefix="$read_result_dir"; prefixcommands "proton"
@@ -591,18 +592,18 @@ case "$select_ans" in
 		generalinput "winetricks ___ --gui" "${cyc}winetricks arguments${noc}"
 		eval "WINEPREFIX=\"$selected_prefix\" WINE=\"$selected_runner\" winetricks $input_ans"
 	elif [[ $select_ans == "4" ]]; then deletelines "Steam game prefixes" "$TEMPPATH/.steamgamecompat" "none"
-	elif [[ $select_ans == "5" ]]; then deletelines "Steam game prefixes" "$TEMPPATH/.steamgamecompat" "force"; prefixcreator "proton"
-	elif [[ $select_ans == "6" ]]; then
+	#elif [[ $select_ans == "5" ]]; then deletelines "Steam game prefixes" "$TEMPPATH/.steampfx" "force"; prefixcreator "proton"
+	elif [[ $select_ans == "5" ]]; then
 		if [[ -d "$PACKPATH/mf-install" ]]; then
 			readfiles "Steam game prefixes|sort" "$TEMPPATH/.steampfx"; selected_prefix="$read_result_dir"; runnerinit "proton"
 			eval "WINEPREFIX=\"$selected_prefix\" PATH=\"$selected_runner_path:\$PATH\" WINELOADER=\"$selected_runner\" \"$PACKPATH/mf-install/mf-install.sh\""
 		else echo -e "\nInstall ${grc}MF${noc} from ${grc}Packages Installer${noc}!"; fi
-	elif [[ $select_ans == "7" ]]; then
+	elif [[ $select_ans == "6" ]]; then
 		if [[ -d "$PACKPATH/mf-installcab" ]]; then
 			readfiles "Steam game prefixes|sort" "$TEMPPATH/.steampfx"; selected_prefix="$read_result_dir"; runnerinit "proton"
 			eval "WINEPREFIX=\"$selected_prefix\" PATH=\"$selected_runner_path:\$PATH\" WINELOADER=\"$selected_runner\" \"$PACKPATH/mf-installcab/install-mf-64.sh\""
 		else echo -e "\nInstall ${grc}MF-Cab${noc} from ${grc}Packages Installer${noc}!"; fi
-	elif [[ "$select_ans" == "8" ]]; then
+	elif [[ "$select_ans" == "7" ]]; then
 		if [[ -d "$PACKPATH/mf-installcab" ]]; then
 			readfiles "Steam games|sort" "$TEMPPATH/.steamdirs"
 			find "$read_result_dir" -name "*.exe" | while read -r line; do echo -e "$(basename -s .exe "$line") | $line" >> "$TEMPPATH/.steamexes"; done
