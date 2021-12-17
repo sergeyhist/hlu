@@ -402,7 +402,7 @@ launchercompleteinit() {
 				wine_vd_part_after="${wine_vd_part_before// /_}"
 				wine_vd="${wine_vd_full//$wine_vd_part_before/$wine_vd_part_after}"
 				launcher_command="${launcher_command//wine_vd/ \$$item}"
-			elif [[ "${!item}" != "on" ]]; then launcher_command="$settings_item $launcher_command"; fi
+			elif [[ "${!item:=}" != "on" ]]; then launcher_command="$settings_item $launcher_command"; fi
 			launcher_settings="$launcher_settings $item=\"${!item}\"\n"; done; IFS="$Def_IFS"; fi
 	if [[ "${settings_overall_values:-x}" != *"debug_switch"* ]]; then launcher_command="$launcher_command &> \\\"/dev/null\\\""
 	else launcher_command="$launcher_command &> \\\"$LOGPATH/${launcher_name// /_}.log\\\""; fi
