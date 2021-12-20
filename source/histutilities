@@ -175,12 +175,12 @@ prefixinit() {
 		echo "Create new prefix" >> "$TEMPPATH/.prefixeslist"
 		readfiles "Prefixes" "$TEMPPATH/.prefixeslist"
 		if [[ "$read_result_dir" == "Add new prefix" ]]; then addlines "prefix" "$HIPATH/addpfx.cfg"
-		elif [[ "$read_result_dir" == "Create new prefix" ]]; then	prefixcreator "none"
+		elif [[ "$read_result_dir" == "Create new prefix" ]]; then	prefixcreator "all"
 		else selected_prefix="$read_result_dir"; break; fi; done
 }
 
 prefixcreator() {
-	if [[ "$1" == "none" ]]; then addlines "prefix" "$HIPATH/addpfx.cfg"; pfx_path="$line_path"
+	if [[ "$1" == "all" ]]; then addlines "prefix" "$HIPATH/addpfx.cfg"; pfx_path="$line_path"
 	elif [[ "$1" == "proton" ]]; then pfx_path="${line_path}"; if [[ ! -d "$pfx_path" ]]; then mkdir -p "$pfx_path"; fi; fi
 	if [[ ! -d "${pfx_path}/drive_c" ]]; then
 		if [[ -z "${selected_runner:+x}" ]]; then runnerinit "$1"; fi
@@ -570,7 +570,7 @@ case "$select_ans" in
 	elif [[ $select_ans == "8"  ]]; then
 		listoptions "Lists Manager" "Add prefix|Create prefix|Delete prefix"
 		if [[ "$select_ans" == "1" ]]; then addlines "prefix" "$HIPATH/addpfx.cfg"
-		elif [[ "$select_ans" == "2" ]]; then prefixcreator "none"
+		elif [[ "$select_ans" == "2" ]]; then prefixcreator "all"
 		elif [[ "$select_ans" == "3" ]]; then deletelines "Prefixes" "$HIPATH/addpfx.cfg" "none"; fi
 	elif [[ $select_ans == "9"  ]]; then
 		listoptions "Lists Manager" "Add runner|Delete runner"
