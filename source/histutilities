@@ -69,7 +69,7 @@ addlines() {
 
 deletelines() {
 	readfiles "$1|sort" "$2"; line_path="$read_result_dir"
-	sed -i "${select_ans}d" "$2"
+	sed -i "/${line_path}/d" "$2"
 	if [[ -d "$read_result_dir" ]]; then
 		if [[ "$3" == "force" ]]; then select_ans="1"
 		else listoptions "Delete folder from filesystem?" "Yes|No"; fi
