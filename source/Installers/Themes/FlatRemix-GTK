@@ -2,14 +2,16 @@
 packagetype="branch"
 packageurl="https://github.com/daniruiz/flat-remix-gtk"
 packageinstall() {
-	if [[ ! -f "$HOME/.local/share/themes" ]]; then mkdir -p "$HOME/.local/share/themes"; fi
-	sudo cp -r "themes/Flat-Remix"* "/usr/share/themes"
-	if [[ -d "flat-remix-gnome" ]]; then rm -rf "flat-remix-gnome"; fi
-	git clone "https://github.com/daniruiz/flat-remix-gnome"; cd "flat-remix-gnome" || exit
-	sudo cp -r "themes/Flat-Remix"* "/usr/share/themes"
+	if [[ ! -f "/usr/share/themes/.flat-remix-gtk" ]]; then
+		sudo mkdir -p "/usr/share/themes/.flat-remix-gtk"
+	else sudo rm -rf "/usr/share/themes/.flat-remix-gtk"
+		sudo find "/usr/share/themes/" -xtype l -delete; fi
+	sudo cp -r "themes/Flat-Remix"* "/usr/share/themes/.flat-remix-gtk"
+	sudo ln -s "/usr/share/themes/.flat-remix-gtk/"* "/usr/share/themes/"
 }
 packageuninstall() {
-	sudo rm -rf "/usr/share/themes/Flat-Remix"*
+	sudo rm -rf "/usr/share/themes/.flat-remix-gtk/"
+	sudo find "/usr/share/themes/" -xtype l -delete
 }
 export packagetype
 export packageurl

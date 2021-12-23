@@ -1,5 +1,5 @@
 #!/bin/bash
-# Version: 1.4
+# Version: 1.4.1
 set -euo pipefail
 
 hi_exit() {
