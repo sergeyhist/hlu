@@ -619,10 +619,15 @@ case "$select_ans" in
 "5") #Arch Updater
 	if [[ "$osversion" == "ArchLinux" ]]; then
 		if [[ -f "/usr/bin/yay" && -f "/usr/bin/checkupdates" ]]; then
-			if [[ $(checkupdates; yay -Qua --devel) ]]; then
-				echo -e "\n ${mac}Updates:${noc}\n\n$(checkupdates; yay -Qua --devel)"
+			listoptions "Use '--devel' option?" "Yes|No"
+			if [[ "$select_ans" == "1" ]]; then
+				list_command="$(checkupdates; yay -Qua --devel)"
+				update_command="sudo pacman -Syu; yay -Syua --devel"
+			else list_command="$(checkupdates; yay -Qua)"; update_command="sudo pacman -Syu; yay -Syua"; fi
+			if [[ -n "$list_command" ]]; then
+				echo -e "\n ${mac}Updates:${noc}\n\n${list_command}"
 				listoptions "Update?" "Yes|No"
-				if [[ "$select_ans" == "1" ]]; then eval "sudo pacman -Syu; yay -Syua --devel"; fi
+				if [[ "$select_ans" == "1" ]]; then eval "$update_command"; fi
 			else echo -e "\n ${mac}No updates found${noc}"; fi
 		else echo -e "\n ${grc}Yay${noc} or ${grc}checkupdates${noc} ${mac}not installed!${noc}\n"; fi
 	else echo -e "\n ${mac}Wrong ${grc}OS${mac}!${noc}\n"; fi
