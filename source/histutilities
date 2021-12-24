@@ -1,5 +1,5 @@
 #!/bin/bash
-# Version: 1.4.1
+# Version: 1.5
 set -euo pipefail
 
 hi_exit() {
@@ -62,7 +62,8 @@ readfiles() {
 }
 
 addlines() {
-	generalinput "$1" "${cyc}path${noc} to the ${grc}$1${noc} folder"; line_path="$input_ans"
+	add_text="${cyc}path${noc} to the ${grc}$1${noc} folder"
+	generalinput "$1" "$add_text"; line_path="$input_ans"
 	if [[ ! -d "$line_path" ]]; then mkdir -p "$line_path"; fi
 	echo -e "$line_path" >> "$2"
 }
@@ -152,9 +153,51 @@ prefixfinder() {
 	IFS="$Def_IFS"
 }
 
+servicefinder() {
+	IFS="|"
+	for item in $1; do
+		if [[ -f "$item" ]]; then
+			while read -r line; do
+				if [[ "$line" == *'/'* ]]; then service_name="$(basename "$line")"
+				else service_name="${line}"; fi; service_name="${service_name// /}"
+				service_full_name="$service_name"; service_name="${service_name//.*/}"
+				service_path_user="$(systemctl show --user -p FragmentPath $service_full_name | sed "s/FragmentPath=//g")"
+				service_path_root="$(systemctl show -p FragmentPath $service_full_name | sed "s/FragmentPath=//g")"
+				if [[ "${service_path_user}" != "" ]]; then service_type="user"; service_path="$service_path_user"
+				elif [[ "${service_path_root}" != "" ]]; then service_type="root"; service_path="$service_path_root"; fi
+				if [[ -n "${service_type:+x}" ]]; then
+					if [[ "$service_type" == "user" ]]; then service_type="--user"; else service_type=""; fi
+					service_status="$(eval "systemctl $service_type show -p ActiveState $service_full_name | sed 's/ActiveState=//g'")"
+					if [[ "$service_status" == "active" ]]; then servc="$lgrc"
+					elif [[ "$service_status" == "inactive" ]]; then servc="$lblc"
+					else servc="$rec"; fi
+					service_string="${servc}${service_status^}${noc} - ${grc}${service_name^}${noc} | $service_path $service_type"
+					grep -Fq "$service_string" "$TEMPPATH/.serviceslist" || echo "$service_string" >> "$TEMPPATH/.serviceslist"; fi
+			done < "$item"
+		fi; done
+	IFS="$Def_IFS"
+}
+
+serviceinit() {
+	selected_service=""
+	while : ; do
+		if [[ -f "$TEMPPATH/.serviceslist" ]]; then rm "$TEMPPATH/.serviceslist"; fi
+		touch "$TEMPPATH/.serviceslist"
+		servicefinder "$HIPATH/services.cfg"
+		echo "Add service" >> "$TEMPPATH/.serviceslist"
+		readfiles "Services" "$TEMPPATH/.serviceslist"
+		if [[ "$read_result_dir" == "Add service" ]]; then
+			generalinput "service" "${grc}service's${noc} ${cyc}name${noc} or full ${cyc}path${noc} to ${grc}service${noc} file"
+			echo "$input_ans" >> "$HIPATH/services.cfg"
+		else
+			selected_service_type="$(echo "$read_result_dir" | cut -d' ' -f2)"
+			selected_service_name="$(basename "$(echo "$read_result_dir" | cut -d' ' -f1)")"
+			selected_service="$selected_service_type $selected_service_name"
+			break; fi; done
+}
+
 runnerinit() {
 	selected_runner=""; selected_runner_path=""
-	if [[ -z "$selected_runner" ]]; then
 		while : ; do
 			if [[ "$1" != "proton" ]]; then echo "$(/usr/bin/wine --version) | /usr/bin/wine" > "$TEMPPATH/.runnerslist"; fi
 			if [[ "$1" == "all" ]]; then runnerfinder "$HIPATH/addrun.cfg|$TEMPPATH/.steamrun"
@@ -163,7 +206,7 @@ runnerinit() {
 			if [[ "$1" != "proton" ]]; then echo "Add new runner" >> "$TEMPPATH/.runnerslist"; fi
 			readfiles "Runners" "$TEMPPATH/.runnerslist"
 			if [[ "$read_result_dir" == "Add new runner" ]]; then addlines "runner" "$HIPATH/addrun.cfg"
-			else selected_runner="$read_result_dir"; selected_runner_path=$(dirname "$read_result_dir"); break; fi; done; fi
+			else selected_runner="$read_result_dir"; selected_runner_path=$(dirname "$read_result_dir"); break; fi; done
 }
 
 prefixinit() {
@@ -500,11 +543,11 @@ INSTPATH="$HIPATH/Installers"; if [[ ! -d "$INSTPATH" ]]; then mkdir -p "$INSTPA
 PACKPATH="$HIPATH/Packages"; if [[ ! -d "$PACKPATH" ]]; then mkdir -p "$PACKPATH"; fi
 CONFPATH="$HIPATH/Configs"; if [[ ! -d "$CONFPATH" ]]; then mkdir -p "$CONFPATH"; fi
 LOGPATH="$HIPATH/.logs"; if [[ ! -d "$LOGPATH" ]]; then mkdir -p "$LOGPATH"; fi
-noc="\e[0m"; rec="\e[31m"; grc="\e[32m"; blc="\e[34m"; cyc="\e[36m"; mac="\e[91m"
+noc="\e[0m"; rec="\e[31m"; grc="\e[32m"; blc="\e[34m"; cyc="\e[36m"; mac="\e[91m"; lgrc="\e[92m"; lblc="\e[94m"
 eval "hostnamectl > \"$TEMPPATH/.osinfo\""
 osversion="$(grep "Operating System" "$TEMPPATH/.osinfo" | cut -d: -f2)"; osversion=${osversion// /}
 if [[ -d "$HOME/.steam" ]]; then steamfinder; fi
-listoptions "Hist Linux Utilities|exit" "Launcher Controller|Wine Helper|Steam Helper|Package Installer|Arch Updater"
+listoptions "Hist Linux Utilities|exit" "Launcher Controller|Wine Helper|Steam Helper|Package Installer|Arch Updater|Systemd Controller"
 case "$select_ans" in
 "1") #Launcher Controller
 	find "$LAUNCHPATH" -maxdepth 1 -mindepth 1 -type f,l | while read -r line; do
@@ -631,4 +674,15 @@ case "$select_ans" in
 			else echo -e "\n ${mac}No updates found${noc}"; fi
 		else echo -e "\n ${grc}Yay${noc} or ${grc}checkupdates${noc} ${mac}not installed!${noc}\n"; fi
 	else echo -e "\n ${mac}Wrong ${grc}OS${mac}!${noc}\n"; fi
+;;
+"6") #Systemd Controller
+	while : ; do
+	serviceinit
+	listoptions "Select option|continue" "Start|Stop|Restart|Status|Unlist"
+	if [[ "$select_ans" == "1" ]]; then eval "systemctl start $selected_service"
+	elif [[ "$select_ans" == "2" ]]; then eval "systemctl stop $selected_service"
+	elif [[ "$select_ans" == "3" ]]; then	eval "systemctl restart $selected_service"
+	elif [[ "$select_ans" == "4" ]]; then eval "systemctl status $selected_service"
+	elif [[ "$select_ans" == "5" ]]; then echo "$selected_service"
+		sed -i "\#$selected_service_name#d" "$HIPATH/services.cfg" ;fi; done
 esac
