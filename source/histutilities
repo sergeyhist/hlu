@@ -187,8 +187,8 @@ serviceinit() {
 		echo "Add service" >> "$TEMPPATH/.serviceslist"
 		readfiles "Services" "$TEMPPATH/.serviceslist"
 		if [[ "$read_result_dir" == "Add service" ]]; then
-			generalinput "service" "${grc}service's${noc} ${cyc}name${noc} or full ${cyc}path${noc} to ${grc}service${noc} file"
-			echo "$input_ans" >> "$HIPATH/services.cfg"
+			generalinput "service|continue" "${grc}service's${noc} ${cyc}name${noc} or full ${cyc}path${noc} to ${grc}service${noc} file"
+			if [[ "$input_ans" != "none" ]]; then echo "$input_ans" >> "$HIPATH/services.cfg"; fi
 		else
 			selected_service_type="$(echo "$read_result_dir" | cut -d' ' -f2)"
 			selected_service_name="$(basename "$(echo "$read_result_dir" | cut -d' ' -f1)")"
@@ -683,6 +683,5 @@ case "$select_ans" in
 	elif [[ "$select_ans" == "2" ]]; then eval "systemctl stop $selected_service"
 	elif [[ "$select_ans" == "3" ]]; then	eval "systemctl restart $selected_service"
 	elif [[ "$select_ans" == "4" ]]; then eval "systemctl status $selected_service"
-	elif [[ "$select_ans" == "5" ]]; then echo "$selected_service"
-		sed -i "\#$selected_service_name#d" "$HIPATH/services.cfg" ;fi; done
+	elif [[ "$select_ans" == "5" ]]; then sed -i "\#$selected_service_name#d" "$HIPATH/services.cfg"; fi; done
 esac
