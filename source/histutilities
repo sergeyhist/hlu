@@ -148,8 +148,10 @@ prefixfinder() {
 		if [[ -f "$item" ]]; then
 			while read -r line; do
 			if [[ -d "$line" && $(find "$line" -type d -name "drive_c") ]]; then
-					prefix_path="$(dirname "$(find "$line" -type d -name "drive_c")")"
-					echo "$(basename "$prefix_path") | $prefix_path" >> "$TEMPPATH/.prefixeslist"; fi; done < "$item"; fi; done
+					prefix_path="$(find "$line" -type d -name "drive_c")"; IFS=$'\n'
+					for i in $prefix_path; do
+						echo "$(basename "$(dirname "$i")") | $(dirname "$i")" >> "$TEMPPATH/.prefixeslist"
+					done; fi; done < "$item"; fi; done; IFS="$Def_IFS"
 	IFS="$Def_IFS"
 }
 
@@ -161,8 +163,8 @@ servicefinder() {
 				if [[ "$line" == *'/'* ]]; then service_name="$(basename "$line")"
 				else service_name="${line}"; fi; service_name="${service_name// /}"
 				service_full_name="$service_name"; service_name="${service_name//.*/}"
-				service_path_user="$(systemctl show --user -p FragmentPath $service_full_name | sed "s/FragmentPath=//g")"
-				service_path_root="$(systemctl show -p FragmentPath $service_full_name | sed "s/FragmentPath=//g")"
+				service_path_user="$(systemctl show --user -p FragmentPath "$service_full_name" | sed "s/FragmentPath=//g")"
+				service_path_root="$(systemctl show -p FragmentPath "$service_full_name" | sed "s/FragmentPath=//g")"
 				if [[ "${service_path_user}" != "" ]]; then service_type="user"; service_path="$service_path_user"
 				elif [[ "${service_path_root}" != "" ]]; then service_type="root"; service_path="$service_path_root"; fi
 				if [[ -n "${service_type:+x}" ]]; then
@@ -198,15 +200,15 @@ serviceinit() {
 
 runnerinit() {
 	selected_runner=""; selected_runner_path=""
-		while : ; do
-			if [[ "$1" != "proton" ]]; then echo "$(/usr/bin/wine --version) | /usr/bin/wine" > "$TEMPPATH/.runnerslist"; fi
-			if [[ "$1" == "all" ]]; then runnerfinder "$HIPATH/addrun.cfg|$TEMPPATH/.steamrun"
-			elif [[ "$1" == "wine" ]]; then runnerfinder "$HIPATH/addrun.cfg"
-			elif [[ "$1" == "proton" ]]; then runnerfinder "$TEMPPATH/.steamrun"; fi
-			if [[ "$1" != "proton" ]]; then echo "Add new runner" >> "$TEMPPATH/.runnerslist"; fi
-			readfiles "Runners" "$TEMPPATH/.runnerslist"
-			if [[ "$read_result_dir" == "Add new runner" ]]; then addlines "runner" "$HIPATH/addrun.cfg"
-			else selected_runner="$read_result_dir"; selected_runner_path=$(dirname "$read_result_dir"); break; fi; done
+	while : ; do
+		if [[ "$1" != "proton" ]]; then echo "$(/usr/bin/wine --version) | /usr/bin/wine" > "$TEMPPATH/.runnerslist"; fi
+		if [[ "$1" == "all" ]]; then runnerfinder "$HIPATH/addrun.cfg|$TEMPPATH/.steamrun"
+		elif [[ "$1" == "wine" ]]; then runnerfinder "$HIPATH/addrun.cfg"
+		elif [[ "$1" == "proton" ]]; then runnerfinder "$TEMPPATH/.steamrun"; fi
+		if [[ "$1" != "proton" ]]; then echo "Add new runner" >> "$TEMPPATH/.runnerslist"; fi
+		readfiles "Runners" "$TEMPPATH/.runnerslist"
+		if [[ "$read_result_dir" == "Add new runner" ]]; then addlines "runner" "$HIPATH/addrun.cfg"
+		else selected_runner="$read_result_dir"; selected_runner_path=$(dirname "$read_result_dir"); break; fi; done
 }
 
 prefixinit() {
@@ -443,7 +445,7 @@ launchercompleteinit() {
 				wine_vd_full="${!item}"
 				wine_vd_part_before="$(echo "$wine_vd_full" | cut -d"'" -f2)"
 				wine_vd_part_after="${wine_vd_part_before// /_}"
-				wine_vd="${wine_vd_full//$wine_vd_part_before/$wine_vd_part_after}"
+				wine_vd="${wine_vd_full//$wine_vd_part_before/$wine_vd_part_after}"; export wine_vd
 				launcher_command="${launcher_command//wine_vd/ \$$item}"
 			elif [[ "${!item:=}" != "on" ]]; then launcher_command="$settings_item $launcher_command"; fi
 			launcher_settings="$launcher_settings $item=\"${!item}\"\n"; done; IFS="$Def_IFS"; fi

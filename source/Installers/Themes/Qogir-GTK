@@ -1,0 +1,13 @@
+#!/bin/bash
+packagetype="branch"
+packageurl="https://github.com/vinceliuice/Qogir-theme"
+packageinstall() {
+	sudo sh install.sh
+}
+packageuninstall() {
+	sudo rm -rf "/usr/share/themes/Qogir"*
+}
+export packagetype
+export packageurl
+export -f packageinstall
+export -f packageuninstall
