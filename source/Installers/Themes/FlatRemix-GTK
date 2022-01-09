@@ -2,10 +2,10 @@
 packagetype="branch"
 packageurl="https://github.com/daniruiz/flat-remix-gtk"
 packageinstall() {
-	if [[ ! -f "/usr/share/themes/.flat-remix-gtk" ]]; then
-		sudo mkdir -p "/usr/share/themes/.flat-remix-gtk"
-	else sudo rm -rf "/usr/share/themes/.flat-remix-gtk"
+	if [[ -d "/usr/share/themes/.flat-remix-gtk" ]]; then
+		sudo rm -rf "/usr/share/themes/.flat-remix-gtk"
 		sudo find "/usr/share/themes/" -xtype l -delete; fi
+	sudo mkdir -p "/usr/share/themes/.flat-remix-gtk"
 	sudo cp -r "themes/Flat-Remix"* "/usr/share/themes/.flat-remix-gtk"
 	sudo ln -s "/usr/share/themes/.flat-remix-gtk/"* "/usr/share/themes/"
 }
