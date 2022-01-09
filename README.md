@@ -66,8 +66,7 @@ Input this command in terminal:
      - Dxvk
      - MF
      - MF-Cab
-     - Vkd3d
-  + Arch Updater   
+     - Vkd3d  
   + Systemd Controller
      - Service's status (active, inactive, etc.)
      - Control commands (start, stop, restart, status)
