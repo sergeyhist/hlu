@@ -466,8 +466,8 @@ settingsinit() {
 		settings_menu="${settings_menu:=}|$(basename -s '.cfg' "$line" | cut -d'_' -f2) options"
 	done < <(find "$CONFPATH" -maxdepth 1 -mindepth 1 -type f | sort -n)
 	settings_menu=${settings_menu:1}
-	listoptions "Launcher setup|continue" "$settings_menu"
 	while : ; do
+		listoptions "Launcher setup|continue" "$settings_menu"
 		if [[ "$list_result_name" != "none" ]]; then
 			settings_name="$(echo "$list_result_name" | cut -d' ' -f1)"
 			settings_file="$(find "$CONFPATH" -name "*${settings_name}.cfg")"
@@ -482,7 +482,7 @@ settingsinit() {
 				settings_items_values="${settings_items_values}|$(sed -n "$((settings_item_begin_string[i]+2))p" "$settings_file")"
 			done
 			settings_items=${settings_items:1}; settings_items_values=${settings_items_values:1}
-			while [[ "$list_result_name" != "none" ]]; do
+			while : ; do
 				listoptions "$settings_name|continue" "$settings_items ___ $settings_items_values"
 				if [[ "$list_result_name" != "none" ]]; then
 					settings_item_name="$(sed -n "$((settings_item_begin_string[list_result_number-1]+2))p" "$settings_file")"
@@ -497,41 +497,52 @@ settingsinit() {
 						if [[ "$settings_item_input_text" != "none" ]]; then
 							settings_item_input_value=""
 							for ((i=1; i<=$(grep -o ' <|> ' <<< "$settings_item_input_text" | grep -c .)+1; i++)); do
-							settings_item_input_text_temp="$(echo -e "${settings_item_input_text// <|> /\\n}" | sed -n "${i}p")"
-							settings_item_value_temp="$(echo -e "${settings_item_value// <|> /\\n}" | sed -n "${i}p")"
-							settings_item_default_temp="$(echo -e "${settings_item_default// <|> /\\n}" | sed -n "${i}p")"
-							settings_item_input_limit_temp="$(echo -e "${settings_item_input_limit// <|> /\\n}" | sed -n "${i}p")"
-							while : ; do
-								generalinput "$settings_item_name-$i ___ $settings_item_default_temp|continue" "$settings_item_input_text_temp"
-								if [[ "$settings_item_input_limit_temp" == "none" ]] || [[ "$input_ans" == "none" ]] || eval "$settings_item_input_limit_temp"; then
-									break; fi
-							done
-							if [[ "$input_ans" != "none" ]]; then settings_item_input_value="$settings_item_input_value${settings_item_value_temp//gi_value/$input_ans}"
-							else settings_item_input_value="none"; break; fi
+								settings_item_input_text_temp="$(echo -e "${settings_item_input_text// <|> /\\n}" | sed -n "${i}p")"
+								settings_item_value_temp="$(echo -e "${settings_item_value// <|> /\\n}" | sed -n "${i}p")"
+								settings_item_default_temp="$(echo -e "${settings_item_default// <|> /\\n}" | sed -n "${i}p")"
+								settings_item_input_limit_temp="$(echo -e "${settings_item_input_limit// <|> /\\n}" | sed -n "${i}p")"
+								while : ; do
+									generalinput "$settings_item_name-$i ___ $settings_item_default_temp|continue" "$settings_item_input_text_temp"
+									if [[ "$settings_item_input_limit_temp" == "none" ]] || [[ "$input_ans" == "none" ]] || eval "$settings_item_input_limit_temp"; then
+										break; fi
+								done
+								if [[ "$input_ans" != "none" ]]; then
+									settings_item_input_value="$settings_item_input_value${settings_item_value_temp//gi_value/$input_ans}"
+								else settings_item_input_value="none"; break; fi
 							done
 						else settings_item_input_value="none"; fi
 						if [[ "$settings_item_input_value" != "none" ]];  then
 							eval "$settings_item_name=\"$settings_item_input_value\""
-						elif [[ "$settings_item_value" != "none" && "$settings_item_input_text" == "none" ]];  then
+						elif [[ "$settings_item_value" != "none" && "$settings_item_input_text" == "none" ]]; then
 							if [[ -n "${!settings_item_name:+nex}" ]]; then eval "$settings_item_name=\"\""
 							else eval "$settings_item_name=\"$settings_item_value\""; fi
 						elif [[ "$settings_item_input_text" != "none" && "$settings_item_input_value" == "none" ]]; then
 							eval "$settings_item_name=\"\""; fi
-					else echo -e "\n $settings_item_limit_string\n"; fi; fi
+					else echo -e "\n $settings_item_limit_string\n"; fi
+				else break; fi
 			done
-			listoptions "Launcher setup|continue" "$settings_menu"
 			IFS='|'
 			for item in $settings_items_values; do
-				if [[ -n ${!item:+x} && ${!item:+x} != "" && "${settings_overall_values:-x}" != *"$item"* ]]; then settings_overall_values="${settings_overall_values:=}|$item"; fi; done; fi
-			if [[ "${settings_overall_values:-x}" == "|"* ]]; then settings_overall_values="${settings_overall_values:1}"; fi
+				if [[ -n ${!item:+x} && ${!item:+x} != "" && "${settings_overall_values:-}" != *"$item"* ]]
+				then settings_overall_values="${settings_overall_values:=}|$item"; fi
+			done
+			if [[ "${settings_overall_values:-}" == "|"* ]]; then
+				settings_overall_values="${settings_overall_values:1}"; fi
 			if [[ -n "${settings_overall_values:+x}" ]]; then
+				echo "$settings_overall_values"
 				for item in $settings_overall_values; do
+					echo "$item"
 					if [[ ${!item:+x} == "" ]]; then
-						settings_overall_values=${settings_overall_values//$item/}; settings_overall_values=${settings_overall_values//||/|}; fi; done; fi
-			if [[ "${settings_overall_values:-x}" == "|"* ]]; then settings_overall_values="${settings_overall_values:1}"; fi
-			if [[ "${settings_overall_values:-x}" == *"|" ]]; then settings_overall_values="${settings_overall_values::-1}"; fi
-			IFS="$Def_IFS"
-		if [[ "$list_result_name" == "none" ]]; then break; fi
+						settings_overall_values=${settings_overall_values//$item/}; settings_overall_values=${settings_overall_values//||/|}
+					fi
+				done
+				IFS="$Def_IFS"
+			fi
+			if [[ "${settings_overall_values:-x}" == "|"* ]]; then
+				settings_overall_values="${settings_overall_values:1}"; fi
+			if [[ "${settings_overall_values:-x}" == *"|" ]]; then
+				settings_overall_values="${settings_overall_values::-1}"; fi
+		else break; fi
 	done
 }
 
