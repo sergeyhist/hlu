@@ -529,9 +529,7 @@ settingsinit() {
 			if [[ "${settings_overall_values:-}" == "|"* ]]; then
 				settings_overall_values="${settings_overall_values:1}"; fi
 			if [[ -n "${settings_overall_values:+x}" ]]; then
-				echo "$settings_overall_values"
 				for item in $settings_overall_values; do
-					echo "$item"
 					if [[ ${!item:+x} == "" ]]; then
 						settings_overall_values=${settings_overall_values//$item/}; settings_overall_values=${settings_overall_values//||/|}
 					fi
