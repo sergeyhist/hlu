@@ -1,5 +1,5 @@
 #!/bin/bash
-# Version: 1.5
+# Version: 1.6
 set -euo pipefail
 
 hi_exit() {
@@ -282,7 +282,7 @@ prefixcommands() {
 packsinstaller() {
 	packagetype=""; packageurl=""; packagearg=""; packagename=""; packagever=""
 	find "$INSTPATH" -maxdepth 1 -mindepth 1 -type d | while read -r line; do basename "$line" >> "$TEMPPATH/.packsfolders"; done
-	if [[ "$osversion" != "ArchLinux" ]]; then sed -i "/Arch/d" "$TEMPPATH/.packsfolders"; fi
+	if [[ "$osversion" != "ArchLinux" ]]; then sed -i "/TKG/d" "$TEMPPATH/.packsfolders"; fi
 	readfiles "Categories|sort" "$TEMPPATH/.packsfolders"
 	selected_package_type="$read_result_dir"
 	find "$INSTPATH/$selected_package_type" -maxdepth 1 -mindepth 1 -type f | while read -r line; do basename "$line" >> "$TEMPPATH/.packs"; done
@@ -309,7 +309,7 @@ packsinstaller() {
 						listoptions "Install? " "Yes|No"
 						if [[ $select_ans == "1" ]]; then
 							packageinstall; fi; fi
-				else echo -e "\nFirst install the ${grc}package${noc}\n"; fi
+				else echo -e "\n${grc}Package${noc} ${rec}not installed${noc}!\n"; fi
 			elif [[ "$select_ans" == "3" ]]; then
 				if [[ -d "$name" ]]; then
 					if grep -oq "packageuninstall" "$selected_package"; then cd "$name"; packageuninstall; cd ..; fi

@@ -1,9 +1,0 @@
-#!/bin/bash
-packagetype="branch"
-packageurl="https://github.com/pineappleEA/Pineapple-Linux"
-packageinstall() {
-    sh pineapple.sh
-}
-export packagetype
-export packageurl
-export -f packageinstall
