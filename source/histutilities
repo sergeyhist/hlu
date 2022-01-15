@@ -322,9 +322,8 @@ packsinstaller() {
 		listoptions "Options" "Install/Update|Uninstall"
 		if [[ -f "$selected_package" ]]; then
 			if [[ "$select_ans" == "1" ]]; then
-				if [[ -d "$name" ]]; then rm -rf "$name"; fi
-				mkdir "$name"; cd "$name"
-				git-latest "$packagename" "$packagever"
+				if [[ ! -d "$name" ]]; then mkdir -p "$name"; fi
+				cd "$name"; git-latest "$packagename" "$packagever"
 				eval "wget \"$git_package\""
 				if grep -oq "packageinstall" "$selected_package"; then packageinstall; fi
 			elif [[ "$select_ans" == "2" ]]; then

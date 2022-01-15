@@ -3,6 +3,7 @@ packagetype="release"
 packagename="RPCS3/rpcs3-binaries-linux"
 packagever=".AppImage"
 packageinstall() {
+	if [[ -f "Rpcs3.AppImage" ]]; then rm "Rpcs3.AppImage"; fi
 	mv rpcs3* Rpcs3.AppImage
 	chmod +x Rpcs3.AppImage
 	if [[ -f "$PWD/Rpcs3.AppImage" ]]; then echo -e "\n\e[32mExecutable location:\e[0m $PWD/Rpcs3.AppImage"; fi

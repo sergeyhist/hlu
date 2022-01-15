@@ -3,6 +3,7 @@ packagetype="release"
 packagename="SteamGridDB/steam-rom-manager"
 packagever=".AppImage"
 packageinstall() {
+	if [[ -f "Steam-ROM-Manager.AppImage" ]]; then rm "Steam-ROM-Manager.AppImage"; fi
 	mv Steam-ROM-Manager* Steam-ROM-Manager.AppImage
 	chmod +x Steam-ROM-Manager.AppImage
 	if [[ -f "$PWD/Steam-ROM-Manager.AppImage" ]]; then echo -e "\n\e[32mExecutable location:\e[0m $PWD/Steam-ROM-Manager.AppImage"; fi
