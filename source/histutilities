@@ -114,7 +114,12 @@ listoptions() {
 }
 
 git-latest() {
-  	git_version=$(curl --silent "https://api.github.com/repos/$1/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+  	for item in $(curl --silent "https://api.github.com/repos/$1/releases" | grep "$2" | grep '"name"' | cut -d'"' -f4); do
+		git_names="${git_names:-}$(basename -s "$2" "$item")|"; done
+	for item in $(curl --silent "https://api.github.com/repos/$1/releases" | grep "$2" | grep '"browser_download_url"' | cut -d'"' -f4); do
+		git_urls+=("$item"); done
+	listoptions "Packages" "$git_names"
+	git_package=${git_urls[$list_result_number-1]}
 }
 
 runnerfinder() {
@@ -319,8 +324,8 @@ packsinstaller() {
 			if [[ "$select_ans" == "1" ]]; then
 				if [[ -d "$name" ]]; then rm -rf "$name"; fi
 				mkdir "$name"; cd "$name"
-				git-latest "$packagename"
-				eval "wget \"https://github.com/$packagename/releases/download/${git_version}/${packagever//VERSION/$git_version}\""
+				git-latest "$packagename" "$packagever"
+				eval "wget \"$git_package\""
 				if grep -oq "packageinstall" "$selected_package"; then packageinstall; fi
 			elif [[ "$select_ans" == "2" ]]; then
 				if grep -oq "packageuninstall" "$selected_package"; then packageuninstall; fi
