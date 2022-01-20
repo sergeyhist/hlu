@@ -334,21 +334,14 @@ packsinstaller() {
 }
 
 steamlauchoptions() {
-	flag=0; line_number=0; steam_command="%command%"
-	readfiles "Steam games|sort" "$TEMPPATH/.steamapps"; launcher_name="$read_result_name"; launcher_steam_appid="$read_result_dir"; launcher_type="steam"
-	if [[ -n "$launcher_steam_appid" ]]; then
-		readfiles "Steam local configs|sort" "$TEMPPATH/.lcfiles"; launcher_lc="$read_result_dir"; settingsinit
-		IFS='|'
-			for item in $settings_overall_values; do
-				if [[ "$item" == "custom_args" ]]; then steam_command="$steam_command ${!item}"
-				else steam_command="${!item} $steam_command"; fi; done
-		IFS="$Def_IFS"
-		while pkill steam; do sleep 1s; done
-		while read -r line; do
-			((line_number+=1))
-			if [[ $line == *'"Software"'* ]]; then flag=1; fi
-			if [[ $flag == 1 && $line == *"Apps"* ]]; then flag=0; ((line_number+=2)); break; fi; done < "$launcher_lc"; fi
-		sed -i "${line_number}i\ \t\t\t\t\t\"$launcher_steam_appid\"\n\t\t\t\t\t{\n\t\t\t\t\t\t\"LaunchOptions\" \t\"$steam_command\"\n\t\t\t\t\t}" "$launcher_lc"
+	steam_command="%command%"; launcher_type="steam"
+	settingsinit
+	IFS='|'
+		for item in $settings_overall_values; do
+			if [[ "$item" == "custom_args" ]]; then steam_command="$steam_command ${!item}"
+			else steam_command="${!item} $steam_command"; fi; done
+	IFS="$Def_IFS"
+	echo -e "\nCopy ${cyc}this${noc} to ${grc}steam game${noc} properties:\n${cyc}$steam_command${noc}\n"
 }
 
 steamfinder() {
