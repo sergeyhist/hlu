@@ -152,11 +152,19 @@ prefixfinder() {
 	for item in $1; do
 		if [[ -f "$item" ]]; then
 			while read -r line; do
-			if [[ -d "$line" && $(find "$line" -type d -name "drive_c") ]]; then
-					prefix_path="$(find "$line" -type d -name "drive_c")"; IFS=$'\n'
-					for i in $prefix_path; do
-						echo "$(basename "$(dirname "$i")") | $(dirname "$i")" >> "$TEMPPATH/.prefixeslist"
-					done; fi; done < "$item"; fi; done; IFS="$Def_IFS"
+				if [[ -d "$line" ]]; then
+					cd "$line"
+					if [[ $(find "$(pwd -P)" -type d -name "drive_c") ]]; then
+						prefix_path="$(find "$(pwd -P)" -type d -name "drive_c")"
+						IFS=$'\n'
+						for i in $prefix_path; do
+							echo "$(basename "$(dirname "$i")") | $(dirname "$i")" >> "$TEMPPATH/.prefixeslist"
+						done
+					fi
+				fi
+			done < "$item"
+		fi
+	done
 	IFS="$Def_IFS"
 }
 
