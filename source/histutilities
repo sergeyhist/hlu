@@ -678,10 +678,12 @@ case "$select_ans" in
 "5") #Systemd Controller
 	while : ; do
 	serviceinit
-	listoptions "Select option|continue" "Start|Stop|Restart|Status|Unlist"
+	listoptions "Select option|continue" "Start|Stop|Restart|Enable|Disable|Status|Unlist"
 	if [[ "$select_ans" == "1" ]]; then eval "systemctl start $selected_service"
 	elif [[ "$select_ans" == "2" ]]; then eval "systemctl stop $selected_service"
-	elif [[ "$select_ans" == "3" ]]; then	eval "systemctl restart $selected_service"
-	elif [[ "$select_ans" == "4" ]]; then eval "systemctl status $selected_service"
-	elif [[ "$select_ans" == "5" ]]; then sed -i "\#$selected_service_name#d" "$HIPATH/services.cfg"; fi; done
+	elif [[ "$select_ans" == "3" ]]; then eval "systemctl restart $selected_service"
+	elif [[ "$select_ans" == "4" ]]; then eval "systemctl enable $selected_service"
+	elif [[ "$select_ans" == "5" ]]; then eval "systemctl disable $selected_service"
+	elif [[ "$select_ans" == "6" ]]; then eval "systemctl status $selected_service"
+	elif [[ "$select_ans" == "7" ]]; then sed -i "\#$selected_service_name#d" "$HIPATH/services.cfg"; fi; done
 esac
