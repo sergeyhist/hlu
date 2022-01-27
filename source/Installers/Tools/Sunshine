@@ -1,0 +1,21 @@
+#!/bin/bash
+packagetype="branch"
+packageurl="https://github.com/loki-47-6F-64/sunshine"
+packagearg="--recurse-submodules"
+packageinstall() {
+    mkdir build
+    cd build/
+    cmake ..
+    make
+    sudo cp sunshine /usr/local/bin/
+    cp sunshine.service $HOME/.config/systemd/user/
+}
+
+packageuninstall() {
+    sudo rm /usr/local/bin/sunshine
+    rm $HOME/.config/systemd/user/sunshine.service
+}
+export packagetype
+export packageurl
+export -f packageinstall
+export -f packageuninstall

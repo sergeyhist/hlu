@@ -1,0 +1,19 @@
+#!/bin/bash
+packagetype="release"
+packagename="luxtorpeda-dev/luxtorpeda"
+packagever=".tar.xz"
+packageinstall() {
+	tar -xf luxtorpeda*
+	rm ./*".tar.xz"
+	if [[ ! -d "/usr/share/steam/compatibilitytools.d" ]]; then sudo mkdir -p "/usr/share/steam/compatibilitytools.d"; fi
+	if [[ -d "/usr/share/steam/compatibilitytools.d/luxtorpeda" ]]; then sudo rm -rf "/usr/share/steam/compatibilitytools.d/luxtorpeda"; fi
+	sudo mv luxtorpeda* "/usr/share/steam/compatibilitytools.d/"
+}
+packageuninstall() {
+	sudo rm -rvf "/usr/share/steam/compatibilitytools.d/luxtorpeda"
+}
+export packagetype
+export packagename
+export packagever
+export -f packageinstall
+export -f packageuninstall
