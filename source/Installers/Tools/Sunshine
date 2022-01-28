@@ -3,8 +3,8 @@ packagetype="branch"
 packageurl="https://github.com/loki-47-6F-64/sunshine"
 packagearg="--recurse-submodules"
 packageinstall() {
-    mkdir build
-    cd build/
+    if [[ ! -d "build" ]]; then mkdir build; fi
+    cd build || exit
     cmake ..
     make
     sudo cp sunshine /usr/local/bin/
@@ -17,5 +17,6 @@ packageuninstall() {
 }
 export packagetype
 export packageurl
+export packagearg
 export -f packageinstall
 export -f packageuninstall
