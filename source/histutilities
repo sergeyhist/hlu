@@ -580,13 +580,13 @@ case "$select_ans" in
 			readfiles "Launchers|sort" "$TEMPPATH/.launcherslist"; launchereditor "$read_result_dir"
 		elif [[ "$select_ans" == "3" ]]; then
 			readfiles "Launchers|sort" "$TEMPPATH/.launcherslist"
-			if [[ -L "$LAUNCHPATH/$read_result_dir}" && $(readlink -f "$LAUNCHPATH/$read_result_dir") ]]; then
-				rm "$(readlink -f "$LAUNCHPATH/$read_result_dir")"; fi
-			rm "$LAUNCHPATH/$read_result_dir"
+			if [[ -L "$LAUNCHPATH/$read_result_dir.hlu}" && $(readlink -f "$LAUNCHPATH/$read_result_dir.hlu") ]]; then
+				rm "$(readlink -f "$LAUNCHPATH/$read_result_dir.hlu")"; fi
+			rm "$LAUNCHPATH/$read_result_dir.hlu"
 		elif [[ "$select_ans" == "4" ]]; then
-			readfiles "Launchers|sort" "$TEMPPATH/.launcherslist"; xdg-open "$LAUNCHPATH/$read_result_dir"
+			readfiles "Launchers|sort" "$TEMPPATH/.launcherslist"; xdg-open "$LAUNCHPATH/$read_result_dir.hlu"
 		elif [[ "$select_ans" == "5" ]]; then
-			readfiles "Launchers|sort" "$TEMPPATH/.launcherslist"; eval "\"$LAUNCHPATH/$read_result_dir\""; fi
+			readfiles "Launchers|sort" "$TEMPPATH/.launcherslist"; eval "\"$LAUNCHPATH/$read_result_dir.hlu\""; fi
 ;;
 "2") #Wine Helper
 	listoptions "Wine Utilities" "Prefix commands|Winetricks|Dxvk|Vkd3d|Install MF|Install MF-Cab|Install mfplat.dll|Prefixes manager|Runners manager|Reset default prefix"
