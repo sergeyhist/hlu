@@ -409,13 +409,14 @@ launchercreator() {
 	if [[ "$launcher_type" == "wine" ]]; then prefixinit; runnerinit "all"; fi
 	execinit "$launcher_type"
 	launcher_name=$init_result_name; launcher_exec_dir="$init_result_dir"; launcher_exec="$init_result"
-	generalinput "launchername ___ $launcher_name" "${cyc}name${noc} of the ${grc}launcher${noc}"; launcher_name="$input_ans"
+	generalinput "launchername ___ $launcher_name" "${cyc}name${noc} of the ${grc}launcher${noc}"
+	launcher_name="${input_ans//.*/}"
 	settingsinit; launchercompleteinit "created"
 }
 
 launchereditor () {
-	launcher_name="$1"; launcher_path="$LAUNCHPATH/$1.hlu"
-	. "$launcher_path" "read_vars"
+	launcher_name="$1"
+	. "$launcher_name".* "read_vars"
 	if [[ "$launcher_type" == "wine" ]]; then
 		listoptions "Launcher Setup" "Change Launch Options|Change Prefix|Change Runner|Change Executable"
 		if [[ "$select_ans" == "1" ]]; then settingsinit
@@ -567,8 +568,9 @@ if [[ -d "$HOME/.steam" ]]; then steamfinder; fi
 listoptions "Hist Linux Utilities|exit" "Launcher Controller|Wine Helper|Steam Helper|Package Installer|Systemd Controller"
 case "$select_ans" in
 "1") #Launcher Controller
-	find "$LAUNCHPATH" -maxdepth 1 -mindepth 1 -type f,l | while read -r line; do
-		if [[ -f "$line" ]]; then echo "$(basename -s .hlu "$line")" >> "$TEMPPATH/.launcherslist"; fi; done
+	cd "$LAUNCHPATH"
+	find "$PWD" -maxdepth 1 -mindepth 1 -type f,l | while read -r line; do
+		if [[ -f "$line" ]]; then echo "$(basename "${line//.*/}")" >> "$TEMPPATH/.launcherslist"; fi; done
 	listoptions "Launcher Controller" "Create launcher|Edit launcher|Delete launcher|Open launcher in text editor|Run launcher"
 		if [[ "$select_ans" == "1" ]]; then
 			listoptions "Launcher Creator" "Wine App|Linux App"
@@ -580,13 +582,12 @@ case "$select_ans" in
 			readfiles "Launchers|sort" "$TEMPPATH/.launcherslist"; launchereditor "$read_result_dir"
 		elif [[ "$select_ans" == "3" ]]; then
 			readfiles "Launchers|sort" "$TEMPPATH/.launcherslist"
-			if [[ -L "$LAUNCHPATH/$read_result_dir.hlu}" && $(readlink -f "$LAUNCHPATH/$read_result_dir.hlu") ]]; then
-				rm "$(readlink -f "$LAUNCHPATH/$read_result_dir.hlu")"; fi
-			rm "$LAUNCHPATH/$read_result_dir.hlu"
+			rm "$read_result_dir".*
 		elif [[ "$select_ans" == "4" ]]; then
-			readfiles "Launchers|sort" "$TEMPPATH/.launcherslist"; xdg-open "$LAUNCHPATH/$read_result_dir.hlu"
+			readfiles "Launchers|sort" "$TEMPPATH/.launcherslist"; xdg-open "$read_result_dir".*
 		elif [[ "$select_ans" == "5" ]]; then
-			readfiles "Launchers|sort" "$TEMPPATH/.launcherslist"; eval "\"$LAUNCHPATH/$read_result_dir.hlu\""; fi
+			echo $PWD
+			readfiles "Launchers|sort" "$TEMPPATH/.launcherslist"; sh "$read_result_dir".*; fi
 ;;
 "2") #Wine Helper
 	listoptions "Wine Utilities" "Prefix commands|Winetricks|Dxvk|Vkd3d|Install MF|Install MF-Cab|Install mfplat.dll|Prefixes manager|Runners manager|Reset default prefix"
