@@ -638,7 +638,7 @@ listoptions "Hist Linux Utilities|exit" "Launcher Controller|Wine Helper|Steam H
 case "$select_ans" in
 "1") #Launcher Controller
 	cd "$LAUNCHPATH"
-	find "$PWD" -maxdepth 1 -mindepth 1 -type f,l | while read -r line; do
+	find "$PWD" -maxdepth 1 -mindepth 1 -type f -name "*.hlu" | while read -r line; do
 		if [[ -f "$line" ]]; then echo "$(basename "${line//.*/}")" >> "$TEMPPATH/.launcherslist"; fi; done
 	listoptions "Launcher Controller" "Create launcher|Edit launcher|Delete launcher|Open launcher in text editor|Run launcher"
 		if [[ "$select_ans" == "1" ]]; then
