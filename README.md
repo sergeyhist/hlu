@@ -12,7 +12,8 @@ Run script:
 
 ## Features:
 + Launcher Controller:   
-   - Create, edit and run launchers for wine apps, linux native apps and legendary(epic games) apps. Launchers support various settings:   
+   - Create, edit and run launchers for wine apps, linux native apps and legendary(epic games) apps.   
+   Launchers settings:   
      - Select prefix   
      - Select wine/proton version   
      - Enabe gamemode, mangohud, vkbasalt    
