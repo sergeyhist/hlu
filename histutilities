@@ -750,8 +750,8 @@ case "$select_ans" in
 			readfiles "Exe files|sort" "$TEMPPATH/.steamexes"
 			cp "$PACKPATH/mf-installcab/mfplat.dll" "$(dirname "$read_result_dir")"
 		else echo -e "\nInstall ${grc}MF-Cab${noc} from ${grc}Packages Installer${noc}!"; fi
-	elif [[ "$select_ans" == "7" ]]; then
-		eval "$PACKPATH/steam-rom-manager/Steam-ROM-Manager.AppImage"
+	elif [[ "$select_ans" == "8" ]]; then
+		eval "cd "$PACKPATH/steam-rom-manager"; ./Steam-ROM-Manager.AppImage"
 	fi
 ;;
 "4") #Legendary Helper
@@ -806,12 +806,14 @@ case "$select_ans" in
 "7") #HLU Updater
 	if [[ -d "$HIPATH/hist-linux-utilities" ]]; then rm -rf "$HIPATH/hist-linux-utilities"; fi
 	cd "$HIPATH"; git clone https://github.com/sergeyhist/hist-linux-utilities
+	rm -rf "$HIPATH/Configs"
+	rm -rf "$HIPATH/Installers"
+	cp -r "$HIPATH/hist-linux-utilities/Configs" "$HIPATH"
+	cp -r "$HIPATH/hist-linux-utilities/Installers" "$HIPATH"
 	if [[ -w "$(dirname "$hlu_path")" ]]; then
 		cp "$HIPATH/hist-linux-utilities/histutilities" "$(dirname "$hlu_path")"
 	else
 		sudo cp "$HIPATH/hist-linux-utilities/histutilities" "$(dirname "$hlu_path")"
 	fi
-	cp -r "$HIPATH/hist-linux-utilities/Configs" "$HIPATH"
-	cp -r "$HIPATH/hist-linux-utilities/Installers" "$HIPATH"
 	rm -rf "$HIPATH/hist-linux-utilities"
 esac
