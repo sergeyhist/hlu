@@ -6,7 +6,7 @@ hi_exit() {
 	rm -rf "$TEMPPATH"
 	if [[ "$exit_flag" == "0" ]]; then
 		listoptions "Restart HLU?" "Yes|No"
-		if [[ "$select_ans" == "1" ]]; then exec "$0"; fi
+		if [[ "$select_ans" == "1" ]]; then exec "$hlu_path"; fi
 	else echo -e "\n${rec}Exit${noc}\n"; fi
 }
 
@@ -603,6 +603,7 @@ settingsinit() {
 
 trap hi_exit EXIT; exit_flag="0"
 Def_IFS=$'\n'; IFS=$Def_IFS
+hlu_path="$0"
 HIPATH="$HOME/Hist"
 HISTORYPATH="$HIPATH/.historyfiles"
 LAUNCHPATH="$HIPATH/Launchers"
@@ -804,10 +805,10 @@ case "$select_ans" in
 "7") #HLU Updater
 	cd "$HIPATH"
 	git clone https://github.com/sergeyhist/hist-linux-utilities
-	if [[ -w "$(dirname "$0")" ]]; then
-		cp "$HIPATH/hist-linux-utilities/histutilities" "$(dirname "$0")"
+	if [[ -w "$(dirname "$hlu_path")" ]]; then
+		cp "$HIPATH/hist-linux-utilities/histutilities" "$(dirname "$hlu_path")"
 	else
-		sudo cp "$HIPATH/hist-linux-utilities/histutilities" "$(dirname "$0")"
+		sudo cp "$HIPATH/hist-linux-utilities/histutilities" "$(dirname "$hlu_path")"
 	fi
 	cp -r "$HIPATH/hist-linux-utilities/Configs" .
 	cp -r "$HIPATH/hist-linux-utilities/Installers" .
