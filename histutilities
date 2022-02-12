@@ -802,6 +802,7 @@ case "$select_ans" in
 	elif [[ "$select_ans" == "7" ]]; then sed -i "\#$selected_service_name#d" "$HIPATH/services.cfg"; fi; done
 ;;
 "7") #HLU Updater
+	if [[ -d "$HIPATH/hist-linux-utilities" ]]; then rm -rf "$HIPATH/hist-linux-utilities"; fi
 	cd "$HIPATH"; git clone https://github.com/sergeyhist/hist-linux-utilities
 	if [[ -w "$(dirname "$hlu_path")" ]]; then
 		cp "$HIPATH/hist-linux-utilities/histutilities" "$(dirname "$hlu_path")"

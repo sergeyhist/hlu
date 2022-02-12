@@ -1,22 +1,18 @@
 # Hist Linux Utilities
 ## Installation:
-Clone the repo:
+Download "histutilities" file from the repo
+Give exec permission:
 
-    git clone https://github.com/sergeyhist/hist-linux-utilities.git
-    cd hist-linux-utilities
+    cd <path_to_downloaded_file>
+    chmod +x histutilities
 
-Run installer script:
+Run script:
 
-    sh hlu-installer.sh
-
-## Usage:
-Input this command in terminal:
-
-    histutilities
+    ./histutilities
 
 ## Features:
 + Launcher Controller:   
-   - Create, edit and run launchers for wine and linux native apps. Launchers support various settings:   
+   - Create, edit and run launchers for wine apps, linux native apps and legendary(epic games) apps. Launchers support various settings:   
      - Select prefix   
      - Select wine/proton version   
      - Enabe gamemode, mangohud, vkbasalt    
@@ -39,7 +35,14 @@ Input this command in terminal:
    - Winetricks for game prefix   
    - Reset game prefix   
    - Install MF, MF-Cab, mfplat.dll
++ Legendary Helper:
+   - Auth
+   - Install, verify, uninstall games
+   - Sync saves
+   - Check game updates
 + Packages Installer ([Packages](https://github.com/sergeyhist/hist-linux-utilities/tree/main/source/Installers))  
 + Systemd Controller
     - Service's status (active, inactive, etc.)
     - Control commands (start, stop, restart, status)
++ HLU Updater
+   - Update script, configs and installers
