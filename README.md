@@ -1,6 +1,6 @@
 # Hist Linux Utilities
 ## Installation:
-Download "histutilities" file from the repo
+Download "histutilities" file from the repo   
 Give exec permission:
 
     cd <path_to_downloaded_file>
