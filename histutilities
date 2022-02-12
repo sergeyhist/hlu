@@ -614,10 +614,9 @@ CONFPATH="$HIPATH/Configs"
 LOGPATH="$HIPATH/.logs";
 if [[ ! -d "$HIPATH"  ]]; then
 	mkdir -p "$HIPATH"
-	cd "$HIPATH"
-	git clone https://github.com/sergeyhist/hist-linux-utilities
-	cp -r "$HIPATH/hist-linux-utilities/Configs" .
-	cp -r "$HIPATH/hist-linux-utilities/Installers" .
+	cd "$HIPATH"; git clone https://github.com/sergeyhist/hist-linux-utilities
+	cp -r "$HIPATH/hist-linux-utilities/Configs" "$HIPATH"
+	cp -r "$HIPATH/hist-linux-utilities/Installers" "$HIPATH"
 	rm -rf "$HIPATH/hist-linux-utilities"
 fi
 if [[ ! -d "$HISTORYPATH" ]]; then mkdir -p "$HISTORYPATH"; fi
@@ -803,14 +802,13 @@ case "$select_ans" in
 	elif [[ "$select_ans" == "7" ]]; then sed -i "\#$selected_service_name#d" "$HIPATH/services.cfg"; fi; done
 ;;
 "7") #HLU Updater
-	cd "$HIPATH"
-	git clone https://github.com/sergeyhist/hist-linux-utilities
+	cd "$HIPATH"; git clone https://github.com/sergeyhist/hist-linux-utilities
 	if [[ -w "$(dirname "$hlu_path")" ]]; then
 		cp "$HIPATH/hist-linux-utilities/histutilities" "$(dirname "$hlu_path")"
 	else
 		sudo cp "$HIPATH/hist-linux-utilities/histutilities" "$(dirname "$hlu_path")"
 	fi
-	cp -r "$HIPATH/hist-linux-utilities/Configs" .
-	cp -r "$HIPATH/hist-linux-utilities/Installers" .
+	cp -r "$HIPATH/hist-linux-utilities/Configs" "$HIPATH"
+	cp -r "$HIPATH/hist-linux-utilities/Installers" "$HIPATH"
 	rm -rf "$HIPATH/hist-linux-utilities"
 esac
