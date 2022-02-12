@@ -724,7 +724,7 @@ case "$select_ans" in
 			eval "WINEPREFIX=\"$HOME/.wine\" wine wineboot -u"; fi; fi
 ;;
 "3") #Steam Helper
-	listoptions "Steam Helper" "Set game launch options|Game prefix commands|Winetricks|Reset game prefix|Install MF|Install MFCab|Install mfplat.dll"
+	listoptions "Steam Helper" "Set game launch options|Game prefix commands|Winetricks|Reset game prefix|Install MF|Install MFCab|Install mfplat.dll|Steam rom manager"
 	if [[ $select_ans == "1" ]]; then steamlauchoptions
 	elif [[ $select_ans == "2" ]]; then
 		readfiles "Steam game prefixes|sort" "$TEMPPATH/.steampfx"; selected_prefix="$read_result_dir"; prefixcommands "proton"
@@ -749,8 +749,10 @@ case "$select_ans" in
 			find "$read_result_dir" -name "*.exe" | while read -r line; do echo -e "$(basename -s .exe "$line") | $line" >> "$TEMPPATH/.steamexes"; done
 			readfiles "Exe files|sort" "$TEMPPATH/.steamexes"
 			cp "$PACKPATH/mf-installcab/mfplat.dll" "$(dirname "$read_result_dir")"
-		else echo -e "\nInstall ${grc}MF-Cab${noc} from ${grc}Packages Installer${noc}!"; fi; fi
-
+		else echo -e "\nInstall ${grc}MF-Cab${noc} from ${grc}Packages Installer${noc}!"; fi
+	elif [[ "$select_ans" == "7" ]]; then
+		eval "$PACKPATH/steam-rom-manager/Steam-ROM-Manager.AppImage"
+	fi
 ;;
 "4") #Legendary Helper
 	if [[ -f "/usr/local/bin/legendary" || -f "/usr/bin/legendary" ]]; then
