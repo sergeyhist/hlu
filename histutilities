@@ -1,5 +1,5 @@
 #!/bin/bash
-# Version: 1.6
+# Version: 1.7
 set -euo pipefail
 
 hi_exit() {
@@ -385,6 +385,22 @@ steamfinder() {
 		echo -e "${steam_profile_name} | ${line}" >> "$TEMPPATH/.lcfiles"; done
 }
 
+epicfinder() {
+	case $1 in
+		'installed')
+			legendary list-installed &> "$TEMPPATH/.epic${1}info"
+			epic_installed=$(grep '\*' "$TEMPPATH/.epic${1}info" | cut -d'*' -f2 | cut -d'|' -f1 | sed 's/^[[:blank:]]*//g')
+			echo -e "${epic_installed//\(App name:/|}" > "$TEMPPATH/.epic${1}apps"
+		;;
+		'all')
+			legendary list &> "$TEMPPATH/.epic${1}info"
+			epic_all=$(grep '\*' "$TEMPPATH/.epic${1}info" | cut -d'*' -f2 | cut -d'|' -f1 | sed 's/^[[:blank:]]*//g')
+			echo -e "${epic_all//\(App name:/|}" > "$TEMPPATH/.epic${1}apps"
+		;;
+	esac
+	readfiles "Legendary Apps" "$TEMPPATH/.epic${1}apps"
+}
+
 execinit() {
 	generalinput "execfiles" "${cyc}path${noc} to the ${grc}folder with executable${noc} or ${cyc}full path${noc} to ${grc}executable${noc}"
 	if [[ -f $(echo "$input_ans" | awk '{$1=$1};1') ]]; then
@@ -406,9 +422,14 @@ execinit() {
 
 launchercreator() {
 	launcher_type="$1"
-	if [[ "$launcher_type" == "wine" ]]; then prefixinit; runnerinit "all"; fi
-	execinit "$launcher_type"
-	launcher_name=$init_result_name; launcher_exec_dir="$init_result_dir"; launcher_exec="$init_result"
+	if [[ "$launcher_type" != "linux" ]]; then prefixinit; runnerinit "all"; fi
+	if [[ "$launcher_type" != "epic" ]]; then
+		execinit "$launcher_type"
+		launcher_name=$init_result_name; launcher_exec_dir="$init_result_dir"; launcher_exec="$init_result"
+	else
+		epicfinder "installed"
+		launcher_name="$read_result_name"; launcher_exec="$read_result_dir"
+	fi
 	generalinput "launchername ___ $launcher_name" "${cyc}name${noc} of the ${grc}launcher${noc}"
 	launcher_name="${input_ans//.*/}"
 	settingsinit; launchercompleteinit "created"
@@ -426,7 +447,13 @@ launchereditor () {
 	elif [[ "$launcher_type" == "linux" ]]; then
 		listoptions "Launcher Setup" "Change Launch Options|Change Executable"
 		if [[ "$select_ans" == "1" ]]; then settingsinit
-		elif [[ "$select_ans" == "2" ]]; then execinit "$launcher_type"; launcher_exec_dir="$init_result_dir"; launcher_exec="$init_result"; fi; fi
+		elif [[ "$select_ans" == "2" ]]; then execinit "$launcher_type"; launcher_exec_dir="$init_result_dir"; launcher_exec="$init_result"; fi
+	elif [[ "$launcher_type" == "epic" ]]; then
+		listoptions "Launcher Setup" "Change Launch Options|Change Prefix|Change Runner"
+		if [[ "$select_ans" == "1" ]]; then settingsinit
+		elif [[ "$select_ans" == "2" ]]; then prefixinit
+		elif [[ "$select_ans" == "3" ]]; then runnerinit "all"; fi
+	fi
 	launchercompleteinit "updated"
 }
 
@@ -435,11 +462,15 @@ launchercompleteinit() {
 	if [[ "$launcher_type" == "wine" ]]; then
 		launcher_vars=" launcher_type=\"$launcher_type\"\n launcher_exec_dir=\"$launcher_exec_dir\"\n selected_runner=\"$selected_runner\"\n selected_prefix=\"$selected_prefix\"\n launcher_exec=\"$launcher_exec\"\n"
 	elif [[ "$launcher_type" == "linux" ]]; then
-		launcher_vars=" launcher_type=\"$launcher_type\"\n launcher_exec_dir=\"$launcher_exec_dir\"\n launcher_exec=\"$launcher_exec\"\n"; fi
+		launcher_vars=" launcher_type=\"$launcher_type\"\n launcher_exec_dir=\"$launcher_exec_dir\"\n launcher_exec=\"$launcher_exec\"\n"
+	elif [[ "$launcher_type" == "epic" ]]; then
+		launcher_vars=" launcher_type=\"$launcher_type\"\n selected_runner=\"$selected_runner\"\n selected_prefix=\"$selected_prefix\"\n launcher_exec=\"$launcher_exec\"\n"; fi
 	if [[ "$launcher_type" == "wine" ]]; then
 		launcher_command="WINEPREFIX=\\\"\$selected_prefix\\\" \\\"\$selected_runner\\\"${launcher_msi}wine_vd \\\"\${launcher_exec}\\\""
 	elif [[ "$launcher_type" == "linux" ]]; then
-		launcher_command="\${launcher_exec}"; fi
+		launcher_command="\${launcher_exec}"
+	elif [[ "$launcher_type" == "epic" ]]; then
+		launcher_command="legendary launch --wine \\\"\${selected_runner}\\\" --wine-prefix \\\"\${selected_prefix}\\\" \${launcher_exec}"; fi
 	if [[ "${settings_overall_values:-x}" != *"wine_vd"* ]]; then launcher_command=${launcher_command//wine_vd/}; fi
 	if [[ -n "${settings_overall_values:+x}" ]]; then
 		launcher_settings=" settings_overall_values=\"$settings_overall_values\"\n"
@@ -453,19 +484,38 @@ launchercompleteinit() {
 				wine_vd_part_after="${wine_vd_part_before// /_}"
 				wine_vd="${wine_vd_full//$wine_vd_part_before/$wine_vd_part_after}"; export wine_vd
 				launcher_command="${launcher_command//wine_vd/ \$$item}"
-			elif [[ "${!item:=}" != "on" ]]; then launcher_command="$settings_item $launcher_command"; fi
-			launcher_settings="$launcher_settings $item=\"${!item}\"\n"; done; IFS="$Def_IFS"; fi
-	if [[ "${settings_overall_values:-x}" != *"debug_switch"* ]]; then launcher_command="$launcher_command &> \\\"/dev/null\\\""
-	else launcher_command="$launcher_command &> \\\"$LOGPATH/${launcher_name// /_}.log\\\""; fi
+			elif [[ "${!item:=}" != "on" ]]; then
+				launcher_command="$settings_item $launcher_command"
+			fi
+			launcher_settings="$launcher_settings $item=\"${!item}\"\n"; done; IFS="$Def_IFS"
+		fi
+	if [[ "${settings_overall_values:-x}" != *"debug_switch"* ]]; then
+		launcher_command="$launcher_command &> \\\"/dev/null\\\""
+	else
+		launcher_command="$launcher_command &> \\\"$LOGPATH/${launcher_name// /_}.log\\\""
+	fi
+	if [[ $launcher_type == "epic" ]]; then
+		legendary info $launcher_exec &> "$TEMPPATH/.epicappinfo"
+		epic_cloud_status=$(grep 'Cloud saves supported' "$TEMPPATH/.epicappinfo" | cut -d':' -f2 | sed 's/^[[:blank:]]*//g')
+		if [[ $epic_cloud_status != "False" ]]; then
+			epic_save_path=$(grep 'Cloud save folder (Windows)' "$TEMPPATH/.epicappinfo" | cut -d':' -f2 | sed 's/^[[:blank:]]*//g')
+			if [[ $selected_runner == *[Pp]"roton"* ]]; then
+				user_save="steamuser"
+			else
+				user_save="$USER"
+			fi
+			epic_save_path=${epic_save_path//\{AppData\}/${selected_prefix}/drive_c/users/${user_save}/AppData/Local}
+			epic_save_path=${epic_save_path//\{EpicID\}/$epic_account_id}
+			launcher_command="legendary sync-saves --save-path \\\"\$epic_save_path\\\" \${launcher_exec}; $launcher_command"
+			launcher_vars="$launcher_vars epic_save_path=\"$epic_save_path\"\n"
+		fi
+		launcher_command="legendary update --update-only \${launcher_exec}; $launcher_command"
+	fi
 	launcher_complete_command="#!/bin/bash\n${launcher_vars:=}\n${launcher_settings:=}\nif [[ \$1 != \"read_vars\" ]]; then\n\tcd \"\${launcher_exec_dir}\"\n\teval \"${launcher_command:=}\"\nfi"
 	launcher_name="$launcher_name.hlu"
-	if [[ -f "$LAUNCHPATH/$launcher_name" || -L "$LAUNCHPATH/$launcher_name" ]]; then rm "$LAUNCHPATH/$launcher_name"; fi
 	echo -e "$launcher_complete_command" > "$LAUNCHPATH/$launcher_name"
 	chmod +x "$LAUNCHPATH/$launcher_name"
-	if [[ ! -w "$launcher_exec_dir" ]]; then echo -e "\nLauncher ${grc}${launcher_name}${noc} successfully $1 in the ${grc}$LAUNCHPATH${noc} folder."
-	else
-		cp "$LAUNCHPATH/$launcher_name" "$launcher_exec_dir/$launcher_name"
-		echo -e "\nLauncher ${grc}${launcher_name}${noc} successfully $1 in the ${grc}$LAUNCHPATH${noc} and ${grc}$launcher_exec_dir${noc} folders."; fi
+	echo -e "\nLauncher ${grc}${launcher_name}${noc} successfully $1 in the ${grc}$LAUNCHPATH${noc} folder."
 }
 
 settingsinit() {
@@ -553,19 +603,38 @@ settingsinit() {
 
 trap hi_exit EXIT; exit_flag="0"
 Def_IFS=$'\n'; IFS=$Def_IFS
-HIPATH="$HOME/Hist"; if [[ ! -d "$HIPATH"  ]]; then mkdir -p "$HIPATH"; fi
-HISTORYPATH="$HIPATH/.historyfiles"; if [[ ! -d "$HISTORYPATH" ]]; then mkdir -p "$HISTORYPATH"; fi
-LAUNCHPATH="$HIPATH/Launchers"; if [[ ! -d "$LAUNCHPATH" ]]; then mkdir -p "$LAUNCHPATH"; fi
-TEMPPATH="$HIPATH/.temp"; if [[ ! -d "$TEMPPATH" ]]; then mkdir -p "$TEMPPATH"; else rm -rf "$TEMPPATH"; mkdir -p "$TEMPPATH"; fi
-INSTPATH="$HIPATH/Installers"; if [[ ! -d "$INSTPATH" ]]; then mkdir -p "$INSTPATH"; fi
-PACKPATH="$HIPATH/Packages"; if [[ ! -d "$PACKPATH" ]]; then mkdir -p "$PACKPATH"; fi
-CONFPATH="$HIPATH/Configs"; if [[ ! -d "$CONFPATH" ]]; then mkdir -p "$CONFPATH"; fi
-LOGPATH="$HIPATH/.logs"; if [[ ! -d "$LOGPATH" ]]; then mkdir -p "$LOGPATH"; fi
+HIPATH="$HOME/Hist"
+HISTORYPATH="$HIPATH/.historyfiles"
+LAUNCHPATH="$HIPATH/Launchers"
+TEMPPATH="$HIPATH/.temp"
+INSTPATH="$HIPATH/Installers"
+PACKPATH="$HIPATH/Packages"
+CONFPATH="$HIPATH/Configs"
+LOGPATH="$HIPATH/.logs";
+if [[ ! -d "$HIPATH"  ]]; then
+	mkdir -p "$HIPATH"
+	cd "$HIPATH"
+	git clone https://github.com/sergeyhist/hist-linux-utilities
+	cp "$HIPATH/hist-linux-utilities/Configs" .
+	cp "$HIPATH/hist-linux-utilities/Installers" .
+	rm -rf "$HIPATH/hist-linux-utilities"
+fi
+if [[ ! -d "$HISTORYPATH" ]]; then mkdir -p "$HISTORYPATH"; fi
+if [[ ! -d "$LAUNCHPATH" ]]; then mkdir -p "$LAUNCHPATH"; fi
+if [[ ! -d "$TEMPPATH" ]]; then mkdir -p "$TEMPPATH"
+else rm -rf "$TEMPPATH"; mkdir -p "$TEMPPATH"; fi
+if [[ ! -d "$PACKPATH" ]]; then mkdir -p "$PACKPATH"; fi
+if [[ ! -d "$LOGPATH" ]]; then mkdir -p "$LOGPATH"; fi
 noc="\e[0m"; rec="\e[31m"; grc="\e[32m"; blc="\e[34m"; cyc="\e[36m"; mac="\e[91m"; lgrc="\e[92m"; lblc="\e[94m"
 eval "hostnamectl > \"$TEMPPATH/.osinfo\""
 osversion="$(grep "Operating System" "$TEMPPATH/.osinfo" | cut -d: -f2)"; osversion=${osversion// /}
 if [[ -d "$HOME/.steam" ]]; then steamfinder; fi
-listoptions "Hist Linux Utilities|exit" "Launcher Controller|Wine Helper|Steam Helper|Package Installer|Systemd Controller"
+if [[ -f "$HOME/.config/legendary/user.json" ]]; then
+	epic_account_id=$(grep 'account_id' "$HOME/.config/legendary/user.json" | cut -d'"' -f4)
+else
+	epic_account_id="none"
+fi
+listoptions "Hist Linux Utilities|exit" "Launcher Controller|Wine Helper|Steam Helper|Legendary Helper|Package Installer|Systemd Controller|HLU Updater"
 case "$select_ans" in
 "1") #Launcher Controller
 	cd "$LAUNCHPATH"
@@ -573,11 +642,22 @@ case "$select_ans" in
 		if [[ -f "$line" ]]; then echo "$(basename "${line//.*/}")" >> "$TEMPPATH/.launcherslist"; fi; done
 	listoptions "Launcher Controller" "Create launcher|Edit launcher|Delete launcher|Open launcher in text editor|Run launcher"
 		if [[ "$select_ans" == "1" ]]; then
-			listoptions "Launcher Creator" "Wine App|Linux App"
+			listoptions "Launcher Creator" "Wine App|Linux App|Legendary App"
 			if [[ "$select_ans" == "1" ]]; then
 				launchercreator "wine"
 			elif [[ "$select_ans" == "2" ]]; then
-				launchercreator "linux"; fi
+				launchercreator "linux"
+			elif [[ "$select_ans" == "3" ]]; then
+				if [[ -f "/usr/local/bin/legendary" || -f "/usr/bin/legendary" ]]; then
+					if [[ $epic_account_id != "none" ]]; then
+						launchercreator "epic"
+					else
+						echo -e "\n${grc}Legendary${noc} not authenticated! Sign in in the ${grc}Legendary Helper${noc} menu"
+					fi
+				else
+					echo -e "\n${grc}Legendary${noc} not installed!"
+				fi
+			fi
 		elif [[ "$select_ans" == "2" ]]; then
 			readfiles "Launchers|sort" "$TEMPPATH/.launcherslist"; launchereditor "$read_result_dir"
 		elif [[ "$select_ans" == "3" ]]; then
@@ -653,7 +733,6 @@ case "$select_ans" in
 		generalinput "winetricks ___ --gui" "${cyc}winetricks arguments${noc}"
 		eval "WINEPREFIX=\"$selected_prefix\" WINE=\"$selected_runner\" winetricks $input_ans"
 	elif [[ $select_ans == "4" ]]; then deletelines "Steam game prefixes" "$TEMPPATH/.steamgamecompat" "none"
-	#elif [[ $select_ans == "5" ]]; then deletelines "Steam game prefixes" "$TEMPPATH/.steampfx" "force"; prefixcreator "proton"
 	elif [[ $select_ans == "5" ]]; then
 		if [[ -d "$PACKPATH/mf-install" ]]; then
 			readfiles "Steam game prefixes|sort" "$TEMPPATH/.steampfx"; selected_prefix="$read_result_dir"; runnerinit "proton"
@@ -673,11 +752,44 @@ case "$select_ans" in
 		else echo -e "\nInstall ${grc}MF-Cab${noc} from ${grc}Packages Installer${noc}!"; fi; fi
 
 ;;
-"4") #Packages Installer
+"4") #Legendary Helper
+	if [[ -f "/usr/local/bin/legendary" || -f "/usr/bin/legendary" ]]; then
+		if [[ $epic_account_id != "none" ]]; then
+			listoptions "Legendary Helper" "Sign out|Install game|Verify game|Uninstall game|Check updates|Sync saves"
+			if [[ $select_ans == "1" ]]; then
+				eval "legendary auth --delete"
+			elif [[ $select_ans == "2" ]]; then
+				epicfinder "all"
+				generalinput "epicinstallpath" "the ${cyc}path${noc} where the ${grc}game${noc} will be installed"
+				eval "legendary install --base-path \"$input_ans\" $read_result_dir"
+			elif [[ $select_ans == "3" ]]; then
+				epicfinder "installed"
+				eval "legendary verify $read_result_dir"
+			elif [[ $select_ans == "4" ]]; then
+				epicfinder "installed"
+				eval "legendary uninstall $read_result_dir"
+			elif [[ $select_ans == "5" ]]; then
+				eval "legendary list-installed --check-updates"
+			elif [[ $select_ans == "6" ]]; then
+				eval "legendary sync-saves"
+			fi
+		else
+			listoptions "Legendary Helper" "Sign in|Install game|Verify game|Uninstall game|Check updates|Sync saves"
+			if [[ $select_ans == "1" ]]; then
+				eval "legendary auth"
+			elif [[ $select_ans == [2-6] ]]; then
+				echo -e "\n${grc}Legendary${noc} not authenticated!"
+			fi
+		fi
+	else
+		echo -e "\n${grc}Legendary${noc} not installed!"
+	fi
+;;
+"5") #Packages Installer
 	if [[ -f "/usr/bin/git" ]]; then packsinstaller
 	else echo -e "\n ${grc}Git ${mac}must be installed!${noc}"; fi
 ;;
-"5") #Systemd Controller
+"6") #Systemd Controller
 	while : ; do
 	serviceinit
 	listoptions "Select option|continue" "Start|Stop|Restart|Enable|Disable|Status|Unlist"
@@ -688,4 +800,16 @@ case "$select_ans" in
 	elif [[ "$select_ans" == "5" ]]; then eval "systemctl disable $selected_service"
 	elif [[ "$select_ans" == "6" ]]; then eval "systemctl status $selected_service"
 	elif [[ "$select_ans" == "7" ]]; then sed -i "\#$selected_service_name#d" "$HIPATH/services.cfg"; fi; done
+;;
+"7") #HLU Updater
+	cd "$HIPATH"
+	git clone https://github.com/sergeyhist/hist-linux-utilities
+	if [[ -w "$(dirname "$0")" ]]; then
+		cp "$HIPATH/hist-linux-utilities/histutilities" "$(dirname "$0")"
+	else
+		sudo cp "$HIPATH/hist-linux-utilities/histutilities" "$(dirname "$0")"
+	fi
+	cp "$HIPATH/hist-linux-utilities/Configs" .
+	cp "$HIPATH/hist-linux-utilities/Installers" .
+	rm -rf "$HIPATH/hist-linux-utilities"
 esac
