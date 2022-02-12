@@ -615,8 +615,8 @@ if [[ ! -d "$HIPATH"  ]]; then
 	mkdir -p "$HIPATH"
 	cd "$HIPATH"
 	git clone https://github.com/sergeyhist/hist-linux-utilities
-	cp "$HIPATH/hist-linux-utilities/Configs" .
-	cp "$HIPATH/hist-linux-utilities/Installers" .
+	cp -r "$HIPATH/hist-linux-utilities/Configs" .
+	cp -r "$HIPATH/hist-linux-utilities/Installers" .
 	rm -rf "$HIPATH/hist-linux-utilities"
 fi
 if [[ ! -d "$HISTORYPATH" ]]; then mkdir -p "$HISTORYPATH"; fi
@@ -809,7 +809,7 @@ case "$select_ans" in
 	else
 		sudo cp "$HIPATH/hist-linux-utilities/histutilities" "$(dirname "$0")"
 	fi
-	cp "$HIPATH/hist-linux-utilities/Configs" .
-	cp "$HIPATH/hist-linux-utilities/Installers" .
+	cp -r "$HIPATH/hist-linux-utilities/Configs" .
+	cp -r "$HIPATH/hist-linux-utilities/Installers" .
 	rm -rf "$HIPATH/hist-linux-utilities"
 esac
