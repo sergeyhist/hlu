@@ -404,7 +404,7 @@ epicfinder() {
 			echo -e "${epic_all//\(App name:/|}" > "$TEMPPATH/.epic${1}apps"
 		;;
 	esac
-	readfiles "Legendary Apps" "$TEMPPATH/.epic${1}apps"
+	readfiles "Legendary Apps|sort" "$TEMPPATH/.epic${1}apps"
 }
 
 execinit() {
@@ -445,20 +445,33 @@ launchereditor () {
 	launcher_name="$1"
 	. "$launcher_name".* "read_vars"
 	if [[ "$launcher_type" == "wine" ]]; then
-		listoptions "Launcher Setup" "Change Launch Options|Change Prefix|Change Runner|Change Executable"
-		if [[ "$select_ans" == "1" ]]; then settingsinit
-		elif [[ "$select_ans" == "2" ]]; then prefixinit
-		elif [[ "$select_ans" == "3" ]]; then runnerinit "all"
-		elif [[ "$select_ans" == "4" ]]; then execinit "$launcher_type"; launcher_exec_dir="$init_result_dir"; launcher_exec="$init_result"; fi
+		listoptions "Launcher Setup" "Change launch Options|Change prefix|Change runner|Change prefix and runner|Change executable"
+		if [[ "$select_ans" == "1" ]]; then
+			settingsinit
+		elif [[ "$select_ans" == "2" ]]; then
+			prefixinit
+		elif [[ "$select_ans" == "3" ]]; then
+			runnerinit "all"
+		elif [[ "$select_ans" == "4" ]]; then
+			prefixinit; runnerinit "all"
+		elif [[ "$select_ans" == "5" ]]; then
+			execinit "$launcher_type"; launcher_exec_dir="$init_result_dir"; launcher_exec="$init_result"; fi
 	elif [[ "$launcher_type" == "linux" ]]; then
-		listoptions "Launcher Setup" "Change Launch Options|Change Executable"
-		if [[ "$select_ans" == "1" ]]; then settingsinit
-		elif [[ "$select_ans" == "2" ]]; then execinit "$launcher_type"; launcher_exec_dir="$init_result_dir"; launcher_exec="$init_result"; fi
+		listoptions "Launcher Setup" "Change launch Options|Change executable"
+		if [[ "$select_ans" == "1" ]]; then
+			settingsinit
+		elif [[ "$select_ans" == "2" ]]; then
+			execinit "$launcher_type"; launcher_exec_dir="$init_result_dir"; launcher_exec="$init_result"; fi
 	elif [[ "$launcher_type" == "epic" ]]; then
-		listoptions "Launcher Setup" "Change Launch Options|Change Prefix|Change Runner"
-		if [[ "$select_ans" == "1" ]]; then settingsinit
-		elif [[ "$select_ans" == "2" ]]; then prefixinit
-		elif [[ "$select_ans" == "3" ]]; then runnerinit "all"; fi
+		listoptions "Launcher Setup" "Change launch Options|Change prefix|Change runner|Change prefix and runner"
+		if [[ "$select_ans" == "1" ]]; then
+			settingsinit
+		elif [[ "$select_ans" == "2" ]]; then
+			prefixinit
+		elif [[ "$select_ans" == "3" ]]; then
+			runnerinit "all"
+		elif [[ "$select_ans" == "4" ]]; then
+			prefixinit; runnerinit "all"; fi
 	fi
 	launchercompleteinit "updated"
 }
@@ -511,6 +524,7 @@ launchercompleteinit() {
 				user_save="$USER"
 			fi
 			epic_save_path=${epic_save_path//\{AppData\}/${selected_prefix}/drive_c/users/${user_save}/AppData/Local}
+			epic_save_path=${epic_save_path//\{UserSavedGames\}/${selected_prefix}/drive_c/users/${user_save}/Saved Games}
 			epic_save_path=${epic_save_path//\{EpicID\}/$epic_account_id}
 			launcher_command="legendary sync-saves --save-path \\\"\$epic_save_path\\\" \${launcher_exec}; $launcher_command"
 			launcher_vars="$launcher_vars epic_save_path=\"$epic_save_path\"\n"
@@ -645,7 +659,7 @@ case "$select_ans" in
 "1") #Launcher Controller
 	cd "$LAUNCHPATH"
 	find "$PWD" -maxdepth 1 -mindepth 1 -type f -name "*.hlu" | while read -r line; do
-		if [[ -f "$line" ]]; then echo "$(basename "${line//.*/}")" >> "$TEMPPATH/.launcherslist"; fi; done
+		if [[ -f "$line" ]]; then echo "$(basename "${line//.hlu/}")" >> "$TEMPPATH/.launcherslist"; fi; done
 	listoptions "Launcher Controller" "Create launcher|Edit launcher|Delete launcher|Open launcher in text editor|Run launcher"
 		if [[ "$select_ans" == "1" ]]; then
 			listoptions "Launcher Creator" "Wine App|Linux App|Legendary App"
