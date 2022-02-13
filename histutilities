@@ -443,7 +443,7 @@ launchercreator() {
 
 launchereditor () {
 	launcher_name="$1"
-	. "$launcher_name".* "read_vars"
+	. "$LAUNCHPATH/${launcher_name}.hlu" "read_vars"
 	if [[ "$launcher_type" == "wine" ]]; then
 		listoptions "Launcher Setup" "Change launch Options|Change prefix|Change runner|Change prefix and runner|Change executable"
 		if [[ "$select_ans" == "1" ]]; then
@@ -525,6 +525,7 @@ launchercompleteinit() {
 			fi
 			epic_save_path=${epic_save_path//\{AppData\}/${selected_prefix}/drive_c/users/${user_save}/AppData/Local}
 			epic_save_path=${epic_save_path//\{UserSavedGames\}/${selected_prefix}/drive_c/users/${user_save}/Saved Games}
+			epic_save_path=${epic_save_path//\{UserDir\}/${selected_prefix}/drive_c/users/${user_save}/Documents}
 			epic_save_path=${epic_save_path//\{EpicID\}/$epic_account_id}
 			launcher_command="legendary sync-saves --save-path \\\"\$epic_save_path\\\" \${launcher_exec}; $launcher_command"
 			launcher_vars="$launcher_vars epic_save_path=\"$epic_save_path\"\n"
@@ -660,7 +661,7 @@ case "$select_ans" in
 	cd "$LAUNCHPATH"
 	find "$PWD" -maxdepth 1 -mindepth 1 -type f -name "*.hlu" | while read -r line; do
 		if [[ -f "$line" ]]; then echo "$(basename "${line//.hlu/}")" >> "$TEMPPATH/.launcherslist"; fi; done
-	listoptions "Launcher Controller" "Create launcher|Edit launcher|Delete launcher|Open launcher in text editor|Run launcher"
+	listoptions "Launcher Controller" "Create launcher|Edit launcher|Delete launcher|Open launcher in default editor|Open launcher in spicific editor|Run launcher"
 		if [[ "$select_ans" == "1" ]]; then
 			listoptions "Launcher Creator" "Wine App|Linux App|Legendary App"
 			if [[ "$select_ans" == "1" ]]; then
@@ -679,15 +680,23 @@ case "$select_ans" in
 				fi
 			fi
 		elif [[ "$select_ans" == "2" ]]; then
-			readfiles "Launchers|sort" "$TEMPPATH/.launcherslist"; launchereditor "$read_result_dir"
+			readfiles "Launchers|sort" "$TEMPPATH/.launcherslist"
+			launchereditor "$read_result_dir"
 		elif [[ "$select_ans" == "3" ]]; then
 			readfiles "Launchers|sort" "$TEMPPATH/.launcherslist"
-			rm "$read_result_dir".*
+			eval "rm \"$LAUNCHPATH/${read_result_dir}.hlu\""
 		elif [[ "$select_ans" == "4" ]]; then
-			readfiles "Launchers|sort" "$TEMPPATH/.launcherslist"; xdg-open "$read_result_dir".*
+			readfiles "Launchers|sort" "$TEMPPATH/.launcherslist"
+			eval "$EDITOR \"$LAUNCHPATH/${read_result_dir}.hlu\""
 		elif [[ "$select_ans" == "5" ]]; then
+			readfiles "Launchers|sort" "$TEMPPATH/.launcherslist"
+			generalinput "editorname" "${cyc}command${noc} for run desired ${grc}text editor${noc} (Example: ${cyc}nano${noc})"
+			eval "$input_ans \"$LAUNCHPATH/${read_result_dir}.hlu\""
+		elif [[ "$select_ans" == "6" ]]; then
 			echo $PWD
-			readfiles "Launchers|sort" "$TEMPPATH/.launcherslist"; sh "$read_result_dir".*; fi
+			readfiles "Launchers|sort" "$TEMPPATH/.launcherslist"
+			eval "sh \"$LAUNCHPATH/${read_result_dir}.hlu\""
+		fi
 ;;
 "2") #Wine Helper
 	listoptions "Wine Utilities" "Prefix commands|Winetricks|Dxvk|Vkd3d|Install MF|Install MF-Cab|Install mfplat.dll|Prefixes manager|Runners manager|Reset default prefix"
