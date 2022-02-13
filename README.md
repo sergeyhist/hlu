@@ -13,7 +13,7 @@ Run script:
 ## Features:
 + Launcher Controller:   
    - Create, edit and run launchers for wine apps, linux native apps and legendary(epic games) apps.   
-   Launchers settings:   
+   Launcher settings:   
      - Select prefix   
      - Select wine/proton version   
      - Enabe gamemode, mangohud, vkbasalt    
@@ -36,6 +36,7 @@ Run script:
    - Winetricks for game prefix   
    - Reset game prefix   
    - Install MF, MF-Cab, mfplat.dll
+   - Run Steam Rom Manager
 + Legendary Helper:
    - Auth
    - Install, verify, uninstall games
