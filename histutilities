@@ -395,12 +395,12 @@ epicfinder() {
 	case $1 in
 		'installed')
 			legendary list-installed &> "$TEMPPATH/.epic${1}info"
-			epic_installed=$(grep '\*' "$TEMPPATH/.epic${1}info" | cut -d'*' -f2 | cut -d'|' -f1 | sed 's/^[[:blank:]]*//g')
+			epic_installed=$(grep '\*' "$TEMPPATH/.epic${1}info" | cut -d'*' -f2 | cut -d'|' -f1 | awk '{$1=$1};1')
 			echo -e "${epic_installed//\(App name:/|}" > "$TEMPPATH/.epic${1}apps"
 		;;
 		'all')
 			legendary list &> "$TEMPPATH/.epic${1}info"
-			epic_all=$(grep '\*' "$TEMPPATH/.epic${1}info" | cut -d'*' -f2 | cut -d'|' -f1 | sed 's/^[[:blank:]]*//g')
+			epic_all=$(grep '\*' "$TEMPPATH/.epic${1}info" | cut -d'*' -f2 | cut -d'|' -f1 | awk '{$1=$1};1')
 			echo -e "${epic_all//\(App name:/|}" > "$TEMPPATH/.epic${1}apps"
 		;;
 	esac
@@ -502,9 +502,9 @@ launchercompleteinit() {
 	fi
 	if [[ $launcher_type == "epic" ]]; then
 		legendary info $launcher_exec &> "$TEMPPATH/.epicappinfo"
-		epic_cloud_status=$(grep 'Cloud saves supported' "$TEMPPATH/.epicappinfo" | cut -d':' -f2 | sed 's/^[[:blank:]]*//g')
+		epic_cloud_status=$(grep 'Cloud saves supported' "$TEMPPATH/.epicappinfo" | cut -d':' -f2 | awk '{$1=$1};1')
 		if [[ $epic_cloud_status != "False" ]]; then
-			epic_save_path=$(grep 'Cloud save folder (Windows)' "$TEMPPATH/.epicappinfo" | cut -d':' -f2 | sed 's/^[[:blank:]]*//g')
+			epic_save_path=$(grep 'Cloud save folder (Windows)' "$TEMPPATH/.epicappinfo" | cut -d':' -f2 | awk '{$1=$1};1')
 			if [[ $selected_runner == *[Pp]"roton"* ]]; then
 				user_save="steamuser"
 			else
