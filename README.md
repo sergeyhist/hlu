@@ -42,7 +42,7 @@ Run script:
    - Install, verify, uninstall games
    - Sync saves
    - Check game updates
-+ Packages Installer ([Packages](https://github.com/sergeyhist/hist-linux-utilities/tree/main/source/Installers))  
++ Packages Installer ([Packages](https://github.com/sergeyhist/hist-linux-utilities/tree/main/Installers))  
 + Systemd Controller
     - Service's status (active, inactive, etc.)
     - Control commands (start, stop, restart, status)
