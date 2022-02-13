@@ -822,5 +822,5 @@ case "$select_ans" in
 		sudo chmod +x "$(dirname "$hlu_path")/histutilities"
 	fi
 	rm -rf "$HIPATH/hist-linux-utilities"
-	exit_flag=0
+	exit_flag=1
 esac
