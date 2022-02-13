@@ -757,7 +757,7 @@ case "$select_ans" in
 			cp "$PACKPATH/mf-installcab/mfplat.dll" "$(dirname "$read_result_dir")"
 		else echo -e "\nInstall ${grc}MF-Cab${noc} from ${grc}Packages Installer${noc}!"; fi
 	elif [[ "$select_ans" == "8" ]]; then
-		if [[ -f "$PACKPATH/steam-rom-manager/Steam-ROM-Manager.AppImage1" ]]; then
+		if [[ -f "$PACKPATH/steam-rom-manager/Steam-ROM-Manager.AppImage" ]]; then
 			eval "cd "$PACKPATH/steam-rom-manager"; ./Steam-ROM-Manager.AppImage"
 		else
 			echo -e "\nFirst install ${grc}Steam-Rom-Manager${noc} from ${grc}Package Installer -> Tools${noc} menu"
