@@ -114,10 +114,16 @@ listoptions() {
 }
 
 git-latest() {
-  	for item in $(curl --silent "https://api.github.com/repos/$1/releases" | grep "$2" | grep '"name"' | cut -d'"' -f4); do
-		git_names="${git_names:-}$(basename -s "$2" "$item")|"; done
+	git_count=0
+  for item in $(curl --silent "https://api.github.com/repos/$1/releases" | grep "$2" | grep '"name"' | cut -d'"' -f4); do
+		if  (( $git_count < 10 )) ; then
+			git_names="${git_names:-}$(basename -s "$2" "$item")|"
+			let "git_count+=1"
+		else break; fi
+	done
 	for item in $(curl --silent "https://api.github.com/repos/$1/releases" | grep "$2" | grep '"browser_download_url"' | cut -d'"' -f4); do
-		git_urls+=("$item"); done
+			git_urls+=("$item")
+	done
 	listoptions "Packages" "$git_names"
 	git_package=${git_urls[$list_result_number-1]}
 }
@@ -822,5 +828,4 @@ case "$select_ans" in
 		sudo chmod +x "$(dirname "$hlu_path")/histutilities"
 	fi
 	rm -rf "$HIPATH/hist-linux-utilities"
-	exit_flag=1
 esac
