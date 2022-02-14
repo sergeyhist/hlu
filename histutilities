@@ -516,6 +516,7 @@ launchercompleteinit() {
 	if [[ $launcher_type == "epic" ]]; then
 		legendary info $launcher_exec &> "$TEMPPATH/.epicappinfo"
 		epic_cloud_status=$(grep 'Cloud saves supported' "$TEMPPATH/.epicappinfo" | cut -d':' -f2 | awk '{$1=$1};1')
+		epic_install_path=$(grep 'Install path' "$TEMPPATH/.epicappinfo" | cut -d':' -f2 | awk '{$1=$1};1')
 		if [[ $epic_cloud_status != "False" ]]; then
 			epic_save_path=$(grep 'Cloud save folder (Windows)' "$TEMPPATH/.epicappinfo" | cut -d':' -f2 | awk '{$1=$1};1')
 			if [[ $selected_runner == *[Pp]"roton"* ]]; then
@@ -526,6 +527,7 @@ launchercompleteinit() {
 			epic_save_path=${epic_save_path//\{AppData\}/${selected_prefix}/drive_c/users/${user_save}/AppData/Local}
 			epic_save_path=${epic_save_path//\{UserSavedGames\}/${selected_prefix}/drive_c/users/${user_save}/Saved Games}
 			epic_save_path=${epic_save_path//\{UserDir\}/${selected_prefix}/drive_c/users/${user_save}/Documents}
+			epic_save_path=${epic_save_path//\{InstallDir\}/$epic_install_path}
 			epic_save_path=${epic_save_path//\{EpicID\}/$epic_account_id}
 			launcher_command="legendary sync-saves --save-path \\\"\$epic_save_path\\\" \${launcher_exec}; $launcher_command"
 			launcher_vars="$launcher_vars epic_save_path=\"$epic_save_path\"\n"
@@ -790,22 +792,26 @@ case "$select_ans" in
 "4") #Legendary Helper
 	if [[ -f "/usr/local/bin/legendary" || -f "/usr/bin/legendary" ]]; then
 		if [[ $epic_account_id != "none" ]]; then
-			listoptions "Legendary Helper" "Sign out|Install game|Verify game|Uninstall game|Check updates|Sync saves"
+			listoptions "Legendary Helper" "Sign out|Import game|Install game|Verify game|Uninstall game|Check updates|Sync saves"
 			if [[ $select_ans == "1" ]]; then
 				eval "legendary auth --delete"
 			elif [[ $select_ans == "2" ]]; then
 				epicfinder "all"
+				generalinput "epicinstallpath" "${cyc}path${noc} to the ${grc}game${noc} folder"
+				eval "legendary import $read_result_dir \"$input_ans\""
+			elif [[ $select_ans == "3" ]]; then
+				epicfinder "all"
 				generalinput "epicinstallpath" "the ${cyc}path${noc} where the ${grc}game${noc} will be installed"
 				eval "legendary install --base-path \"$input_ans\" $read_result_dir"
-			elif [[ $select_ans == "3" ]]; then
-				epicfinder "installed"
-				eval "legendary verify $read_result_dir"
 			elif [[ $select_ans == "4" ]]; then
 				epicfinder "installed"
-				eval "legendary uninstall $read_result_dir"
+				eval "legendary verify $read_result_dir"
 			elif [[ $select_ans == "5" ]]; then
-				eval "legendary list-installed --check-updates"
+				epicfinder "installed"
+				eval "legendary uninstall $read_result_dir"
 			elif [[ $select_ans == "6" ]]; then
+				eval "legendary list-installed --check-updates"
+			elif [[ $select_ans == "7" ]]; then
 				eval "legendary sync-saves"
 			fi
 		else
