@@ -792,7 +792,7 @@ case "$select_ans" in
 "4") #Legendary Helper
 	if [[ -f "/usr/local/bin/legendary" || -f "/usr/bin/legendary" ]]; then
 		if [[ $epic_account_id != "none" ]]; then
-			listoptions "Legendary Helper" "Sign out|Import game|Install game|Verify game|Update game|Uninstall game|Check updates|Sync saves|Fix saves"
+			listoptions "Legendary Helper" "Sign out|Import game|Install game|Verify game|Repair game|Update game|Uninstall game|Check updates|Sync cloud saves|Fix cloud saves"
 			if [[ $select_ans == "1" ]]; then
 				eval "legendary auth --delete"
 			elif [[ $select_ans == "2" ]]; then
@@ -808,22 +808,25 @@ case "$select_ans" in
 				eval "legendary verify $read_result_dir"
 			elif [[ $select_ans == "5" ]]; then
 				epicfinder "installed"
-				eval "legendary update $read_result_dir"
+				eval "legendary repair $read_result_dir"
 			elif [[ $select_ans == "6" ]]; then
 				epicfinder "installed"
-				eval "legendary uninstall $read_result_dir"
+				eval "legendary update $read_result_dir"
 			elif [[ $select_ans == "7" ]]; then
-				eval "legendary list-installed --check-updates"
+				epicfinder "installed"
+				eval "legendary uninstall $read_result_dir"
 			elif [[ $select_ans == "8" ]]; then
-				eval "legendary sync-saves"
+				eval "legendary list-installed --check-updates"
 			elif [[ $select_ans == "9" ]]; then
+				eval "legendary sync-saves"
+			elif [[ $select_ans == "10" ]]; then
 				eval "legendary clean-saves"
 			fi
 		else
-			listoptions "Legendary Helper" "Sign out|Import game|Install game|Verify game|Update game|Uninstall game|Check updates|Sync saves|Fix saves"
+			listoptions "Legendary Helper" "Sign out|Import game|Install game|Verify game|Repair game|Update game|Uninstall game|Check updates|Sync saves|Fix saves"
 			if [[ $select_ans == "1" ]]; then
 				eval "legendary auth"
-			elif [[ $select_ans == [2-9] ]]; then
+			elif [[ $select_ans == [2-10] ]]; then
 				echo -e "\n${grc}Legendary${noc} not authenticated!"
 			fi
 		fi
@@ -862,4 +865,5 @@ case "$select_ans" in
 		sudo chmod +x "$(dirname "$hlu_path")/histutilities"
 	fi
 	rm -rf "$HIPATH/hist-linux-utilities"
+	exit_flag=1
 esac
