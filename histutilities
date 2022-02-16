@@ -834,7 +834,7 @@ case "$select_ans" in
 			elif [[ $select_ans == "11" ]]; then
 				eval "legendary clean-saves"
 			elif [[ $select_ans == "12" ]]; then
-				epicfinder "installed"
+				epicfinder "all"
 				eval "legendary info $read_result_dir"
 			fi
 		else
