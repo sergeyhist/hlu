@@ -867,9 +867,8 @@ case "$select_ans" in
 		cp "$HIPATH/hist-linux-utilities/histutilities" "$(dirname "$hlu_path")"
 		chmod +x "$(dirname "$hlu_path")/histutilities"
 	else
-		sudo cp "$HIPATH/hist-linux-utilities/histutilities" "$(dirname "$hlu_path")"
-		sudo chmod +x "$(dirname "$hlu_path")/histutilities"
+		sudo cp "$HIPATH/hist-linux-utilities/histutilities" "$(dirname "$hlu_path")" &> /dev/null
+		sudo chmod +x "$(dirname "$hlu_path")/histutilities" &> /dev/null
 	fi
-	rm -rf "$HIPATH/hist-linux-utilities"
-	exit_flag=1
+	rm -rf "$HIPATH/hist-linux-utilities" &> /dev/null
 esac
