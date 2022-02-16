@@ -8,6 +8,14 @@ hi_exit() {
 	if [[ "$exit_flag" == "0" ]]; then
 		listoptions "Restart HLU?" "Yes|No"
 		if [[ "$select_ans" == "1" ]]; then exec "$hlu_path"; fi
+	elif [[ $exit_flag == "2" ]]; then
+		if [[ -w "$(dirname "$hlu_path")" ]]; then
+			cp "$HIPATH/hist-linux-utilities/histutilities" "$(dirname "$hlu_path")"
+			chmod +x "$(dirname "$hlu_path")/histutilities"
+		else
+			sudo cp "$HIPATH/hist-linux-utilities/histutilities" "$(dirname "$hlu_path")"
+			sudo chmod +x "$(dirname "$hlu_path")/histutilities"
+		fi
 	else echo -e "\n${rec}Exit${noc}\n"; fi
 }
 
@@ -625,23 +633,6 @@ settingsinit() {
 	done
 }
 
-selfupdate() {
-	echo "test"
-	if [[ -d "$HIPATH/hist-linux-utilities" ]]; then rm -rf "$HIPATH/hist-linux-utilities"; fi
-	cd "$HIPATH"; git clone https://github.com/sergeyhist/hist-linux-utilities
-	rm -rf "$HIPATH/Configs"
-	rm -rf "$HIPATH/Installers"
-	cp -r "$HIPATH/hist-linux-utilities/Configs" "$HIPATH"
-	cp -r "$HIPATH/hist-linux-utilities/Installers" "$HIPATH"
-	if [[ -w "$(dirname "$hlu_path")" ]]; then
-		cp "$HIPATH/hist-linux-utilities/histutilities" "$(dirname "$hlu_path")"
-		chmod +x "$(dirname "$hlu_path")/histutilities"
-	else
-		sudo cp "$HIPATH/hist-linux-utilities/histutilities" "$(dirname "$hlu_path")"
-		sudo chmod +x "$(dirname "$hlu_path")/histutilities"
-	fi
-}
-
 trap hi_exit EXIT; exit_flag="0"
 Def_IFS=$'\n'; IFS=$Def_IFS
 hlu_path="$0"
@@ -875,5 +866,11 @@ case "$select_ans" in
 	elif [[ "$select_ans" == "7" ]]; then sed -i "\#$selected_service_name#d" "$HIPATH/services.cfg"; fi; done
 ;;
 "7") #HLU Updater
-	selfupdate
+if [[ -d "$HIPATH/hist-linux-utilities" ]]; then rm -rf "$HIPATH/hist-linux-utilities"; fi
+cd "$HIPATH"; git clone https://github.com/sergeyhist/hist-linux-utilities
+rm -rf "$HIPATH/Configs"
+rm -rf "$HIPATH/Installers"
+cp -r "$HIPATH/hist-linux-utilities/Configs" "$HIPATH"
+cp -r "$HIPATH/hist-linux-utilities/Installers" "$HIPATH"
+exit_flag=2
 esac
