@@ -8,8 +8,6 @@ hi_exit() {
 		listoptions "Restart HLU?" "Yes|No"
 		if [[ "$select_ans" == "1" ]]; then exec "$hlu_path"; fi
 	elif [[ $exit_flag == "2" ]]; then
-		echo "test"
-		echo "test"
 		if [[ -w "$(dirname "$hlu_path")" ]]; then
 			cp "$HIPATH/hist-linux-utilities/histutilities" "$(dirname "$hlu_path")"
 			chmod +x "$(dirname "$hlu_path")/histutilities"
