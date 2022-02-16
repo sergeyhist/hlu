@@ -4,11 +4,11 @@ set -euo pipefail
 
 hi_exit() {
 	rm -rf "$TEMPPATH"
-	if [[ -d "$HIPATH/hist-linux-utilities" ]]; then rm -rf "$HIPATH/hist-linux-utilities"; fi
 	if [[ "$exit_flag" == "0" ]]; then
 		listoptions "Restart HLU?" "Yes|No"
 		if [[ "$select_ans" == "1" ]]; then exec "$hlu_path"; fi
 	elif [[ $exit_flag == "2" ]]; then
+		echo "test"
 		if [[ -w "$(dirname "$hlu_path")" ]]; then
 			cp "$HIPATH/hist-linux-utilities/histutilities" "$(dirname "$hlu_path")"
 			chmod +x "$(dirname "$hlu_path")/histutilities"
@@ -16,6 +16,7 @@ hi_exit() {
 			sudo cp "$HIPATH/hist-linux-utilities/histutilities" "$(dirname "$hlu_path")"
 			sudo chmod +x "$(dirname "$hlu_path")/histutilities"
 		fi
+		if [[ -d "$HIPATH/hist-linux-utilities" ]]; then rm -rf "$HIPATH/hist-linux-utilities"; fi
 	else echo -e "\n${rec}Exit${noc}\n"; fi
 }
 
