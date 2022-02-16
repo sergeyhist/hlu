@@ -792,7 +792,7 @@ case "$select_ans" in
 "4") #Legendary Helper
 	if [[ -f "/usr/local/bin/legendary" || -f "/usr/bin/legendary" ]]; then
 		if [[ $epic_account_id != "none" ]]; then
-			listoptions "Legendary Helper" "Sign out|Import game|Install game|Verify game|Repair game|Update game|Uninstall game|Check updates|Upload cloud saves|Fix cloud saves"
+			listoptions "Legendary Helper" "Sign out|Import game|Install game|Verify game|Repair game|Update game|Move game|Uninstall game|Check updates|Upload cloud saves|Fix cloud saves|Game info"
 			if [[ $select_ans == "1" ]]; then
 				eval "legendary auth --delete"
 			elif [[ $select_ans == "2" ]]; then
@@ -814,19 +814,25 @@ case "$select_ans" in
 				eval "legendary update $read_result_dir"
 			elif [[ $select_ans == "7" ]]; then
 				epicfinder "installed"
-				eval "legendary uninstall $read_result_dir"
+				eval "legendary move $read_result_dir"
 			elif [[ $select_ans == "8" ]]; then
-				eval "legendary list-installed --check-updates"
+				epicfinder "installed"
+				eval "legendary uninstall $read_result_dir"
 			elif [[ $select_ans == "9" ]]; then
-				eval "legendary sync-saves --skip-download"
+				eval "legendary list-installed --check-updates"
 			elif [[ $select_ans == "10" ]]; then
+				eval "legendary sync-saves --skip-download"
+			elif [[ $select_ans == "11" ]]; then
 				eval "legendary clean-saves"
+			elif [[ $select_ans == "12" ]]; then
+				epicfinder "installed"
+				eval "legendary info $read_result_dir"
 			fi
 		else
-			listoptions "Legendary Helper" "Sign out|Import game|Install game|Verify game|Repair game|Update game|Uninstall game|Check updates|Sync saves|Fix saves"
+			listoptions "Legendary Helper" "Sign out|Import game|Install game|Verify game|Repair game|Update game|Move game|Uninstall game|Check updates|Upload cloud saves|Fix cloud saves|Game info"
 			if [[ $select_ans == "1" ]]; then
 				eval "legendary auth"
-			elif [[ $select_ans == [2-10] ]]; then
+			elif [[ $select_ans == [2-12] ]]; then
 				echo -e "\n${grc}Legendary${noc} not authenticated!"
 			fi
 		fi
