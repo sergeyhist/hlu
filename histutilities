@@ -626,6 +626,7 @@ settingsinit() {
 }
 
 selfupdate() {
+	echo "test"
 	if [[ -d "$HIPATH/hist-linux-utilities" ]]; then rm -rf "$HIPATH/hist-linux-utilities"; fi
 	cd "$HIPATH"; git clone https://github.com/sergeyhist/hist-linux-utilities
 	rm -rf "$HIPATH/Configs"
