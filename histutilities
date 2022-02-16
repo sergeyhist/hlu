@@ -529,7 +529,7 @@ launchercompleteinit() {
 			epic_save_path=${epic_save_path//\{UserDir\}/${selected_prefix}/drive_c/users/${user_save}/Documents}
 			epic_save_path=${epic_save_path//\{InstallDir\}/$epic_install_path}
 			epic_save_path=${epic_save_path//\{EpicID\}/$epic_account_id}
-			launcher_command="yes | legendary sync-saves --save-path \\\"\$epic_save_path\\\" \${launcher_exec}; $launcher_command"
+			launcher_command="yes | legendary sync-saves --skip-upload --save-path \\\"\$epic_save_path\\\" \${launcher_exec}; $launcher_command"
 			launcher_vars="$launcher_vars epic_save_path=\"$epic_save_path\"\n"
 		fi
 		launcher_command="yes | legendary update --update-only \${launcher_exec}; $launcher_command"
@@ -792,7 +792,7 @@ case "$select_ans" in
 "4") #Legendary Helper
 	if [[ -f "/usr/local/bin/legendary" || -f "/usr/bin/legendary" ]]; then
 		if [[ $epic_account_id != "none" ]]; then
-			listoptions "Legendary Helper" "Sign out|Import game|Install game|Verify game|Repair game|Update game|Uninstall game|Check updates|Sync cloud saves|Fix cloud saves"
+			listoptions "Legendary Helper" "Sign out|Import game|Install game|Verify game|Repair game|Update game|Uninstall game|Check updates|Upload cloud saves|Fix cloud saves"
 			if [[ $select_ans == "1" ]]; then
 				eval "legendary auth --delete"
 			elif [[ $select_ans == "2" ]]; then
@@ -818,7 +818,7 @@ case "$select_ans" in
 			elif [[ $select_ans == "8" ]]; then
 				eval "legendary list-installed --check-updates"
 			elif [[ $select_ans == "9" ]]; then
-				eval "legendary sync-saves"
+				eval "legendary sync-saves --skip-download"
 			elif [[ $select_ans == "10" ]]; then
 				eval "legendary clean-saves"
 			fi
