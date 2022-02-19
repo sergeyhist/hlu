@@ -12,4 +12,3 @@ export packagetype
 export packagename
 export packagever
 export -f packageinstall
-export -f packageuninstall
