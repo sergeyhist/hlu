@@ -229,7 +229,12 @@ serviceinit() {
 runnerinit() {
 	selected_runner=""; selected_runner_path=""
 	while : ; do
-		if [[ "$1" != "proton" ]]; then echo "$(/usr/bin/wine --version) | /usr/bin/wine" > "$TEMPPATH/.runnerslist"; fi
+		if [[ "$1" != "proton" ]]; then
+			echo "$(/usr/bin/wine --version) | /usr/bin/wine" > "$TEMPPATH/.runnerslist"
+			if [[ -d "$PACKPATH/wine-ge-custom" ]]; then
+					echo "$("$PACKPATH/wine-ge-custom/Wine-GE/bin/wine" --version) | "$PACKPATH/wine-ge-custom/Wine-GE/bin/wine"" > "$TEMPPATH/.runnerslist"
+				fi
+		fi
 		if [[ "$1" == "all" ]]; then runnerfinder "$HIPATH/addrun.cfg|$TEMPPATH/.steamrun"
 		elif [[ "$1" == "wine" ]]; then runnerfinder "$HIPATH/addrun.cfg"
 		elif [[ "$1" == "proton" ]]; then runnerfinder "$TEMPPATH/.steamrun"; fi
@@ -704,7 +709,6 @@ case "$select_ans" in
 			generalinput "editorname" "${cyc}command${noc} for run desired ${grc}text editor${noc} (Example: ${cyc}nano${noc})"
 			eval "$input_ans \"$LAUNCHPATH/${read_result_dir}.hlu\""
 		elif [[ "$select_ans" == "6" ]]; then
-			echo $PWD
 			readfiles "Launchers|sort" "$TEMPPATH/.launcherslist"
 			eval "sh \"$LAUNCHPATH/${read_result_dir}.hlu\""
 		fi

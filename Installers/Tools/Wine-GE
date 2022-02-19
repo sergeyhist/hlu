@@ -1,0 +1,18 @@
+#!/bin/bash
+packagetype="release"
+packagename="GloriousEggroll/wine-ge-custom"
+packagever=".tar.xz"
+packageinstall() {
+	tar -xf wine*.tar.xz
+	rm ./*".tar.xz"
+  if [[ -d Wine-GE ]]; then rm -rf Wine-GE; fi
+  mv lutris-ge* Wine-GE
+}
+packageuninstall() {
+
+}
+export packagetype
+export packagename
+export packagever
+export -f packageinstall
+export -f packageuninstall
