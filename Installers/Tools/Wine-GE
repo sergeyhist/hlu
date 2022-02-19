@@ -8,9 +8,6 @@ packageinstall() {
   if [[ -d Wine-GE ]]; then rm -rf Wine-GE; fi
   mv lutris-ge* Wine-GE
 }
-packageuninstall() {
-
-}
 export packagetype
 export packagename
 export packagever
