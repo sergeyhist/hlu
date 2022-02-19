@@ -232,7 +232,7 @@ runnerinit() {
 		if [[ "$1" != "proton" ]]; then
 			echo "$(/usr/bin/wine --version) | /usr/bin/wine" > "$TEMPPATH/.runnerslist"
 			if [[ -d "$PACKPATH/wine-ge-custom" ]]; then
-					echo "$("$PACKPATH/wine-ge-custom/Wine-GE/bin/wine" --version) | "$PACKPATH/wine-ge-custom/Wine-GE/bin/wine"" > "$TEMPPATH/.runnerslist"
+					echo "Wine-GE | $PACKPATH/wine-ge-custom/Wine-GE/bin/wine" >> "$TEMPPATH/.runnerslist"
 				fi
 		fi
 		if [[ "$1" == "all" ]]; then runnerfinder "$HIPATH/addrun.cfg|$TEMPPATH/.steamrun"
