@@ -834,7 +834,7 @@ case "$select_ans" in
 			elif [[ $select_ans == "9" ]]; then
 				eval "legendary list-installed --check-updates"
 			elif [[ $select_ans == "10" ]]; then
-				eval "legendary sync-saves --skip-download"
+				eval "legendary sync-saves --skip-download --disable-filters"
 			elif [[ $select_ans == "11" ]]; then
 				eval "legendary clean-saves"
 			elif [[ $select_ans == "12" ]]; then
